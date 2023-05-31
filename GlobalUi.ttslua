@@ -1,0 +1,27 @@
+local GlobalUi = {}
+GlobalUi.__index = GlobalUi
+
+local Constants = require('Constants')
+local Options = require('Options')
+local Ui = require('Ui')
+
+------------------------------------------------------
+
+function GlobalUi.init(saved_data)
+   
+end
+
+function GlobalUi.save()
+    local flatData = {
+        
+    }
+
+    return flatData
+end
+
+------------------------------------------------------
+
+return {
+    init = GlobalUi.init,
+    save = GlobalUi.save,
+}

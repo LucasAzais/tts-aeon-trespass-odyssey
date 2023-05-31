@@ -1,0 +1,22 @@
+local Options = {}
+Options.__index = Options
+
+local Constants = require('Constants')
+
+------------------------------------------------------
+
+function Options.init(saved_data)
+    
+end
+
+function Options.save()
+    local flatData = {
+        
+    }
+
+    return flatData
+end
+
+------------------------------------------------------
+
+return Options
