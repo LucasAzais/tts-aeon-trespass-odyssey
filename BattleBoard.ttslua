@@ -1,0 +1,143 @@
+local BattleBoard = {}
+BattleBoard.__index = BattleBoard
+
+local Content = require('Content')
+local Constants = require('Constants')
+local EventManager = require('EventManager')
+local Log = require('Log').ForModule('BattleBoard')
+local Utils = require('Utils')
+
+------------------------------------------------------
+
+BattleBoard.BOARD_GUID = '77cbc9'
+BattleBoard.COLUMNS = 20
+BattleBoard.ROWS = 14
+
+BattleBoard.X_OFFSET = 2.89
+BattleBoard.Z_OFFSET = 3.18
+
+function BattleBoard.init()
+    BattleBoard.BOARD = getObjectFromGUID(BattleBoard.BOARD_GUID)
+
+    EventManager.addHandler('onObjectDrop', function(_, object)
+        -- Only snap appropriate elements
+        if object.hasTag(Constants.TERRAIN) 
+            or object.hasTag(Constants.PRIMORDIAL)
+            or object.hasTag(Constants.TITAN) then
+
+            BattleBoard.snapObjectToGrid(object)
+        end
+    end)
+end
+
+function BattleBoard.snapObjectToGrid(object)
+    if not object then return end
+
+    local element = nil
+    if object.hasTag(Constants.PRIMORDIAL) then
+        element = Content.getByName(Content.primordials, object.getName())
+    elseif object.hasTag(Constants.TERRAIN) then
+        element = Content.getByName(Content.terrain, object.getName())
+    end
+
+    local size = nil
+    if element then
+        size = { width = element.size.width, height = element.size.height }
+    elseif object.hasTag(Constants.TITAN) then
+        size = { width = 1, height = 1 }
+    end
+
+    -- Leave the other objects where they are
+    if size == nil then
+        return
+    end
+
+    local yRot = object.getRotation().y
+    if (yRot > 45 and yRot < 135) or (yRot < 315 and yRot > 225) then
+        size.width, size.height = size.height, size.width
+    end
+
+    -- Default values
+    size.width = size.width or 1
+    size.height = size.height or 1
+
+    object.setPositionSmooth(BattleBoard.snappedPosition(object, size), false, true)
+end
+
+-- Return the position of the object, snapped to the grid
+function BattleBoard.snappedPosition(object, size)
+    -- Absolute board position
+    -- TODO: Calculate these live
+    local bounds = BattleBoard.BOARD.getBounds()
+    
+    local left = bounds.center.x - bounds.size.x/2 + BattleBoard.X_OFFSET
+    local right = bounds.center.x + bounds.size.x/2 - BattleBoard.X_OFFSET
+    local top = bounds.center.z + bounds.size.z/2 - BattleBoard.Z_OFFSET
+    local bottom = bounds.center.z - bounds.size.z/2 + BattleBoard.Z_OFFSET
+    -- local top = 21.92
+    -- local right = 51.99
+    -- local bottom = -6.11
+    -- local left = 12.01
+
+    local boardWidth = math.abs(right - left)
+    local boardHeight = math.abs(top - bottom)
+    local cellWidth = boardWidth / (BattleBoard.COLUMNS - 1)
+    local cellHeight = boardHeight / (BattleBoard.ROWS - 1)
+
+    -- Consider we remove half a cell on each side and recalculate
+    left = left + cellWidth / 2
+    right = right - cellWidth / 2
+    top = top - cellHeight / 2
+    bottom = bottom + cellHeight / 2
+
+    cellWidth = math.abs(right - left) / (BattleBoard.COLUMNS - 1)
+    cellHeight = math.abs(top - bottom) / (BattleBoard.ROWS - 1)
+
+    -- Debug code to show the grid that's being used
+    -- local debugGrid = {}
+    -- for i = 0, BattleBoard.COLUMNS - 1 do
+    --     table.insert(debugGrid, {
+    --         points = { {left + i * cellWidth, 1.5, top}, {left + i * cellWidth, 1.5, bottom} },
+    --         color = {1,0,0},
+    --         thickness = 0.2,
+    --     })
+    -- end
+    -- for i = 0, BattleBoard.ROWS - 1 do
+    --     table.insert(debugGrid, {
+    --         points = { {left, 1.5, top - i * cellHeight}, {right, 1.5, top - i * cellHeight} },
+    --         color = {1,0,0},
+    --         thickness = 0.2,
+    --     })
+    -- end
+
+    -- Global.setVectorLines(debugGrid)
+
+    local worldPosition = object.getPosition()
+
+    local column = (worldPosition.x - left) / cellWidth
+    local row = (worldPosition.z - bottom) / cellHeight
+
+    local snapCol = (size.width%2 == 0) and math.floor(column) + 0.5 or math.floor(column + 0.5)
+    local snapRow = (size.height%2 == 0) and math.floor(row) + 0.5 or math.floor(row + 0.5)
+    local widthRadius = size.width / 2
+    local heightRadius = size.height / 2
+    local epsilon = 0.001
+
+    if 
+        snapCol - widthRadius < -0.5 - epsilon
+        or snapCol + widthRadius >= BattleBoard.COLUMNS + epsilon
+        or snapRow - heightRadius < -0.5 - epsilon
+        or snapRow + heightRadius >= BattleBoard.ROWS + epsilon
+    then
+        -- do nothing
+        return object.getPosition()
+    else
+        return {left + (snapCol * cellWidth), worldPosition.y, bottom + (snapRow * cellHeight)}
+    end
+end
+
+------------------------------------------------------
+
+return {
+    init = BattleBoard.init,
+}

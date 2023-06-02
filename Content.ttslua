@@ -1,0 +1,110 @@
+local Content = {}
+Content.__index = Content
+
+------------------------------------------------------
+
+Content.primordials = {
+    {
+        name = 'Hekaton',
+        size = {width = 2, height = 2},
+    },
+    {
+        name = 'Labyrinthauros',
+        size = {width = 2, height = 2},
+    },
+    {
+        name = 'Hermesian Pursuer',
+        size = {width = 2, height = 2},
+    },
+    {
+        name = 'Alpha Temenos',
+        size = {width = 2, height = 2},
+    }
+}
+
+Content.terrain = {
+    {
+        name = 'Labyrinth O',
+        size = {width = 2, height = 2},
+    },
+    {
+        name = 'Labyrinth Z',
+        size = {width = 3, height = 2},
+    },
+    {
+        name = 'Labyrinth L',
+        size = {width = 3, height = 2},
+    },
+    {
+        name = 'Labyrinth I',
+        size = {width = 4, height = 1},
+    },
+    {
+        name = 'Maze Fissure O',
+        size = {width = 2, height = 2},
+    },
+    {
+        name = 'Maze Fissure Z',
+        size = {width = 3, height = 2},
+    },
+    {
+        name = 'Maze Fissure L',
+        size = {width = 3, height = 2},
+    },
+    {
+        name = 'Maze Fissure I',
+        size = {width = 4, height = 1},
+    },
+    {
+        name = 'Maze Outcrop',
+        size = {width = 2, height = 2},
+    },
+    {
+        name = 'Abandoned Temple',
+        size = {width = 2, height = 2},
+    },
+    {
+        name = 'Minos Manos Unit',
+        size = {width = 2, height = 2},
+    },
+    {
+        name = 'Column',
+        size = {width = 1, height = 1},
+    },
+    {
+        name = 'Ambrosia Pool',
+        size = {width = 2, height = 2},
+    },
+    {
+        name = 'Giant Shell',
+        size = {width = 3, height = 3},
+    },
+    {
+        name = 'City',
+        size = {width = 3, height = 3},
+    },
+    {
+        name = 'Ruined City',
+        size = {width = 3, height = 3},
+    },
+    {
+        name = 'Argo Hull 1x4',
+        size = {width = 4, height = 1},
+    },
+    {
+        name = 'Argo Hull 1x5',
+        size = {width = 5, height = 1},
+    }
+}
+
+function Content.getByName(content, name)
+    for _, element in ipairs(content) do
+        if element.name == name then
+            return element
+        end
+    end
+end
+
+------------------------------------------------------
+
+return Content

@@ -6,6 +6,7 @@
 -- Global vars: underscore: CONSTANTS_LIKE_THIS and variables_like_this
 -- Local vars: camelCase
 
+local BattleBoard = require('BattleBoard')
 local Ui = require('Ui')
 local Log = require('Log').ForModule("Global")
 
@@ -30,6 +31,7 @@ function onLoad(script_state)
 
     Log.init()
     Ui.init()
+    BattleBoard.init()
 
     Ui.globalRefresh()
 

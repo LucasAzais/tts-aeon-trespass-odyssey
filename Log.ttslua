@@ -8,7 +8,7 @@ local Utils = require('Utils')
 
 Log.logsByModule = {}
 Log.levelByModule = {
-    -- ["Global"] = Constants.DEBUG,
+    ["Global"] = Constants.DEBUG,
     ["BattleBoard"] = Constants.DEBUG,
 }
 
