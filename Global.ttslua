@@ -7,6 +7,7 @@
 -- Local vars: camelCase
 
 local BattleBoard = require('BattleBoard')
+local Triskelion = require('Triskelion')
 local Ui = require('Ui')
 local Log = require('Log').ForModule("Global")
 
@@ -28,9 +29,11 @@ function onLoad(script_state)
 
     -- Parse save data
     local savedData = JSON.decode(script_state) or {}
+    -- local savedData = {}
 
     Log.init()
     Ui.init()
+    Triskelion.init(savedData.triskelions or {})
     BattleBoard.init()
 
     Ui.globalRefresh()
@@ -47,8 +50,7 @@ function onSave()
     local dataToSave = {}
 
     -- if Setup.isSetupComplete() then
-    --     dataToSave.setup = Setup.save()
-    --     dataToSave.game_state = GameState.save()
+        dataToSave.triskelions = Triskelion.save()
     -- end
 
     return JSON.encode(dataToSave)

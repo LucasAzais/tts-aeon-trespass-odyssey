@@ -1,0 +1,140 @@
+local Triskelion = {}
+Triskelion.__index = Triskelion
+
+local Constants = require('Constants')
+local Log = require('Log').ForModule('Triskelion')
+local Ui = require('Ui')
+local Utils = require('Utils')
+
+------------------------------------------------------
+
+Triskelion.TRISKELIONS = {
+    [Constants.WHITE] = { guid = '61d766', [Constants.RAGE] = 0, [Constants.DANGER] = 0, [Constants.FATE] = 0 },
+    [Constants.GREEN] = { guid = '4e7acc', [Constants.RAGE] = 0, [Constants.DANGER] = 0, [Constants.FATE] = 0 },
+    [Constants.BLUE] = { guid = 'd73cd9', [Constants.RAGE] = 0, [Constants.DANGER] = 0, [Constants.FATE] = 0 },
+    [Constants.RED] = { guid = 'eda365', [Constants.RAGE] = 0, [Constants.DANGER] = 0, [Constants.FATE] = 0 },
+}
+
+function Triskelion.init(saved_data)
+    -- Create the UI
+    for color, triskelion in pairs(Triskelion.TRISKELIONS) do
+        triskelion[Constants.DANGER] = saved_data[Constants.DANGER] or 0
+        triskelion[Constants.RAGE] = saved_data[Constants.RAGE] or 0
+        triskelion[Constants.FATE] = saved_data[Constants.FATE] or 0
+
+        triskelion.object = getObjectFromGUID(triskelion.guid)
+        if triskelion.object then
+            triskelion.name = 'triskelion-'..color
+            local root = Ui.createRootOnObject(triskelion.name..'-root', triskelion.object, 0.7)
+
+            local panel = root:panel({ id = triskelion.name .. '-panel', width = 2300, height = 2300 })
+
+            -- Danger
+            triskelion.danger_button = panel:button({ id = triskelion.name .. '-danger-text', text = tostring(triskelion[Constants.DANGER]), width = 400, height = 400, x = 15, y = -330, 
+                        fontSize = 350, onClick = function(_, button, id)
+                if button == '-2' then
+                    Triskelion.decrementDanger(color)
+                else
+                    Triskelion.incrementDanger(color)
+                end
+            end })
+            triskelion.danger_button.attributes.colors = '#FFFFFF00|#FFFFFF00|#FFFFFF00|rgba(0.78,0.78,0.78,0.5)'
+            -- triskelion.danger.attributes.fontStyle = 'Bold'
+
+            -- Rage
+            triskelion.rage_button = panel:button({ id = triskelion.name .. '-rage-text', text = tostring(triskelion[Constants.RAGE]), width = 400, height = 400, x = -410, y = 800,
+                        fontSize = 350, onClick = function(_, button, id)
+                if button == '-2' then
+                    Triskelion.decrementRage(color)
+                else
+                    Triskelion.incrementRage(color)
+                end
+            end })
+            triskelion.rage_button.attributes.colors = '#FFFFFF00|#FFFFFF00|#FFFFFF00|rgba(0.78,0.78,0.78,0.5)'
+            -- triskelion.rage.attributes.fontStyle = 'Bold'
+
+            -- Fate
+            triskelion.fate_button = panel:button({ id = triskelion.name .. '-fate-text', text = tostring(triskelion[Constants.FATE]), width = 400, height = 400, x = 420, y = 800, 
+                        fontSize = 350, onClick = function(_, button, id)
+                if button == '-2' then
+                    Triskelion.decrementFate(color)
+                else
+                    Triskelion.incrementFate(color)
+                end
+            end })
+            triskelion.fate_button.attributes.colors = '#FFFFFF00|#FFFFFF00|#FFFFFF00|rgba(0.78,0.78,0.78,0.5)'
+            -- triskelion.fate.attributes.fontStyle = 'Bold'
+        end
+    end
+end
+
+function Triskelion.incrementRage(color) Triskelion.incrementValue(color, Constants.RAGE) end
+function Triskelion.incrementDanger(color) Triskelion.incrementValue(color, Constants.DANGER) end
+function Triskelion.incrementFate(color) Triskelion.incrementValue(color, Constants.FATE) end
+
+function Triskelion.incrementValue(color, type)
+    if not Triskelion.TRISKELIONS[color] or Triskelion.TRISKELIONS[color][type] == nil then return end
+
+    local currentValue = Triskelion.TRISKELIONS[color][type]
+    if currentValue >= 9 then
+        if type == Constants.RAGE then
+            broadcastToAll('This titan dies.', Constants.WARNING_COLOR)
+        elseif type == Constants.DANGER then
+            broadcastToAll('Draw an Obol.', Constants.WARNING_COLOR)
+        elseif type == Constants.FATE then
+            broadcastToAll('Draw a Moiros card.', Constants.WARNING_COLOR)
+        end
+    else
+        Triskelion.TRISKELIONS[color][type] = currentValue + 1
+    end
+
+    Triskelion.updateTriskelionDisplay(color, type)
+end
+
+function Triskelion.decrementRage(color) Triskelion.decrementValue(color, Constants.RAGE) end
+function Triskelion.decrementDanger(color) Triskelion.decrementValue(color, Constants.DANGER) end
+function Triskelion.decrementFate(color) Triskelion.decrementValue(color, Constants.FATE) end
+
+function Triskelion.decrementValue(color, type)
+    if not Triskelion.TRISKELIONS[color] or not Triskelion.TRISKELIONS[color][type] then return end
+
+    local currentValue = Triskelion.TRISKELIONS[color][type]
+    if currentValue > 0 then
+        Triskelion.TRISKELIONS[color][type] = currentValue - 1
+    end
+
+    Triskelion.updateTriskelionDisplay(color, type)
+end
+
+function Triskelion.updateTriskelionDisplay(color, type)
+    if not Triskelion.TRISKELIONS[color] or Triskelion.TRISKELIONS[color][type] == nil then return end
+
+    if type == Constants.RAGE then
+        Triskelion.TRISKELIONS[color].rage_button:setText(Triskelion.TRISKELIONS[color][Constants.RAGE])
+    elseif type == Constants.DANGER then
+        Triskelion.TRISKELIONS[color].danger_button:setText(Triskelion.TRISKELIONS[color][Constants.DANGER])
+    elseif type == Constants.FATE then
+        Triskelion.TRISKELIONS[color].fate_button:setText(Triskelion.TRISKELIONS[color][Constants.FATE])
+    end
+end
+
+function Triskelion.save()
+    local flatData = {}
+
+    for color, triskelion in pairs(Triskelion.TRISKELIONS) do
+        flatData[color] = {
+            [Constants.RAGE] = triskelion[Constants.RAGE],
+            [Constants.DANGER] = triskelion[Constants.DANGER],
+            [Constants.FATE] = triskelion[Constants.FATE],
+        }
+    end
+
+    return flatData
+end
+
+------------------------------------------------------
+
+return {
+    init = Triskelion.init,
+    save = Triskelion.save,
+}

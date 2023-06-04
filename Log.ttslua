@@ -10,6 +10,7 @@ Log.logsByModule = {}
 Log.levelByModule = {
     ["Global"] = Constants.DEBUG,
     ["BattleBoard"] = Constants.DEBUG,
+    ["Triskelion"] = Constants.DEBUG,
 }
 
 function Log.init()

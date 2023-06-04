@@ -3,10 +3,25 @@ Constants.__index = Constants
 
 ------------------------------------------------------
 
+-- Logging
 Constants.DEBUG = 1
 Constants.INFO = 2
 Constants.WARNING = 3
 Constants.ERROR = 4
+
+-- Message colors
+Constants.WARNING_COLOR = Color(243/255, 100/255, 29/255)
+
+-- Player Colors
+Constants.WHITE = 'White'
+Constants.RED = 'Red'
+Constants.BLUE = 'Blue'
+Constants.GREEN = 'Green'
+
+-- Important
+Constants.RAGE = 'Rage'
+Constants.DANGER = 'Danger'
+Constants.FATE = 'Fate'
 
 -- Tags
 Constants.PRIMORDIAL = 'Primordial'
