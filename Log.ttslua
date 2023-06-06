@@ -8,17 +8,18 @@ local Utils = require('Utils')
 
 Log.logsByModule = {}
 Log.levelByModule = {
-    ["Global"] = Constants.DEBUG,
-    ["BattleBoard"] = Constants.DEBUG,
-    ["Triskelion"] = Constants.DEBUG,
+    ['Global'] = Constants.DEBUG,
+    ['Argonaut'] = Constants.DEBUG,
+    ['BattleBoard'] = Constants.DEBUG,
+    ['Triskelion'] = Constants.DEBUG,
 }
 
 function Log.init()
     Log.logsByModule = {}
 
-    logStyle("debug", { r = 1.0, g = 1.0, b = 1.0 }, "", "")
-    logStyle("info", { r = 0.0, g = 1.0, b = 1.0 }, "", "")
-    logStyle("error", { r = 1.0, g = 0.0, b = 0.0 }, "", "")
+    logStyle('debug', { r = 1.0, g = 1.0, b = 1.0 }, '', '')
+    logStyle('info', { r = 0.0, g = 1.0, b = 1.0 }, '', '')
+    logStyle('error', { r = 1.0, g = 0.0, b = 0.0 }, '', '')
 end
 
 function Log.create(module, level)

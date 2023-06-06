@@ -27,6 +27,7 @@ Constants.FATE = 'Fate'
 Constants.PRIMORDIAL = 'Primordial'
 Constants.TITAN = 'Titan'
 Constants.TERRAIN = 'Terrain'
+Constants.ARGONAUT_SHEET = 'ArgonautSheet'
 
 ------------------------------------------------------
 

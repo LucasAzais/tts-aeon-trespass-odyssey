@@ -6,6 +6,7 @@
 -- Global vars: underscore: CONSTANTS_LIKE_THIS and variables_like_this
 -- Local vars: camelCase
 
+local Argonaut = require('Argonaut')
 local BattleBoard = require('BattleBoard')
 local Triskelion = require('Triskelion')
 local Ui = require('Ui')
@@ -34,6 +35,7 @@ function onLoad(script_state)
     Log.init()
     Ui.init()
     Triskelion.init(savedData.triskelions or {})
+    Argonaut.init(savedData.argonauts or {})
     BattleBoard.init()
 
     Ui.globalRefresh()
@@ -51,6 +53,7 @@ function onSave()
 
     -- if Setup.isSetupComplete() then
         dataToSave.triskelions = Triskelion.save()
+        dataToSave.argonauts = Argonaut.save()
     -- end
 
     return JSON.encode(dataToSave)

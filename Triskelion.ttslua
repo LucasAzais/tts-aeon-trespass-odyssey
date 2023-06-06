@@ -39,7 +39,7 @@ function Triskelion.init(saved_data)
                 end
             end })
             triskelion.danger_button.attributes.colors = '#FFFFFF00|#FFFFFF00|#FFFFFF00|rgba(0.78,0.78,0.78,0.5)'
-            -- triskelion.danger.attributes.fontStyle = 'Bold'
+            triskelion.danger_button.attributes.fontStyle = 'Bold'
 
             -- Rage
             triskelion.rage_button = panel:button({ id = triskelion.name .. '-rage-text', text = tostring(triskelion[Constants.RAGE]), width = 400, height = 400, x = -410, y = 800,
@@ -51,7 +51,7 @@ function Triskelion.init(saved_data)
                 end
             end })
             triskelion.rage_button.attributes.colors = '#FFFFFF00|#FFFFFF00|#FFFFFF00|rgba(0.78,0.78,0.78,0.5)'
-            -- triskelion.rage.attributes.fontStyle = 'Bold'
+            triskelion.rage_button.attributes.fontStyle = 'Bold'
 
             -- Fate
             triskelion.fate_button = panel:button({ id = triskelion.name .. '-fate-text', text = tostring(triskelion[Constants.FATE]), width = 400, height = 400, x = 420, y = 800, 
@@ -63,7 +63,7 @@ function Triskelion.init(saved_data)
                 end
             end })
             triskelion.fate_button.attributes.colors = '#FFFFFF00|#FFFFFF00|#FFFFFF00|rgba(0.78,0.78,0.78,0.5)'
-            -- triskelion.fate.attributes.fontStyle = 'Bold'
+            triskelion.fate_button.attributes.fontStyle = 'Bold'
         end
     end
 end

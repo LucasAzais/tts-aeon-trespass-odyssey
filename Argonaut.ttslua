@@ -1,0 +1,369 @@
+local Argonaut = {}
+
+local ArgonautClass = {}
+ArgonautClass.__index = ArgonautClass
+function ArgonautClass.Is(x) return getmetatable(x) == ArgonautClass end
+
+local ArgonautSheetClass = {}
+ArgonautSheetClass.__index = ArgonautSheetClass
+function ArgonautSheetClass.Is(x) return getmetatable(x) == ArgonautSheetClass end
+
+local Constants = require('Constants')
+local EventManager = require('EventManager')
+local Log = require('Log').ForModule('Argonaut')
+local Ui = require('Ui')
+local Utils = require('Utils')
+
+------------------------------------------------------
+
+Argonaut.ARGONAUTS = {
+    -- [Constants.WHITE] = { guid = '92ca09' },
+    -- [Constants.GREEN] = { guid = '2dd6f1' },
+    -- [Constants.BLUE] = { guid = '0a7e09' },
+    -- [Constants.RED] = { guid = '125c2f' },
+}
+Argonaut.ARGONAUT_SHEETS = {}
+
+Argonaut.CUSTOM_ASSETS = {
+    {
+        name = 'checked',
+        url = 'http://cloud-3.steamusercontent.com/ugc/2057628267251746049/3647F426FC0701F65CD80005CF410D4C1B7C0BFF/',
+    }
+}
+
+Argonaut.SHEET_URL = 'http://cloud-3.steamusercontent.com/ugc/2064383278577605984/7CF66AC45D1C97F24EC2D3E38D106CC3787E9A5C/'
+Argonaut.SHEET_SCALE = {6.92, 1.00, 6.92}
+
+function Argonaut.init(saved_data)
+    for index, argonaut in ipairs(saved_data or {}) do
+        Argonaut.ARGONAUTS[argonaut.id] = ArgonautClass.create(argonaut)
+        Argonaut.ARGONAUT_SHEETS[argonaut.id] = ArgonautSheetClass.create(Argonaut.ARGONAUTS[argonaut.id], getObjectFromGUID(argonaut.sheetGUID))
+    end
+
+    EventManager.addHandler('onObjectSpawn', function(object)
+        if object.hasTag(Constants.ARGONAUT_SHEET) then
+            local newId = Argonaut.getNextId()
+            Argonaut.ARGONAUTS[newId] = ArgonautClass.create({ id = newId })
+            Argonaut.ARGONAUT_SHEETS[newId] = ArgonautSheetClass.create(Argonaut.ARGONAUTS[newId], object)
+        end
+    end)
+end
+
+function Argonaut.getNextId()
+    local maxId = 1
+
+    for id, _ in pairs(Argonaut.ARGONAUTS) do
+        if id >= maxId then
+            maxId = id + 1
+        end
+    end
+
+    return maxId
+end
+
+function Argonaut.save()
+    local flatData = {
+        argonauts = {},
+    }
+
+    for id, argonaut in pairs(Argonaut.ARGONAUTS) do
+        table.insert(flatData.argonauts, argonaut:save())
+    end
+
+    return flatData
+end
+
+function ArgonautClass.create(argonaut)
+    assert(argonaut.id ~= nil and 'number' == type(argonaut.id))
+
+    local newArgonaut = {
+        id = argonaut.id,
+        name = argonaut.name,
+        player = argonaut.player,
+        katharsis = argonaut.katharsis or {nil, nil, nil},
+        courage = argonaut.courage or 0,
+        cunning = argonaut.cunning or 0,
+        endurance = argonaut.endurance or 0,
+        fury = argonaut.fury or 0,
+        will = argonaut.will or 0,
+        wisdom = argonaut.wisdom or 0,
+        abilities = argonaut.abilities,
+        mnemoses = {},
+        notes = argonaut.notes,
+        sheetGUID = argonaut.sheetGUID,
+    }
+
+    for i = 1, 6, 1 do
+        local mnemos = {
+            name = (argonaut.mnemoses and argonaut.mnemoses[i].name) or '',
+            nodes = (argonaut.mnemoses and argonaut.mnemoses[i].nodes) or nil,
+            breakthroughs = (argonaut.mnemoses and argonaut.mnemoses[i].breakthroughs) or {false, false, false},
+            breakthroughNumbers = (argonaut.mnemoses and argonaut.mnemoses[i].breakthroughNumbers) or nil,
+        }
+
+        if not mnemos.nodes then
+            mnemos.nodes = {}
+            for nodeIndex = 1, 10, 1 do
+                mnemos.nodes[nodeIndex] = false
+            end
+        end
+
+        if not mnemos.breakthroughNumbers then
+            mnemos.breakthroughNumbers = {}
+            for breakthroughIndex = 1, 3, 1 do
+                mnemos.breakthroughNumbers[breakthroughIndex] = {nil, nil, nil, nil}
+            end
+        end
+
+        table.insert(newArgonaut.mnemoses, mnemos)
+    end
+
+    setmetatable(newArgonaut, ArgonautClass)
+
+    Log:debug('Created new %s', newArgonaut)
+    return newArgonaut
+end
+
+function ArgonautClass:save()
+    return self
+end
+
+function ArgonautClass:__tostring()
+    return Utils.format('Argonaut{id = %s, name = %s}', self.id, self.name or 'nil')
+end
+
+function ArgonautSheetClass.create(argonaut, object)
+    if not object then return end
+
+    local sheet = {
+        argonaut = argonaut,
+        object = object,
+    }
+    setmetatable(sheet, ArgonautSheetClass)
+
+    local inputColors = '#FFFFFF00|#32323222|#FFFFFF00|rgba(0.78,0.78,0.78,0.5)'
+    local name = 'argonaut-sheet-'..sheet.argonaut.id
+    sheet.root = Ui.createRootOnObject(name .. '-root', object, 1.2)
+
+    -- Name/Player
+    local panel = sheet.root:panel({ id = name .. '-name-panel', x = -2, y = -75.8, width = 450, height = 100, })
+    -- panel.attributes.color = 'Green'
+    sheet.name_input = panel:input({ id = name .. '-name-input', fontSize = 45, 
+                                        colors = inputColors, height = 50,
+                                        text = argonaut.name, placeholder = ' ', onValueChanged = function(_, value)
+        argonaut.name = value
+    end })
+
+    sheet.player_input = panel:input({ id = name .. '-player-input', fontSize = 45, y = -44.5, 
+                                        colors = inputColors, height = 50,
+                                        text = argonaut.player, placeholder = ' ', onValueChanged = function(_, value)
+        argonaut.player = value
+    end })
+
+    -- Katharsis
+    local panel = sheet.root:panel({ id = name .. '-katharsis-panel', x = -9.2, y = -81.8, width = 145, height = 100, })
+    -- panel.attributes.color = 'Green'
+    sheet.katharsis_input = {}
+    for i = 1, 3, 1 do
+        sheet.katharsis_input[i] = panel:input({ id = name .. '-katharsis-' .. i, fontSize = 50, x = 48 * (i - 1), 
+                                width = 50, height = 50,
+                                colors = inputColors, text = argonaut.katharsis[i], placeholder = ' ', onValueChanged = function(_, value)
+            argonaut.katharsis[i] = value
+        end })
+        sheet.katharsis_input[i].attributes.characterLimit = 1
+        sheet.katharsis_input[i].attributes.textAlignment = 'MiddleCenter'
+    end
+
+    -- Skills
+    local panel = sheet.root:verticalLayout({ id = name .. '-skills-panel', x = 25.8, y = -41.2, width = 74, height = 372, })
+    -- panel.attributes.color = 'Green'
+    sheet.courage_button = panel:button({ id = name .. '-courage-button', fontSize = 55,
+                            colors = inputColors, horizontalOverflow = 'Overflow',
+                            text = tostring(argonaut.courage), onClick = function(_, button)
+        if button == '-2' then
+            argonaut.courage = argonaut.courage - 1
+        else
+            argonaut.courage = argonaut.courage + 1
+        end
+        sheet.courage_button:setText(argonaut.courage)
+    end })
+    sheet.cunning_button = panel:button({ id = name .. '-cunning-button', fontSize = 55, 
+                            colors = inputColors, horizontalOverflow = 'Overflow',
+                            text = tostring(argonaut.cunning), onClick = function(_, button)
+        if button == '-2' then
+            argonaut.cunning = argonaut.cunning - 1
+        else
+            argonaut.cunning = argonaut.cunning + 1
+        end
+        sheet.cunning_button:setText(argonaut.cunning)
+    end })
+    sheet.endurance_button = panel:button({ id = name .. '-endurance-button', fontSize = 55, 
+                            colors = inputColors, horizontalOverflow = 'Overflow',
+                            text = tostring(argonaut.endurance), onClick = function(_, button)
+        if button == '-2' then
+            argonaut.endurance = argonaut.endurance - 1
+        else
+            argonaut.endurance = argonaut.endurance + 1
+        end
+        sheet.endurance_button:setText(argonaut.endurance)
+    end })
+    sheet.fury_button = panel:button({ id = name .. '-fury-button', fontSize = 55,
+                            colors = inputColors, horizontalOverflow = 'Overflow',
+                            text = tostring(argonaut.fury), onClick = function(_, button)
+        if button == '-2' then
+            argonaut.fury = argonaut.fury - 1
+        else
+            argonaut.fury = argonaut.fury + 1
+        end
+        sheet.fury_button:setText(argonaut.fury)
+    end })
+    sheet.will_button = panel:button({ id = name .. '-will-button', fontSize = 55,
+                            colors = inputColors, horizontalOverflow = 'Overflow',
+                            text = tostring(argonaut.will), onClick = function(_, button)
+        if button == '-2' then
+            argonaut.will = argonaut.will - 1
+        else
+            argonaut.will = argonaut.will + 1
+        end
+        sheet.will_button:setText(argonaut.will)
+    end })
+    sheet.wisdom_button = panel:button({ id = name .. '-wisdom-button', fontSize = 55,
+                            colors = inputColors, horizontalOverflow = 'Overflow',
+                            text = tostring(argonaut.wisdom), onClick = function(_, button)
+        if button == '-2' then
+            argonaut.wisdom = argonaut.wisdom - 1
+        else
+            argonaut.wisdom = argonaut.wisdom + 1
+        end
+        sheet.wisdom_button:setText(argonaut.wisdom)
+    end })
+
+    -- Abilities
+    local panel = sheet.root:panel({ id = name .. '-abilities-panel', x = -22, y = -41, width = 740, height = 380, })
+    -- panel.attributes.color = 'Green'
+
+    sheet.abilities_input = panel:input({ id = name .. '-abilities-input', fontSize = 38, lineType = 'MultiLineNewLine',
+                                colors = inputColors, 
+                                text = argonaut.abilities, placeholder = ' ', onValueChanged = function(_, value)
+            argonaut.abilities = value
+        end
+    })
+
+    -- Mnemos
+    sheet.mnemoses = {}
+    local yStep = -132.6
+    for mnemosIndex = 1, 6, 1 do
+        local currentMnemos = argonaut.mnemoses[mnemosIndex]
+
+        local panel = sheet.root:panel({ id = name .. '-mnemos-' .. mnemosIndex .. '-panel', x = 2, y = -5, width = 1300, height = 50, })
+        -- panel.attributes.color = 'Green'
+        sheet.mnemoses[mnemosIndex] = {
+            name_input = panel:input({ id = name .. '-mnemos-' .. mnemosIndex .. '-name-input', fontSize = 38,
+                        colors = inputColors, 
+                        x = -435,
+                        y = -15 + yStep * (mnemosIndex - 1), 
+                        width = 325, text = currentMnemos.name, placeholder = ' ', onValueChanged = function(_, value)
+                currentMnemos.name = value
+            end }),
+            nodes = {},
+            breakthroughs = {},
+            breakthroughNumbers = {}
+        }
+
+        -- Nodes
+        local xStep = 65.5
+        for nodeIndex = 1, 10, 1 do
+            local jump = 0
+            if nodeIndex >= 4 then
+                jump = jump + xStep
+            end
+            if nodeIndex >= 8 then
+                jump = jump + xStep
+            end
+
+            sheet.mnemoses[mnemosIndex].nodes[nodeIndex] = panel:checkbox({ id = name .. '-mnemos-' .. mnemosIndex .. '-node-' .. nodeIndex .. '-checkbox', 
+                                checked = currentMnemos.nodes[nodeIndex], width = 50, height = 50, 
+                                x = -215 + jump + (nodeIndex-1) * xStep + (mnemosIndex - 1) * 0.2, 
+                                y = yStep * (mnemosIndex - 1),
+                                onClick = function(_, button)
+                if currentMnemos.nodes[nodeIndex] then
+                    currentMnemos.nodes[nodeIndex] = false
+                else
+                    currentMnemos.nodes[nodeIndex] = true
+                end
+
+                sheet.mnemoses[mnemosIndex].nodes[nodeIndex]:setChecked(currentMnemos.nodes[nodeIndex])
+            end })
+            sheet.mnemoses[mnemosIndex].nodes[nodeIndex].attributes.preserveAspect = true
+        end
+
+        -- Breakthroughs
+        for bIndex = 1, 3, 1 do
+            local globalIndex = (bIndex == 1 and 4) or (bIndex == 2 and 9) or (bIndex == 3 and 13) or 0
+
+            sheet.mnemoses[mnemosIndex].breakthroughs[bIndex] = panel:checkbox({ id = name .. '-mnemos-' .. mnemosIndex .. '-breakthrough-' .. bIndex .. '-checkbox', 
+                                checked = currentMnemos.breakthroughs[bIndex], width = 70, height = 70,
+                                x = -215 + (globalIndex - 1) * xStep + (mnemosIndex - 1) * 0.2, 
+                                y = 10 + yStep * (mnemosIndex - 1),
+                                onClick = function(_, button)
+                if currentMnemos.breakthroughs[bIndex] then
+                    currentMnemos.breakthroughs[bIndex] = false
+                else
+                    currentMnemos.breakthroughs[bIndex] = true
+                end
+
+                sheet.mnemoses[mnemosIndex].breakthroughs[bIndex]:setChecked(currentMnemos.breakthroughs[bIndex])
+            end })
+        end
+
+        -- Breakthrough Numbers
+        local subXStep = 33
+        for bIndex = 1, 3, 1 do
+            -- bIndex == 3 is 12, somehow the box isn't above the breakthrough...
+            local globalIndex = (bIndex == 1 and 4) or (bIndex == 2 and 9.02) or (bIndex == 3 and 12) or 0
+            sheet.mnemoses[mnemosIndex].breakthroughNumbers[bIndex] = {nil, nil, nil, nil}
+
+            for subBIndex = 1, 4, 1 do
+                sheet.mnemoses[mnemosIndex].breakthroughNumbers[bIndex][subBIndex] = panel:input({ id = name .. '-mnemos-' .. mnemosIndex .. '-breakthrough-' .. bIndex .. '-input', 
+                                    colors = inputColors, fontSize = 25, 
+                                    text = currentMnemos.breakthroughNumbers[bIndex][subBIndex], placeholder = ' ', width = 35, height = 35, 
+                                    x = -215 + (globalIndex - 1) * xStep  + (mnemosIndex - 1) * 0.3 - 51 + subXStep * (subBIndex - 1),
+                                    y = 72.8 + yStep * (mnemosIndex - 1),
+                                    onValueChanged = function(_, value)
+                    currentMnemos.breakthroughNumbers[bIndex][subBIndex] = value
+                end })
+                sheet.mnemoses[mnemosIndex].breakthroughNumbers[bIndex][subBIndex].attributes.characterLimit = 1
+                sheet.mnemoses[mnemosIndex].breakthroughNumbers[bIndex][subBIndex].attributes.textAlignment = 'MiddleCenter'
+                sheet.mnemoses[mnemosIndex].breakthroughNumbers[bIndex][subBIndex].attributes.fontStyle = 'Bold'
+            end
+        end
+    end
+
+    -- Notes
+    local panel = sheet.root:panel({ id = name .. '-notes-panel', x = 3.3, y = 82, width = 1220, height = 178, })
+    -- panel.attributes.color = 'Green'
+
+    sheet.notes_input = panel:input({ id = name .. '-notes-input', fontSize = 35, lineType = 'MultiLineNewLine',
+                                colors = inputColors, 
+                                text = argonaut.notes, placeholder = ' ', onValueChanged = function(_, value)
+            argonaut.notes = value
+        end
+    })
+
+    sheet.object.UI.setCustomAssets(Argonaut.CUSTOM_ASSETS)
+    sheet.root:refresh()
+
+    Log:debug('Created new %s', sheet)
+    return sheet
+end
+
+function ArgonautSheetClass:__tostring()
+    return Utils.format('ArgonautSheet{id = %s, guid = %s}', self.argonaut.id, self.object.getGUID())
+end
+
+------------------------------------------------------
+
+return {
+    init = Argonaut.init,
+    save = Argonaut.save,
+}

@@ -4,6 +4,7 @@ Ui.__index = Ui
 ------------------------------------------------------
 
 Ui.SCALE = '0.1 0.1'
+Ui.VISIBLE_COLORS = '#FFFFFFFF|#FFFFFFFF|#FFFFFFFF|#FFFFFFFF'
 Ui.INVISIBLE_COLORS = '#00000000|#00000088|#00000088|#00000000'
 
 ------------------------------------------------------
@@ -84,6 +85,14 @@ function Ui:createElementOnGlobal(tag, params)
         element.attributes.preferredHeight = params.height
     end
 
+    if params.color ~= nil then
+        element.attributes.color = params.color
+    end
+
+    if params.textColor ~= nil then
+        element.attributes.textColor = params.textColor
+    end
+
     table.insert(self.children, element)
 
     return element
@@ -128,6 +137,10 @@ function Ui:createElementOnObject(tag, params)
         element.attributes.preferredHeight = params.height
     end
 
+    if params.color ~= nil then
+        element.attributes.color = params.color
+    end
+
     table.insert(self.children, element)
 
     return element
@@ -138,7 +151,7 @@ function Ui:panel(params)
 
     local layout = self:createElement('Panel', params)
     layout.z = self.z
-    layout.rotation = '0 0 0'
+    -- layout.rotation = '0 0 0'
     -- layout.scale = self.scale
     layout.attributes.childForceExpandHeight = 'false'
 
@@ -350,6 +363,29 @@ function Ui:button(params)
     return button
 end
 
+function Ui:checkbox(params)
+    local checkbox = self:createElement('Button', params)
+    checkbox.z = self.z
+
+    checkbox.checkedImage = params.checkedImage or 'checked'
+    checkbox.checkedColors = Ui.VISIBLE_COLORS
+    checkbox.uncheckedColors = Ui.INVISIBLE_COLORS
+
+    checkbox.attributes.image = checkbox.checkedImage
+    if params.checked then
+        checkbox.attributes.colors = checkbox.checkedColors
+    else
+        checkbox.attributes.colors = checkbox.uncheckedColors
+    end
+
+    setmetatable(checkbox, Ui)
+    if params.onClick then
+        checkbox:registerOnClick(params.onClick)
+    end
+
+    return checkbox
+end
+
 function Ui:text(params)
     assert(params.text ~= nil and 'string' == type(params.text))
     assert(params.fontSize == nil or 'number' == type(params.fontSize))
@@ -375,15 +411,37 @@ end
 function Ui:input(params)
     assert(params.text == nil or 'string' == type(params.text))
     assert(params.fontSize == nil or 'number' == type(params.fontSize))
+    assert(params.lineType == nil or 'string' == type(params.lineType))
+    assert(params.placeholder == nil or 'string' == type(params.placeholder))
+    assert(params.characterValidation == nil or 'string' == type(params.characterValidation))
 
     local input = self:createElement('InputField', params)
     input.z = self.z
     -- input.rotation = '0 0 0'
     -- input.scale = self.scale
-    input.attributes.text = params.text
+    input.attributes.verticalOverflow = 'Overflow'
+
+    input.attributes.textColor = params.textColor or '#323232'
+    input.attributes.colors = params.colors or '#FFFFFF|#FFFFFF|#C8C8C8|rgba(0.78,0.78,0.78,0.5)'
+
+    if params.text ~= nil then
+        input.attributes.text = params.text
+    end
 
     if params.fontSize ~= nil then
         input.attributes.fontSize = params.fontSize
+    end
+
+    if params.lineType ~= nil then
+        input.attributes.lineType = params.lineType
+    end
+
+    if params.placeholder ~= nil then
+        input.attributes.placeholder = params.placeholder
+    end
+
+    if params.characterValidation ~= nil then
+        input.attributes.characterValidation = params.characterValidation
     end
 
     setmetatable(input, Ui)
@@ -539,6 +597,13 @@ function Ui:setOffsetXY(offsetXY) self:setAttribute('offsetXY', 'string', offset
 function Ui:setActive(active) self:setAttribute('active', 'boolean', active) end
 function Ui:setImage(value) self:setAttribute('image', 'string', value ~= nil and tostring(value) or '') end
 function Ui:setIcon(value) self:setAttribute('icon', 'string', value ~= nil and tostring(value) or '') end
+function Ui:setChecked(checked)
+    if checked then
+        self:setColors(self.checkedColors)
+    else
+        self:setColors(self.uncheckedColors)
+    end
+end
 
 -- This doesn't need the setAttribute because we've already registeredOnClick initially, and that calls self.onClick instead of self.attributes.onClick
 function Ui:setOnClick(onClick)
@@ -571,8 +636,8 @@ function Ui:registerOnValueChanged(onValueChanged)
     self.onValueChanged = onValueChanged or function() end
 
     local onValueChangedFunctionName = self.attributes.id.."_onValueChanged"
-    Global.setVar(onValueChangedFunctionName, function(player, isOn, id)
-        self.onValueChanged(player, isOn, id)
+    Global.setVar(onValueChangedFunctionName, function(player, value, id)
+        self.onValueChanged(player, value, id)
     end)
     self.attributes.onValueChanged = "Global/"..onValueChangedFunctionName
 end
