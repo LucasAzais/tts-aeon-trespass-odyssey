@@ -1,0 +1,706 @@
+local Argo = {}
+
+local Constants = require('Constants')
+local Cycle = require('Cycle')
+local EventManager = require('EventManager')
+local Log = require('Log').ForModule('Argo')
+local Ui = require('Ui')
+local Utils = require('Utils')
+
+------------------------------------------------------
+
+Argo.CUSTOM_ASSETS = {
+    {
+        name = 'checked',
+        url = 'http://cloud-3.steamusercontent.com/ugc/2057628267251746049/3647F426FC0701F65CD80005CF410D4C1B7C0BFF/',
+    }
+}
+
+-- TODO: This about making everything cycle specific? like hull = {[Cycle.CYCLE_I] = 0, [Cycle.CYCLE_II] = 0, [Cycle.CYCLE_III] = 0,}
+-- TODO: Replace all names with proper strings
+function Argo.init(savedData)
+    Argo.hull = savedData.hull or 0
+    Argo.hull_unlocked = savedData.hull_unlocked or false
+    Argo.crew = savedData.crew or 0
+    Argo.crew_unlocked = savedData.crew_unlocked or false
+    Argo.story_card = savedData.story_card or nil
+    Argo.doom_card = savedData.doom_card or ''
+    Argo.map_tile = savedData.map_tile or ''
+    Argo.humanity = savedData.humanity or 0
+    Argo.defectors = savedData.defectors or 0
+    Argo.argo_fate = savedData.argo_fate or 0
+    Argo.argo_knowledge = savedData.argo_knowledge or 0
+    Argo.strangers = savedData.strangers or 0
+    Argo.abilities_limit = savedData.abilities_limit or 0
+    Argo.current_titans = savedData.current_titans or 0
+    Argo.max_titans = savedData.max_titans or 0
+    Argo.titans_list1 = savedData.titans_list1
+    Argo.titans_list2 = savedData.titans_list2
+    Argo.adventure_tracks = savedData.adventure_tracks or {
+        [Constants.CYCLE_I] = {
+            [Constants.FATED_CONUNDRUM] = {false, 0, 0, 0, false},
+            [Constants.PLIGHT_OF_THE_PEOPLE] = {false, 0, 0, 0, false},
+            [Constants.HIDDEN_IN_PLAIN_SIGHT] = {false, 0, 0, 0, false},
+            [Constants.MAN_OF_PURPOSE] = {false, 0, 0, 0, false},
+            [Constants.UNEASY_RESTS_THE_HEAD] = {false, 0, 0, false},
+            [Constants.TEARS_OF_A_MINOTAUR] = {false, 0, 0, false},
+            [Constants.DREAMS_LAID_BARE] = {false, 0, 0, 0, false},
+            [Constants.TUTORIAL] = {false, 0, false},
+        },
+        [Constants.CYCLE_II] = {
+            [Constants.CONSIDER_THE_ANT] = {false, 0, 0, false},
+            [Constants.THE_OTHER_THERMOPYLAE] = {false, 0, 0, false},
+            [Constants.FROM_THE_ASHES] = {false, 0, 0, false},
+            [Constants.INTENDED_PURPOSE] = {false, 0, 0, false},
+            [Constants.MISERY_INDUSTRY] = {false, 0, 0, false},
+            [Constants.PARABLE_OF_THE_BUTTERFLY] = {false, 0, 0, false},
+            [Constants.TRUTH_TO_WEAKNESS] = {false, 0, 0, false},
+            [Constants.WHEN_THE_LAND_MEETS_THE_SEA] = {false, 0, 0, false},
+        },
+        [Constants.CYCLE_III] = {
+            [Constants.ROAD_LESS_TRAVELED] = {false, 0, 0, 0, false},
+            [Constants.CHILDREN_OF_THE_SUN] = {false, 0, 0, 0, false},
+            [Constants.WHAT_WE_LEFT_BEHIND] = {false, 0, 0, 0, false},
+            [Constants.OF_WAX_AND_PROMISES] = {false, 0, 0, false},
+            [Constants.CANT_GO_BACK] = {false, 0, 0, false},
+            [Constants.SIN_OF_THE_FATHERS] = {false, 0, 0, false},
+            [Constants.COMING_OF_AGE] = {false, 0, 0, 0, false},
+        },
+    }
+
+    Argo.diplomacy_tracks = savedData.diplomacy_tracks or {
+        [Constants.CYCLE_I] = {
+            [Constants.MINOANS] = 0,
+            [Constants.LABYRINTHIANS] = 0,
+            [Constants.HORNSWORN] = 0,
+        },
+        [Constants.CYCLE_II] = {
+            [Constants.HELOTS] = 0,
+            [Constants.CYCLOPES] = 0,
+            [Constants.SYMMACHY] = 0,
+        },
+        [Constants.CYCLE_III] = {
+            [Constants.SUNHEIRS] = 0,
+            [Constants.DELPHIANS] = 0,
+            [Constants.TWILIGHT_WATCH] = 0,
+        },
+    }
+
+    Argo.godforms = savedData.godforms or {}
+    Argo.summons = savedData.summons or {}
+    Argo.summons_limit = savedData.summons_limit or 0
+    -- Argo.evolution_track = savedData.evolution_track or {}
+    Argo.boss_track = savedData.boss_track or 0
+    Argo.adversary_track = savedData.adversary_track or 0
+    Argo.adversary_unlocked = savedData.adversary_unlocked or false
+
+    -- Cycle I resources
+    Argo.trireme = savedData.trireme or 0
+    Argo.trireme_note = savedData.trireme_note
+    Argo.monument = savedData.monument or 0
+    Argo.monument_note = savedData.monument_note
+    Argo.armament = savedData.armament or 0
+    Argo.armament_note = savedData.armament_note
+
+    Argo.muscle_cluster = savedData.muscle_cluster or 0
+    Argo.muscle_cluster_note = savedData.muscle_cluster_note
+    Argo.calcified_knucle_bone = savedData.calcified_knucle_bone or 0
+    Argo.calcified_knucle_bone_note = savedData.calcified_knucle_bone_note
+    Argo.infused_mechanism = savedData.infused_mechanism or 0
+    Argo.infused_mechanism_note = savedData.infused_mechanism_note
+    Argo.fleshy_mantle = savedData.fleshy_mantle or 0
+    Argo.fleshy_mantle_note = savedData.fleshy_mantle_note
+    Argo.fear_essence = savedData.fear_essence or 0
+    Argo.fear_essence_note = savedData.fear_essence_note
+    Argo.maze_fragment = savedData.maze_fragment or 0
+    Argo.maze_fragment_note = savedData.maze_fragment_note
+    Argo.grotesque_beak = savedData.grotesque_beak or 0
+    Argo.grotesque_beak_note = savedData.grotesque_beak_note
+    Argo.powdered_matter = savedData.powdered_matter or 0
+    Argo.powdered_matter_note = savedData.powdered_matter_note
+    Argo.raw_ambrosia = savedData.raw_ambrosia or 0
+    Argo.raw_ambrosia_note = savedData.raw_ambrosia_note
+    Argo.cores_note = savedData.cores_note
+
+    Argo.priests = savedData.priests or 0
+    Argo.priests_note = savedData.priests_note
+    Argo.sisyphus_tears = savedData.sisyphus_tears or 0
+    Argo.sisyphus_tears_note = savedData.sisyphus_tears_note
+    Argo.rare_resources_note = savedData.rare_resources_note
+
+    Argo.argo_sheet = getObjectsWithTag(Constants.ARGO_SHEET)[1]
+    if not Argo.argo_sheet then
+        Log:error('Could not find argo sheet with tag %s', Constants.ARGO_SHEET)
+        broadcastToAll('Could not find argo sheet. Create one with tag ' .. Constants.ARGO_SHEET 
+                .. ' then save and reload.', Color.Red)
+    end
+
+    if Cycle.getCurrentCycle() then
+        Argo.createSheetUi(Cycle.getCurrentCycle())
+    end
+end
+
+function Argo.createSheetUi(cycle)
+    if not cycle then return end
+    if not Argo.argo_sheet then return end
+
+    Argo.uiRoot = Ui.createRootOnObject('argo-sheet-root', Argo.argo_sheet, 1.2)
+    Argo.uiRoot:wipe()
+    Argo.ui = {}
+
+    Argo.argo_sheet.UI.setCustomAssets(Constants.CUSTOM_ASSETS)
+
+    if cycle == Constants.CYCLE_I then
+        Argo.ui.main_panel = Argo.uiRoot:panel({ id = 'global-panel', width = 4000, height = 3000 })
+        -- panel.attributes.color = 'Green'
+        
+        ------------------------
+        -- Top left section
+        Argo.ui.story_card_input = Argo.ui.main_panel:input({ id = 'story-card-input', width = 150, height = 60, x = -1110, y = 547, 
+                            fontSize = 50, placeholder = ' ', text = Argo.story_card, colors = Ui.TRANSPARENT_INPUT_COLORS,
+                            textAlignment = 'MiddleCenter', onValueChanged = function(_, value) 
+                                Argo.story_card = value
+                                Log:debug('Story card set to %s', value)
+                            end })
+        Argo.ui.doom_card_input = Argo.ui.main_panel:input({ id = 'doom-card-input', width = 150, height = 60, x = -820, y = 547,
+                            fontSize = 50, placeholder = ' ', text = Argo.doom_card, colors = Ui.TRANSPARENT_INPUT_COLORS,
+                            textAlignment = 'MiddleCenter', onValueChanged = function(_, value) 
+                                Argo.doom_card = value
+                                Log:debug('Doom card set to %s', value)
+                            end })
+        Argo.ui.map_tile_input = Argo.ui.main_panel:input({ id = 'map-tile-input', width = 150, height = 60, x = -530, y = 547,
+                            fontSize = 50, placeholder = ' ', text = Argo.map_tile, colors = Ui.TRANSPARENT_INPUT_COLORS,
+                            textAlignment = 'MiddleCenter', onValueChanged = function(_, value) 
+                                Argo.map_tile = value
+                                Log:debug('Map tile set to %s', value)
+                            end })
+
+        ------------------------
+        -- Argo fate section
+        Argo.ui.argo_fate_button = Argo.ui.main_panel:button({ id = 'argo-fate-button', fontSize = 40, 
+                            width = 55, height = 54, x = -295, y = 733,
+                            colors = Ui.TRANSPARENT_INPUT_COLORS, textAlignment = 'MiddleCenter',
+                            text = tostring(Argo.argo_fate), onClick = function(_, button)
+
+            Argo.argo_fate = Argo.argo_fate + (button == '-2' and -1 or 1)
+            Argo.argo_fate = Utils.clamp(Argo.argo_fate, 0, 10)
+            Argo.ui.argo_fate_button:setText(Argo.argo_fate)
+            Log:debug('Argo fate set to %s', Argo.argo_fate)
+
+            if Argo.argo_fate >= 10 then
+                broadcastToAll('Read 0981 immediately.', Constants.WARNING_COLOR)
+            end
+        end })
+
+        Argo.ui.argo_knowledge_button = Argo.ui.main_panel:button({ id = 'argo-knowledge-button', fontSize = 40, 
+                            width = 80, height = 50, x = -120, y = 632,
+                            colors = Ui.TRANSPARENT_INPUT_COLORS, textAlignment = 'MiddleCenter',
+                            text = tostring(Argo.argo_knowledge), onClick = function(_, button)
+            
+            Argo.argo_knowledge = Argo.argo_knowledge + (button == '-2' and -1 or 1)
+            Argo.argo_knowledge = Utils.clamp(Argo.argo_knowledge, 0, nil)
+            Argo.ui.argo_knowledge_button:setText(Argo.argo_knowledge)
+            Log:debug('Argo knowledge set to %s', Argo.argo_knowledge)
+        end })
+
+        Argo.ui.strangers_button = Argo.ui.main_panel:button({ id = 'strangers-button', fontSize = 40, 
+                            width = 80, height = 50, x = -120, y = 543,
+                            colors = Ui.TRANSPARENT_INPUT_COLORS, textAlignment = 'MiddleCenter',
+                            text = tostring(Argo.strangers), onClick = function(_, button)
+            
+            Argo.strangers = Argo.strangers + (button == '-2' and -1 or 1)
+            Argo.strangers = Utils.clamp(Argo.strangers, 0, nil)
+            Argo.ui.strangers_button:setText(Argo.strangers)
+            Log:debug('Strangers set to %s', Argo.strangers)
+        end })
+
+        ------------------------
+        -- Hull/Crew
+        Argo.ui.hull_group = Argo.ui.main_panel:checkboxGroup({ id = 'hull-group', onClick = function(checkbox)
+            checkbox:select()
+            Argo.hull = checkbox.checkboxValue
+            Log:debug('Hull set to %s', Argo.hull)
+
+            if Argo.hull == 0 then
+                broadcastToAll('Read 0415 immediately.', Constants.WARNING_COLOR)
+            end
+        end })
+
+        local maxCheckboxes = 5
+        for i = maxCheckboxes, 0, -1 do
+            Argo.ui['hull_'..i..'_checkbox'] = Argo.ui.hull_group:checkbox({ id = 'hull-'..i..'-checkbox', 
+                                width = 100, height = 100, x = -998 + (maxCheckboxes-i) * 82.5, y = 387.5,
+                                checked = (Argo.hull == i) }, true)
+            Argo.ui['hull_'..i..'_checkbox'].checkboxValue = i
+        end
+
+        Argo.ui.crew_group = Argo.ui.main_panel:checkboxGroup({ id = 'crew-group', onClick = function(checkbox)
+            checkbox:select()
+            Argo.crew = checkbox.checkboxValue
+            Log:debug('Crew set to %s', Argo.crew)
+
+            if Argo.crew == 0 then
+                broadcastToAll('Read 0562 immediately.', Constants.WARNING_COLOR)
+            end
+        end })
+
+        local maxCheckboxes = 6
+        for i = maxCheckboxes, 0, -1 do
+            Argo.ui['crew_'..i..'_checkbox'] = Argo.ui.crew_group:checkbox({ id = 'crew-'..i..'-checkbox', 
+                                width = 100, height = 100, x = -998 + (maxCheckboxes-i) * 82.5, y = 295,
+                                checked = (Argo.crew == i) }, true)
+            Argo.ui['crew_'..i..'_checkbox'].checkboxValue = i
+        end
+
+        ------------------------
+        -- Titans
+        Argo.ui.abilities_limit_input = Argo.ui.main_panel:input({ id = 'story-card-input', width = 95, height = 45, x = -92.5, y = 274, 
+                            fontSize = 45, placeholder = ' ', text = tostring(Argo.abilities_limit), colors = Ui.TRANSPARENT_INPUT_COLORS,
+                            textAlignment = 'MiddleCenter', characterValidation = 'Integer', onValueChanged = function(_, value) 
+                                Argo.abilities_limit = value
+                                Log:debug('Abilities limit set to %s', value)
+                            end })
+        Argo.ui.current_titans_input = Argo.ui.main_panel:input({ id = 'current-titans-input', width = 60, height = 45, x = -115, y = 213,
+                            fontSize = 35, placeholder = ' ', text = tostring(Argo.current_titans or ''), colors = Ui.TRANSPARENT_INPUT_COLORS,
+                            textAlignment = 'MiddleCenter', characterValidation = 'Integer', onValueChanged = function(_, value) 
+                                Argo.current_titans = value
+                                Log:debug('Current titans set to %s', value)
+                            end })
+        Argo.ui.max_titans_input = Argo.ui.main_panel:input({ id = 'max-titans-input', width = 60, height = 45, x = -70, y = 213,
+                            fontSize = 35, placeholder = ' ', text = tostring(Argo.max_titans or ''), colors = Ui.TRANSPARENT_INPUT_COLORS,
+                            textAlignment = 'MiddleCenter', characterValidation = 'Integer', onValueChanged = function(_, value) 
+                                Argo.max_titans = value
+                                Log:debug('Max titans set to %s', value)
+                            end })
+
+        Argo.ui.titans_input1 = Argo.ui.main_panel:input({ id = 'titans-list1-input', fontSize = 30, lineType = 'MultiLineNewLine',
+                                colors = Ui.TRANSPARENT_INPUT_COLORS, width = 585, height = 355, x = -957, y = 18,
+                                text = Argo.titans_list1, placeholder = ' ', onValueChanged = function(_, value)
+            Argo.titans_list1 = value
+            Log:debug('Titans list 1 set to %s', Argo.titans_list1)
+        end })
+
+        Argo.ui.titans_input2 = Argo.ui.main_panel:input({ id = 'titans-list2-input', fontSize = 30, lineType = 'MultiLineNewLine',
+                                colors = Ui.TRANSPARENT_INPUT_COLORS, width = 585, height = 355, x = -348, y = 18,
+                                text = Argo.titans_list2, placeholder = ' ', onValueChanged = function(_, value)
+            Argo.titans_list2 = value
+            Log:debug('Titans list 2 set to %s', Argo.titans_list2)
+        end })
+
+        ------------------------
+        -- Adventure tracks
+        local xStart, yStart = -1075, -322
+        local xStep = 50
+        local xOffset, yOffset = 422, -123
+        for adventureIndex, adventureName in ipairs({Constants.FATED_CONUNDRUM, Constants.PLIGHT_OF_THE_PEOPLE, Constants.HIDDEN_IN_PLAIN_SIGHT,
+                                                    Constants.MAN_OF_PURPOSE, Constants.UNEASY_RESTS_THE_HEAD, Constants.TEARS_OF_A_MINOTAUR,
+                                                    Constants.DREAMS_LAID_BARE, Constants.TUTORIAL}) do
+
+            local adventure = Argo.adventure_tracks[Constants.CYCLE_I][adventureName]
+
+            for index, value in ipairs(adventure) do
+                -- Calculate it, in cycle 1 it's 3 columns and 3 rows
+                local x = xStart + (index - math.ceil(#adventure / 2) - ((#adventure % 2) == 0 and 0.5 or 0)) * xStep + xOffset * ((adventureIndex - 1) % 3)
+                local y = yStart + yOffset * math.floor((adventureIndex - 1)/3)
+
+                if value == true or value == false then
+                    Argo.ui[adventureName .. '_track_input_' .. index] = Argo.ui.main_panel:checkbox({ 
+                                id = adventureName .. '-track-input-' .. index, 
+                                width = 65, height = 65, x = x, y = y,
+                                checked = value, onClick = function(_, button)
+                                    adventure[index] = not adventure[index]
+                                    Argo.ui[adventureName .. '_track_input_' .. index]:setChecked(adventure[index])
+                                    Log:debug('Adventure track for [%s - space %s] set to %s', adventureName, index, tostring(adventure[index]))
+                                end })
+                else
+                    Argo.ui[adventureName .. '_track_input_' .. index] = Argo.ui.main_panel:input({
+                                id = adventureName .. '-track-input-' .. index, colors = Ui.TRANSPARENT_INPUT_COLORS,
+                                text = (adventure[index] > 0 and adventure[index]) or '',
+                                width = 58, height = 50, x = x, y = y, textAlignment = 'MiddleCenter',
+                                characterLimit = 2, characterValidation = 'Integer', fontSize = 35, placeholder = ' ', onValueChanged = function(_, newValue) 
+                                    adventure[index] = newValue
+                                    Log:debug('Adventure track for [%s - space %d] set to %s', adventureName, index, newValue)
+                                end})
+                end
+            end
+        end
+
+        ------------------------
+        -- Diplomacy tracks
+        local cycleTracks = Argo.diplomacy_tracks[Constants.CYCLE_I]
+        for index, factionName in ipairs({ Constants.MINOANS, Constants.LABYRINTHIANS, Constants.HORNSWORN }) do
+            Argo.ui[factionName .. '_checkbox_group'] = Argo.ui.main_panel:checkboxGroup({ id = factionName .. '-checkbox-group', onClick = function(checkbox)
+                checkbox:select()
+                cycleTracks[factionName] = checkbox.checkboxValue
+                Log:debug(factionName .. ' diplomacy set to %s', cycleTracks[factionName])
+            end })
+
+            for i = -10, 10 do
+                local jump = 0
+                if i >= -9 then jump = jump + 40 end
+                if i >= -4 then jump = jump + 18 end
+                if i >= 0 then jump = jump + 22 end
+                if i >= 4 then jump = jump + 22 end
+                if i >= 8 then jump = jump + 16 end
+
+                Argo.ui[factionName .. '_'..i..'_checkbox'] = Argo.ui[factionName .. '_checkbox_group']:checkbox({ id = factionName .. '-'..i..'-checkbox', 
+                                    width = 50, height = 50, x = -1008 + jump + (10 + i) * 41, y = -767 + (index - 1) * -49,
+                                    checked = (Argo.hull == i) }, true)
+                Argo.ui[factionName .. '_'..i..'_checkbox'].checkboxValue = i
+            end
+        end
+
+        ------------------------
+        -- Godforms
+        -- If checkbox checked -> set to true
+        -- If text entered -> set to the text
+        -- Otherwise set it to nil
+        local xStart = 76
+        for index = 1, 6 do
+            Argo.ui['godform_'..index..'_checkbox'] = Argo.ui.main_panel:checkbox({ id = 'godform-' .. index .. '-checkbox',
+                                checked = (Argo.godforms[index] ~= nil), width = 65, height = 65,
+                                x = xStart, y = 750 + (index-1) * -55, onClick = function(_, button)
+                                    if Argo.godforms[index] == nil then
+                                        Argo.godforms[index] = true
+                                        Argo.ui['godform_'..index..'_checkbox']:setChecked(true)
+                                        Log:debug('Godform %s activated.', index)
+                                    else
+                                        Argo.godforms[index] = nil
+                                        Argo.ui['godform_'..index..'_checkbox']:setChecked(false)
+                                        Argo.ui['godform_'..index..'_input']:setText('')
+                                        Log:debug('Godform %s deactivated.', index)
+                                    end
+                                end })
+
+            Argo.ui['godform_'..index..'_input'] = Argo.ui.main_panel:input({ id = 'godform-' .. index .. '-input',
+                                text = Argo.godforms[index], width = 500, height = 50,
+                                fontSize = 40, colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ',
+                                x = xStart + 290, y = 750 + 10 + (index-1) * -55, onValueChanged = function(_, newValue)
+                                    Argo.godforms[index] = newValue
+                                    Log:debug('Godform %s set to %s', index, newValue)
+
+                                    if Argo.godforms[index] == '' then
+                                        Argo.godforms[index] = nil
+                                        Argo.ui['godform_'..index..'_checkbox']:setChecked(false)
+                                        Log:debug('Godform %s deactivated.', index)
+                                    elseif Argo.godforms[index] and Argo.godforms[index] ~= '' then
+                                        Argo.ui['godform_'..index..'_checkbox']:setChecked(true)
+                                        Log:debug('Godform %s activated.', index)
+                                    end
+                                end })
+        end
+
+        ------------------------
+        -- Summons
+        -- If checkbox checked -> set to true
+        -- If text entered -> set to the text
+        -- Otherwise set it to nil
+        Argo.ui.summons_limit_button = Argo.ui.main_panel:button({ id = 'summons-button', fontSize = 40, 
+                            width = 55, height = 55, x = 1221, y = 805,
+                            colors = Ui.TRANSPARENT_INPUT_COLORS, textAlignment = 'MiddleCenter',
+                            text = tostring(Argo.summons_limit), onClick = function(_, button)
+            
+            Argo.summons_limit = Argo.summons_limit + (button == '-2' and -1 or 1)
+            Argo.summons_limit = Utils.clamp(Argo.summons_limit, 0, nil)
+            Argo.ui.summons_limit_button:setText(Argo.summons_limit)
+            Log:debug('Summons limit set to %s', Argo.summons_limit)
+        end })
+
+        local xStart = 700
+        for index = 1, 6 do
+            Argo.ui['summon_'..index..'_checkbox'] = Argo.ui.main_panel:checkbox({ id = 'summon-' .. index .. '-checkbox',
+                                checked = (Argo.summons[index] ~= nil), width = 65, height = 65,
+                                x = xStart, y = 750 + (index-1) * -55, onClick = function(_, button)
+                                    if Argo.summons[index] == nil then
+                                        Argo.summons[index] = true
+                                        Argo.ui['summon_'..index..'_checkbox']:setChecked(true)
+                                        Log:debug('Summon %s activated.', index)
+                                    else
+                                        Argo.summons[index] = nil
+                                        Argo.ui['summon_'..index..'_checkbox']:setChecked(false)
+                                        Argo.ui['summon_'..index..'_input']:setText('')
+                                        Log:debug('Summon %s deactivated.', index)
+                                    end
+                                end })
+
+            Argo.ui['summon_'..index..'_input'] = Argo.ui.main_panel:input({ id = 'summon-' .. index .. '-input',
+                                text = Argo.summons[index], width = 500, height = 50,
+                                fontSize = 40, colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ',
+                                x = xStart + 290, y = 750 + 10 + (index-1) * -55, onValueChanged = function(_, newValue)
+                                    Argo.summons[index] = newValue
+                                    Log:debug('Summon %s set to %s', index, newValue)
+
+                                    if Argo.summons[index] == '' then
+                                        Argo.summons[index] = nil
+                                        Argo.ui['summon_'..index..'_checkbox']:setChecked(false)
+                                        Log:debug('Summon %s deactivated.', index)
+                                    elseif Argo.summons[index] and Argo.summons[index] ~= '' then
+                                        Argo.ui['summon_'..index..'_checkbox']:setChecked(true)
+                                        Log:debug('Summon %s activated.', index)
+                                    end
+                                end })
+        end
+
+        ------------------------
+        -- Evolution tracks
+
+        ------------------------
+        -- Boss primordial track
+        local xStart = 332
+        local yStart = 17
+        for index = 1, 4 do
+            Argo.ui['boss_'..index..'_checkbox'] = Argo.ui.main_panel:checkbox({ id = 'boss-' .. index .. '-checkbox',
+                                    checked = (Argo.boss_track >= index), width = 65, height = 65,
+                                    x = xStart + (index-1) * 56, y = yStart, onClick = function(_, button)
+                                        if Argo.boss_track >= index then
+                                            Argo.boss_track = index - 1
+                                        else
+                                            Argo.boss_track = index
+                                        end
+
+                                        for jndex = 1, Argo.boss_track do
+                                            Argo.ui['boss_'..jndex..'_checkbox']:setChecked(true)
+                                        end
+
+                                        for jndex = Argo.boss_track + 1, 4 do
+                                            Argo.ui['boss_'..jndex..'_checkbox']:setChecked(false)
+                                        end
+                                        
+                                        Log:debug('Boss track set to %s.', Argo.boss_track)
+                                    end })
+        end
+
+        ------------------------
+        -- Adversary track
+        local xStart = 990
+        Argo.ui['adversary_unlocked_checkbox'] = Argo.ui.main_panel:checkbox({ id = 'adversary-unlocked-checkbox',
+                                    checked = Argo.adversary_unlocked, width = 50, height = 50,
+                                    x = xStart - 52, y = yStart + 4, onClick = function(_, button)
+                                        Argo.adversary_unlocked = not Argo.adversary_unlocked
+                                        Argo.ui['adversary_unlocked_checkbox']:setChecked(Argo.adversary_unlocked)
+                                        Log:debug('Adversary unlocked set to %s.', tostring(Argo.adversary_unlocked))
+                                    end })
+
+        for index = 1, 5 do
+            Argo.ui['adversary_'..index..'_checkbox'] = Argo.ui.main_panel:checkbox({ id = 'adversary-' .. index .. '-checkbox',
+                                    checked = (Argo.adversary_track >= index), width = 65, height = 65,
+                                    x = xStart + (index-1) * 56, y = yStart, onClick = function(_, button)
+                                        if Argo.adversary_track >= index then
+                                            Argo.adversary_track = index - 1
+                                        else
+                                            Argo.adversary_track = index
+                                        end
+
+                                        for jndex = 1, Argo.adversary_track do
+                                            Argo.ui['adversary_'..jndex..'_checkbox']:setChecked(true)
+                                        end
+
+                                        for jndex = Argo.adversary_track + 1, 5 do
+                                            Argo.ui['adversary_'..jndex..'_checkbox']:setChecked(false)
+                                        end
+                                        
+                                        Log:debug('Adversary track set to %s.', Argo.adversary_track)
+                                    end })
+        end
+
+        ------------------------
+        -- Mortal resource track
+        local xStart, yStart = 77, -239
+        -- This requires a named loop to keep the resources order....
+        for index, resource in ipairs({'trireme', 'monument', 'armament'}) do
+            Argo.ui[resource .. '_button'] = Argo.ui.main_panel:button({ id = resource .. '-button', fontSize = 40, 
+                                width = 55, height = 55, 
+                                x = xStart, y = yStart + (index-1) * -138 + (index == 3 and 5 or 0), -- Somehow the boxes aren't linear
+                                colors = Ui.TRANSPARENT_INPUT_COLORS, textAlignment = 'MiddleCenter',
+                                text = tostring(Argo[resource]), onClick = function(_, button)
+                
+                Argo[resource] = Argo[resource] + (button == '-2' and -1 or 1)
+                Argo[resource] = Utils.clamp(Argo[resource], 0, nil)
+
+                -- Only do it once on 100 (avoid unecessary sets)
+                if Argo[resource] == 100 then
+                    Argo.ui[resource .. '_button']:setFontSize(35)
+                    Argo.ui[resource .. '_button']:setWidth(70)
+                elseif Argo[resource] == 99 then
+                    Argo.ui[resource .. '_button']:setFontSize(40)
+                    Argo.ui[resource .. '_button']:setWidth(55)
+                end
+
+                Argo.ui[resource .. '_button']:setText(Argo[resource])
+                Log:debug('Resource %s set to %s', resource, Argo[resource])
+            end })
+
+            Argo.ui[resource .. '_note_input'] = Argo.ui.main_panel:input({ id = resource .. '-note-button', fontSize = 24, 
+                                width = 240, height = 70, lineType = 'MultiLineNewLine',
+                                x = xStart + 90, y = yStart - 72 + (index-1) * -134 + (index == 3 and 5 or 0), -- Somehow the boxes aren't linear
+                                colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ',
+                                text = Argo[resource .. '_note'], onValueChanged = function(_, newValue)
+                
+                Argo[resource .. '_note'] = newValue
+                Log:debug('Note for resource %s set to %s', resource, Argo[resource .. '_note'])
+            end })
+        end
+
+        -- Primordial resources
+        local xStart, yStart = 365, -239
+        local xOffset, yOffset = 234, -138
+        local resourcesArray = {'muscle_cluster', 'calcified_knucle_bone', 'infused_mechanism', 'fleshy_mantle', 'fear_essence', 
+                    'maze_fragment', 'grotesque_beak', 'powdered_matter', 'raw_ambrosia'}
+        for index, resource in ipairs(resourcesArray) do
+            local x = xStart + xOffset * ((index - 1) % 4) + (((index == 3 or index == 7) and -5) or 0) -- Fix some inconsistencies
+            local y = yStart + yOffset * math.floor((index - 1)/4) + (index == 9 and 5 or 0)
+
+            Argo.ui[resource .. '_button'] = Argo.ui.main_panel:button({ id = resource .. '-button', fontSize = 40, 
+                                width = 55, height = 55, x = x, y = y, 
+                                colors = Ui.TRANSPARENT_INPUT_COLORS, textAlignment = 'MiddleCenter',
+                                text = tostring(Argo[resource]), onClick = function(_, button)
+                
+                Argo[resource] = Argo[resource] + (button == '-2' and -1 or 1)
+                Argo[resource] = Utils.clamp(Argo[resource], 0, nil)
+
+                -- Only do it once on 100 (avoid unecessary sets)
+                if Argo[resource] == 100 then
+                    Argo.ui[resource .. '_button']:setFontSize(35)
+                    Argo.ui[resource .. '_button']:setWidth(70)
+                elseif Argo[resource] == 99 then
+                    Argo.ui[resource .. '_button']:setFontSize(40)
+                    Argo.ui[resource .. '_button']:setWidth(55)
+                end
+
+                Argo.ui[resource .. '_button']:setText(Argo[resource])
+                Log:debug('Resource %s set to %s', resource, Argo[resource])
+            end })
+
+            Argo.ui[resource .. '_note_input'] = Argo.ui.main_panel:input({ id = resource .. '-note-button', fontSize = 24, 
+                                width = 220, height = 70, x = x + 84, y = y - 72 + (index > 4 and 7 or 0),
+                                colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ', lineType = 'MultiLineNewLine',
+                                text = Argo[resource .. '_note'], onValueChanged = function(_, newValue)
+                
+                Argo[resource .. '_note'] = newValue
+                Log:debug('Note for resource %s set to %s', resource, Argo[resource .. '_note'])
+            end })
+        end
+
+        Argo.ui['cores_note_input'] = Argo.ui.main_panel:input({ id = 'cores-note-button', fontSize = 24, 
+                                width = 690, height = 70, x = 912, y = -575,
+                                colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ', lineType = 'MultiLineNewLine',
+                                text = Argo['cores_note'], onValueChanged = function(_, newValue)
+                
+                Argo['cores_note'] = newValue
+                Log:debug('Note for resource %s set to %s', 'cores', Argo['cores_note'])
+            end })
+
+        ------------------------
+        -- Divine resources
+        local xStart, yStart = 167, -801
+        for index, resource in ipairs({'priests', 'sisyphus_tears', 'rare_resources'}) do
+            if resource ~= 'rare_resources' then
+                Argo.ui[resource .. '_button'] = Argo.ui.main_panel:button({ id = resource .. '-button', fontSize = 40, 
+                                    width = 55, height = 55, x = xStart + (index-1) * 366, y = yStart, 
+                                    colors = Ui.TRANSPARENT_INPUT_COLORS, textAlignment = 'MiddleCenter',
+                                    text = tostring(Argo[resource]), onClick = function(_, button)
+                    
+                    Argo[resource] = Argo[resource] + (button == '-2' and -1 or 1)
+                    Argo[resource] = Utils.clamp(Argo[resource], 0, nil)
+
+                    -- Only do it once on 100 (avoid unecessary sets)
+                    if Argo[resource] == 100 then
+                        Argo.ui[resource .. '_button']:setFontSize(35)
+                        Argo.ui[resource .. '_button']:setWidth(70)
+                    elseif Argo[resource] == 99 then
+                        Argo.ui[resource .. '_button']:setFontSize(40)
+                        Argo.ui[resource .. '_button']:setWidth(55)
+                    end
+
+                    Argo.ui[resource .. '_button']:setText(Argo[resource])
+                    Log:debug('Resource %s set to %s', resource, Argo[resource])
+                end })
+            end
+
+            Argo.ui[resource .. '_note_input'] = Argo.ui.main_panel:input({ id = resource .. '-note-button', fontSize = 24, 
+                                    width = 300, height = 70, x = xStart + 110 + (index-1) * 374, y = yStart - 74,
+                                    colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ', lineType = 'MultiLineNewLine',
+                                    text = Argo[resource .. '_note'], onValueChanged = function(_, newValue)
+                    
+                    Argo[resource .. '_note'] = newValue
+                    Log:debug('Note for resource %s set to %s', resource, Argo[resource .. '_note'])
+                end })
+            end
+    end
+end
+
+function Argo.save()
+    local flatData = {
+        hull = Argo.hull,
+        hull_unlocked = Argo.hull_unlocked,
+        crew = Argo.crew,
+        crew_unlocked = Argo.crew_unlocked,
+        story_card = Argo.story_card,
+        doom_card = Argo.doom_card,
+        map_tile = Argo.map_tile,
+        humanity = Argo.humanity,
+        defectors = Argo.defectors,
+        argo_fate = Argo.argo_fate,
+        argo_knowledge = Argo.argo_knowledge,
+        strangers = Argo.strangers,
+        abilities_limit = Argo.abilities_limit,
+        current_titans = Argo.current_titans,
+        max_titans = Argo.max_titans,
+        titans_list1 = Argo.titans_list1,
+        titans_list2 = Argo.titans_list2,
+        adventure_tracks = Argo.adventure_tracks,
+
+        diplomacy_tracks = Argo.diplomacy_tracks,
+
+        godforms = Argo.godforms,
+        summons = Argo.summons,
+        summons_limit = Argo.summons_limit,
+        -- evolution_track = Argo.evolution_track,
+        boss_track = Argo.boss_track,
+        adversary_track = Argo.adversary_track,
+        adversary_unlocked = Argo.adversary_unlocked,
+
+        -- Cycle I resources
+        trireme = Argo.trireme,
+        trireme_note = Argo.trireme_note,
+        monument = Argo.monument,
+        monument_note = Argo.monument_note,
+        armament = Argo.armament,
+        armament_note = Argo.armament_note,
+
+        muscle_cluster = Argo.muscle_cluster,
+        muscle_cluster_note = Argo.muscle_cluster_note,
+        calcified_knucle_bone = Argo.calcified_knucle_bone,
+        calcified_knucle_bone_note = Argo.calcified_knucle_bone_note,
+        infused_mechanism = Argo.infused_mechanism,
+        infused_mechanism_note = Argo.infused_mechanism_note,
+        fleshy_mantle = Argo.fleshy_mantle,
+        fleshy_mantle_note = Argo.fleshy_mantle_note,
+        fear_essence = Argo.fear_essence,
+        fear_essence_note = Argo.fear_essence_note,
+        maze_fragment = Argo.maze_fragment,
+        maze_fragment_note = Argo.maze_fragment_note,
+        grotesque_beak = Argo.grotesque_beak,
+        grotesque_beak_note = Argo.grotesque_beak_note,
+        powdered_matter = Argo.powdered_matter,
+        powdered_matter_note = Argo.powdered_matter_note,
+        raw_ambrosia = Argo.raw_ambrosia,
+        raw_ambrosia_note = Argo.raw_ambrosia_note,
+        cores_note = Argo.cores_note,
+
+        priests = Argo.priests,
+        priests_note = Argo.priests_note,
+        sisyphus_tears = Argo.sisyphus_tears,
+        sisyphus_tears_note = Argo.sisyphus_tears_note,
+        rare_resources_note = Argo.rare_resources_note,
+    }
+
+    return flatData
+end
+
+------------------------------------------------------
+
+return {
+    init = Argo.init,
+    save = Argo.save,
+}

@@ -7,7 +7,9 @@
 -- Local vars: camelCase
 
 local Argonaut = require('Argonaut')
+local Argo = require('Argo')
 local BattleBoard = require('BattleBoard')
+local Cycle = require('Cycle')
 local Triskelion = require('Triskelion')
 local Ui = require('Ui')
 local Log = require('Log').ForModule("Global")
@@ -34,8 +36,10 @@ function onLoad(script_state)
 
     Log.init()
     Ui.init()
+    Cycle.init(savedData.cycle or {})
     Triskelion.init(savedData.triskelions or {})
     Argonaut.init(savedData.argonauts or {})
+    Argo.init(savedData.argo or {})
     BattleBoard.init()
 
     Ui.globalRefresh()
@@ -54,6 +58,8 @@ function onSave()
     -- if Setup.isSetupComplete() then
         dataToSave.triskelions = Triskelion.save()
         dataToSave.argonauts = Argonaut.save()
+        dataToSave.cycle = Cycle.save()
+        dataToSave.argo = Argo.save()
     -- end
 
     return JSON.encode(dataToSave)

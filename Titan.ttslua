@@ -1,0 +1,28 @@
+local Titan = {}
+Titan.__index = Titan
+
+local Constants = require('Constants')
+local Log = require('Log').ForModule('Titan')
+
+------------------------------------------------------
+
+Titan.DREAMWALKER = 'Dreamwalker'
+Titan.EARTHSHAKER = 'Earthshaker'
+Titan.GAMECHANGER = 'Gamechanger'
+Titan.LOGICBREAKER = 'Logicbreaker'
+Titan.MAZERUNNER = 'Mazerunner'
+
+Titan.TITANS = {
+    [Titan.DREAMWALKER] = {
+        danger_steps = {
+
+        },
+        rage_steps = {
+            
+        }
+    }
+}
+
+------------------------------------------------------
+
+return Titan

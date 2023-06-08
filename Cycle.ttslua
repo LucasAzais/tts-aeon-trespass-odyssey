@@ -1,0 +1,75 @@
+local Cycle = {}
+Cycle.__index = Cycle
+
+local Constants = require('Constants')
+local Log = require('Log').ForModule('Cycle')
+local Ui = require('Ui')
+local Utils = require('Utils')
+
+------------------------------------------------------
+
+Cycle.CYCLES = {
+    [Constants.CYCLE_I] = {
+        argoSheet = 'http://cloud-3.steamusercontent.com/ugc/2064383278577606165/AFFB9737557EC154FAA960A8AC24101B05D39A1A/',
+        timelineSheet = 'http://cloud-3.steamusercontent.com/ugc/2064383278577606310/BC5581142434D1EE85307B3769808936B81E659C/',
+        createUi = Cycle.createIUI,
+    },
+    [Constants.CYCLE_II] = {
+        argoSheet = 'http://cloud-3.steamusercontent.com/ugc/2055377100655086003/8518F02014AC26C787188C1623EBC6B546250F1F/',
+        timelineSheet = 'http://cloud-3.steamusercontent.com/ugc/2055377100655086204/93A47A6CA2CE9925253297EECD65CE19C1D06321/',
+        createUi = Cycle.createIIUI,
+    },
+    [Constants.CYCLE_III] = {
+        argoSheet = 'http://cloud-3.steamusercontent.com/ugc/2055377100655086102/082EF198E73D335AEAB39DE861C2D40DB75CDA36/',
+        timelineSheet = 'http://cloud-3.steamusercontent.com/ugc/2055377100655086309/124B8FC2229CBFABFD529CA2909A298CC01209C9/',
+        createUi = Cycle.createIIIUI,
+    },
+    [Constants.ONWARDS_ODYSSEY] = {
+        argoSheet = 'http://cloud-3.steamusercontent.com/ugc/2055377100655085870/CAB9F817561ED63B0F7CE4E74208E42387DC5CF0/',
+        createUi = Cycle.createOnwardsOdysseyUI,
+    }
+}
+
+function Cycle.init(savedData)
+    -- Cycle.current_cycle = savedData.current_cycle or nil
+    Cycle.current_cycle = Constants.CYCLE_I
+
+    Cycle.timeline_sheet = getObjectsWithTag(Constants.TIMELINE_SHEET)[1]
+    if not Cycle.timeline_sheet then
+        Log:error('Could not find timeline sheet with tag %s', Constants.TIMELINE_SHEET)
+        broadcastToAll('Could not find timeline sheet. Create one with tag ' .. Constants.TIMELINE_SHEET
+                .. ' then save and reload.', Color.Red)
+    end
+end
+
+function Cycle.createIUI()
+
+end
+
+function Cycle.createIIUI()
+
+end
+
+function Cycle.createIIIUI()
+
+end
+
+function Cycle.createOnwardsOdysseyUI()
+
+end
+
+function Cycle.getCurrentCycle()
+    return Cycle.current_cycle
+end
+
+function Cycle.save()
+    local flatData = {
+        current_cycle = Cycle.current_cycle,
+    }
+
+    return flatData
+end
+
+------------------------------------------------------
+
+return Cycle
