@@ -19,6 +19,7 @@ Triskelion.TRISKELIONS = {
 function Triskelion.init(savedData)
     -- Create the Triskelion + titan UI
     for color, triskelion in pairs(Triskelion.TRISKELIONS) do
+        if not savedData[color] then savedData[color] = {} end
         triskelion.titanGUID = savedData[color].titanGUID or nil
         triskelion[Constants.DANGER] = savedData[color][Constants.DANGER] or 0
         triskelion[Constants.RAGE] = savedData[color][Constants.RAGE] or 0

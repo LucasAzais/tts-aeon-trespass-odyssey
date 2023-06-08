@@ -9,7 +9,9 @@
 local Argonaut = require('Argonaut')
 local Argo = require('Argo')
 local BattleBoard = require('BattleBoard')
+local Constants = require('Constants')
 local Cycle = require('Cycle')
+local Timeline = require('Timeline')
 local Triskelion = require('Triskelion')
 local Ui = require('Ui')
 local Log = require('Log').ForModule("Global")
@@ -31,15 +33,16 @@ function onLoad(script_state)
     end
 
     -- Parse save data
-    local savedData = JSON.decode(script_state) or {}
-    -- local savedData = {}
+    -- local savedData = JSON.decode(script_state) or {}
+    local savedData = {}
 
     Log.init()
     Ui.init()
     Cycle.init(savedData.cycle or {})
+    Argo.init(savedData.argo or {})
+    Timeline.init(savedData.timeline or {})
     Triskelion.init(savedData.triskelions or {})
     Argonaut.init(savedData.argonauts or {})
-    Argo.init(savedData.argo or {})
     BattleBoard.init()
 
     Ui.globalRefresh()
@@ -60,6 +63,7 @@ function onSave()
         dataToSave.argonauts = Argonaut.save()
         dataToSave.cycle = Cycle.save()
         dataToSave.argo = Argo.save()
+        dataToSave.timeline = Timeline.save()
     -- end
 
     return JSON.encode(dataToSave)
