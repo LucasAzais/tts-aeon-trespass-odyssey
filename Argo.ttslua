@@ -89,7 +89,20 @@ function Argo.init(savedData)
     Argo.godforms = savedData.godforms or {}
     Argo.summons = savedData.summons or {}
     Argo.summons_limit = savedData.summons_limit or 0
-    -- Argo.evolution_track = savedData.evolution_track or {}
+
+    Argo.evolution_track = savedData.evolution_track or {
+        [1] = { [Constants.HEKATON] = false, },
+        [2] = { [Constants.HEKATON] = false, [Constants.LABYRINTHAUROS] = false },
+        [3] = { [Constants.MIXED] = false },
+        [4] = { [Constants.HEKATON] = false, [Constants.LABYRINTHAUROS] = false },
+        [5] = { [Constants.MIXED] = false },
+        [6] = { [Constants.MIXED] = false },
+        [7] = { [Constants.HEKATON] = false, [Constants.LABYRINTHAUROS] = false },
+        [8] = { [Constants.HEKATON] = false, [Constants.LABYRINTHAUROS] = false },
+        [9] = { [Constants.HEKATON] = false, [Constants.LABYRINTHAUROS] = false },
+        [10] = { [Constants.MIXED] = false },
+    }
+
     Argo.boss_track = savedData.boss_track or 0
     Argo.adversary_track = savedData.adversary_track or 0
     Argo.adversary_unlocked = savedData.adversary_unlocked or false
@@ -443,6 +456,46 @@ function Argo.createSheetUi(cycle)
 
         ------------------------
         -- Evolution tracks
+        local xStart, yStart = 665, 232
+        for index, level in ipairs(Argo.evolution_track) do
+            local x = xStart + (index - 1) * 47.5
+            local y = yStart
+
+            if level[Constants.MIXED] ~= nil then
+                Argo.ui['evolution_' .. index .. '_' .. Constants.MIXED .. '_checkbox'] = 
+                                Argo.ui.main_panel:checkbox({ id = 'evolution-' .. index .. '-' .. Constants.MIXED .. '-checkbox',
+                                            checked = level[Constants.MIXED], width = 55, height = 55,
+                                            x = x, y = y, onClick = function(_, button)
+                                                level[Constants.MIXED] = not level[Constants.MIXED]
+                                                Argo.ui['evolution_' .. index .. '_' .. Constants.MIXED .. '_checkbox']:setChecked(level[Constants.MIXED])
+                                                Log:debug('Evolution track section %s set to %s.', index, tostring(level[Constants.MIXED]))
+                                            end })
+            else
+                if level[Constants.HEKATON] ~= nil then
+                    y = yStart + 30
+                    Argo.ui['evolution_' .. index .. '_' .. Constants.HEKATON .. '_checkbox'] = 
+                                Argo.ui.main_panel:checkbox({ id = 'evolution-' .. index .. '-' .. Constants.HEKATON .. '-checkbox',
+                                            checked = level[Constants.HEKATON], width = 55, height = 55,
+                                            x = x, y = y, onClick = function(_, button)
+                                                level[Constants.HEKATON] = not level[Constants.HEKATON]
+                                                Argo.ui['evolution_' .. index .. '_' .. Constants.HEKATON .. '_checkbox']:setChecked(level[Constants.HEKATON])
+                                                Log:debug('Evolution track section %s set to %s.', index, tostring(level[Constants.HEKATON]))
+                                            end })
+                end
+
+                if level[Constants.LABYRINTHAUROS] ~= nil then
+                    y = yStart - 30
+                    Argo.ui['evolution_' .. index .. '_' .. Constants.LABYRINTHAUROS .. '_checkbox'] = 
+                                Argo.ui.main_panel:checkbox({ id = 'evolution-' .. index .. '-' .. Constants.LABYRINTHAUROS .. '-checkbox',
+                                            checked = level[Constants.LABYRINTHAUROS], width = 55, height = 55,
+                                            x = x, y = y, onClick = function(_, button)
+                                                level[Constants.LABYRINTHAUROS] = not level[Constants.LABYRINTHAUROS]
+                                                Argo.ui['evolution_' .. index .. '_' .. Constants.LABYRINTHAUROS .. '_checkbox']:setChecked(level[Constants.LABYRINTHAUROS])
+                                                Log:debug('Evolution track section %s set to %s.', index, tostring(level[Constants.LABYRINTHAUROS]))
+                                            end })
+                end
+            end
+        end
 
         ------------------------
         -- Boss primordial track
@@ -655,7 +708,7 @@ function Argo.save()
         godforms = Argo.godforms,
         summons = Argo.summons,
         summons_limit = Argo.summons_limit,
-        -- evolution_track = Argo.evolution_track,
+        evolution_track = Argo.evolution_track,
         boss_track = Argo.boss_track,
         adversary_track = Argo.adversary_track,
         adversary_unlocked = Argo.adversary_unlocked,

@@ -46,6 +46,15 @@ Constants.CYCLE_I = 'I'
 Constants.CYCLE_II = 'II'
 Constants.CYCLE_III = 'III'
 
+-- Evolution Track
+Constants.MIXED = 'Mixed'
+
+-- Primordials
+Constants.HEKATON = 'Hekaton'
+Constants.LABYRINTHAUROS = 'Labyrinthauros'
+Constants.HERMESIAN_PURSUER = 'Hermesian Pursuer'
+Constants.ALPHA_TEMENOS = 'Alpha Temenos'
+
 -- Factions
 Constants.MINOANS = 'Minoans'
 Constants.LABYRINTHIANS = 'Labyrinthians'
