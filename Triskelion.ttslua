@@ -2,6 +2,7 @@ local Triskelion = {}
 Triskelion.__index = Triskelion
 
 local Constants = require('Constants')
+local EventManager = require('EventManager')
 local Log = require('Log').ForModule('Triskelion')
 local Ui = require('Ui')
 local Utils = require('Utils')
@@ -9,18 +10,19 @@ local Utils = require('Utils')
 ------------------------------------------------------
 
 Triskelion.TRISKELIONS = {
-    [Constants.WHITE] = { guid = '61d766', [Constants.RAGE] = 0, [Constants.DANGER] = 0, [Constants.FATE] = 0 },
-    [Constants.GREEN] = { guid = '4e7acc', [Constants.RAGE] = 0, [Constants.DANGER] = 0, [Constants.FATE] = 0 },
-    [Constants.BLUE] = { guid = 'd73cd9', [Constants.RAGE] = 0, [Constants.DANGER] = 0, [Constants.FATE] = 0 },
-    [Constants.RED] = { guid = 'eda365', [Constants.RAGE] = 0, [Constants.DANGER] = 0, [Constants.FATE] = 0 },
+    [Constants.WHITE] = { guid = '61d766', titanGUID = nil, [Constants.RAGE] = 0, [Constants.DANGER] = 0, [Constants.FATE] = 0 },
+    [Constants.GREEN] = { guid = '4e7acc', titanGUID = nil, [Constants.RAGE] = 0, [Constants.DANGER] = 0, [Constants.FATE] = 0 },
+    [Constants.BLUE] = { guid = 'd73cd9', titanGUID = nil, [Constants.RAGE] = 0, [Constants.DANGER] = 0, [Constants.FATE] = 0 },
+    [Constants.RED] = { guid = 'eda365', titanGUID = nil, [Constants.RAGE] = 0, [Constants.DANGER] = 0, [Constants.FATE] = 0 },
 }
 
-function Triskelion.init(saved_data)
-    -- Create the UI
+function Triskelion.init(savedData)
+    -- Create the Triskelion + titan UI
     for color, triskelion in pairs(Triskelion.TRISKELIONS) do
-        triskelion[Constants.DANGER] = saved_data[Constants.DANGER] or 0
-        triskelion[Constants.RAGE] = saved_data[Constants.RAGE] or 0
-        triskelion[Constants.FATE] = saved_data[Constants.FATE] or 0
+        triskelion.titanGUID = savedData[color].titanGUID or nil
+        triskelion[Constants.DANGER] = savedData[color][Constants.DANGER] or 0
+        triskelion[Constants.RAGE] = savedData[color][Constants.RAGE] or 0
+        triskelion[Constants.FATE] = savedData[color][Constants.FATE] or 0
 
         triskelion.object = getObjectFromGUID(triskelion.guid)
         if triskelion.object then
@@ -64,10 +66,50 @@ function Triskelion.init(saved_data)
             end })
             triskelion.fate_button.attributes.colors = '#FFFFFF00|#FFFFFF00|#FFFFFF00|rgba(0.78,0.78,0.78,0.5)'
             triskelion.fate_button.attributes.fontStyle = 'Bold'
+
+            -- Create the Titan UI
+            if triskelion.titanGUID then
+                Triskelion.createTitanUi(triskelion.titanGUID)
+            end
         end
     end
+
+    -- Link both elements when Triskelion is dropped on a titan sheet
+    EventManager.addHandler('onObjectDrop', function(_, object)
+        if object.hasTag(Constants.TRISKELION) then
+            -- To link a triskelion, run a physics cast below it and detect a titan sheet
+            -- This avoids using collisions, they are too demanding on TTS...
+            local sheet = Utils.castAndTagFilter(object.getPosition(), Vector(0, -1, 0), Constants.TITAN_SHEET)
+            if sheet then
+                local linkTriskelion, linkColor = nil, nil
+                for color, triskelion in pairs(Triskelion.TRISKELIONS) do
+                    if triskelion.guid == object.getGUID() then
+                        linkTriskelion = triskelion
+                        linkColor = color
+                    elseif triskelion.titanGUID == sheet.getGUID() then
+                        Log:error('This triskelion is already linked to another titan sheet (ID %s)', sheet.getGUID())
+                        broadcastToAll('This triskelion is already linked to another titan sheet (ID ' .. sheet.getGUID() .. ')')
+                        return
+                    end
+                end
+
+                if linkTriskelion ~= nil then
+                    -- Wipe the previous UI if required
+                    if linkTriskelion.titanGUID then
+                        linkTriskelion.titanRoot:wipe()
+                        linkTriskelion.titanRoot = nil
+                    end
+
+                    linkTriskelion.titanGUID = sheet.getGUID()
+                    Triskelion.createTitanUi(linkTriskelion.titanGUID)
+                    Log:debug('Linked %s triskelion with titan sheet %s', linkColor, sheet.getGUID())
+                end
+            end
+        end
+    end)
 end
 
+-- Increment functions (with clamping)
 function Triskelion.incrementRage(color) Triskelion.incrementValue(color, Constants.RAGE) end
 function Triskelion.incrementDanger(color) Triskelion.incrementValue(color, Constants.DANGER) end
 function Triskelion.incrementFate(color) Triskelion.incrementValue(color, Constants.FATE) end
@@ -89,8 +131,10 @@ function Triskelion.incrementValue(color, type)
     end
 
     Triskelion.updateTriskelionDisplay(color, type)
+    -- Triskelion.updateLinkedTitanDisplay(color, type)
 end
 
+-- Decrement functions (with clamping)
 function Triskelion.decrementRage(color) Triskelion.decrementValue(color, Constants.RAGE) end
 function Triskelion.decrementDanger(color) Triskelion.decrementValue(color, Constants.DANGER) end
 function Triskelion.decrementFate(color) Triskelion.decrementValue(color, Constants.FATE) end
@@ -104,6 +148,7 @@ function Triskelion.decrementValue(color, type)
     end
 
     Triskelion.updateTriskelionDisplay(color, type)
+    -- Triskelion.updateLinkedTitanDisplay(color, type)
 end
 
 function Triskelion.updateTriskelionDisplay(color, type)
@@ -118,11 +163,86 @@ function Triskelion.updateTriskelionDisplay(color, type)
     end
 end
 
+function Triskelion.createTitanUi(titanGUID)
+    if not titanGUID then return end
+    local titanSheet = getObjectFromGUID(titanGUID)
+    if not titanSheet then return end
+
+    local triskelion = Triskelion.getTriskelionFromTitan(titanGUID)
+    triskelion.titanRoot = Ui.createRootOnObject('titan-' .. titanGUID .. '-root', titanSheet, 1.2)
+
+    -- The previous UI should have been wiped, but do it again just in case
+    triskelion.titanRoot:wipe()
+
+    local panel = triskelion.titanRoot:panel({ id = 'test-panel',  width = 3000, height = 2000 })
+
+    panel:text({ id = 'titan-danger-indicator', text = '\u{00BB}        \u{00AB}', color = '#343634', 
+            x = 370, fontSize = 200, active = false, })
+    panel:text({ id = 'titan-rage-indicator', text = '\u{00BB}        \u{00AB}', color = '#c71818',
+            x = 1100, fontSize = 200, active = false, })
+
+    triskelion.titanRoot:refresh()
+    Log:debug('Created UI for titan sheet %s', titanGUID)
+end
+
+function Triskelion.getTriskelionFromTitan(titanGUID)
+    for _, triskelion in pairs(Triskelion.TRISKELIONS) do
+        if triskelion.titanGUID == titanGUID then
+            return triskelion
+        end
+    end
+end
+
+function Triskelion.updateLinkedTitanDisplay(color, type)
+    if not type or not Triskelion.TRISKELIONS[color] then return end
+    
+    local triskelion = Triskelion.TRISKELIONS[color]
+    if not triskelion.titanGUID then return end
+
+    local titanSheet = getObjectFromGUID(triskelion.titanGUID)
+    if not titanSheet then return end
+
+    -- TODO: The actual UI depends on both the titan and the strain/kratos pattern if there is on or not
+    -- It makes it very complicated to figure out so we will figure it out later
+    
+    -- if type == Constants.DANGER then
+    --     if triskelion.danger < 1 then
+
+
+    --     -- The UI depends on the titan type...
+    --     if titanSheet.getName() == 'Gamechanger' then
+
+    --     elseif titanSheet.getName() == 'Logicbreaker' then
+    
+    --     elseif titanSheet.getName() == 'Mazerunner' then
+    
+    --     elseif titanSheet.getName() == 'Earthshaker' then
+    
+    --     else
+
+    --     end
+    -- elseif type == Constants.RAGE then
+    --     -- The UI depends on the titan type...
+    --     if titanSheet.getName() == 'Gamechanger' then
+
+    --     elseif titanSheet.getName() == 'Logicbreaker' then
+    
+    --     elseif titanSheet.getName() == 'Mazerunner' then
+    
+    --     elseif titanSheet.getName() == 'Earthshaker' then
+    
+    --     else
+
+    --     end
+    -- end
+end
+
 function Triskelion.save()
     local flatData = {}
 
     for color, triskelion in pairs(Triskelion.TRISKELIONS) do
         flatData[color] = {
+            ['titanGUID'] = triskelion.titanGUID,
             [Constants.RAGE] = triskelion[Constants.RAGE],
             [Constants.DANGER] = triskelion[Constants.DANGER],
             [Constants.FATE] = triskelion[Constants.FATE],

@@ -5,7 +5,7 @@ local Constants = require('Constants')
 
 ------------------------------------------------------
 
-function Options.init(saved_data)
+function Options.init(savedData)
     
 end
 

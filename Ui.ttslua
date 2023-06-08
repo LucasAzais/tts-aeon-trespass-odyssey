@@ -4,6 +4,7 @@ Ui.__index = Ui
 ------------------------------------------------------
 
 Ui.SCALE = '0.1 0.1'
+Ui.TRANSPARENT_INPUT_COLORS = '#FFFFFF00|#32323222|#32323222|rgba(0.78,0.78,0.78,0.5)'
 Ui.VISIBLE_COLORS = '#FFFFFFFF|#FFFFFFFF|#FFFFFFFF|#FFFFFFFF'
 Ui.INVISIBLE_COLORS = '#00000000|#00000088|#00000088|#00000000'
 
@@ -103,8 +104,8 @@ function Ui:createElementOnObject(tag, params)
     assert(params.id ~= nil and 'string' == type(params.id))
     assert(params.x == nil or 'number' == type(params.x))
     assert(params.y == nil or 'number' == type(params.y))
-    assert(params.width == nil or 'number' == type(params.width))
-    assert(params.height == nil or 'number' == type(params.height))
+    assert(params.width == nil or 'number' == type(params.width) or 'string' == type(params.width))
+    assert(params.height == nil or 'number' == type(params.height) or 'string' == type(params.height))
     assert(params.active == nil or 'boolean' == type(params.active))
     assert(params.scale == nil or 'string' == type(params.scale))
 
@@ -151,7 +152,7 @@ function Ui:panel(params)
 
     local layout = self:createElement('Panel', params)
     layout.z = self.z
-    -- layout.rotation = '0 0 0'
+    layout.rotation = '0 0 0'
     -- layout.scale = self.scale
     layout.attributes.childForceExpandHeight = 'false'
 
@@ -363,27 +364,74 @@ function Ui:button(params)
     return button
 end
 
-function Ui:checkbox(params)
-    local checkbox = self:createElement('Button', params)
+-- This isn't exactly a normal element
+function Ui:checkboxGroup(params)
+    assert(params.id ~= nil and 'string' == type(params.id))
+    assert(params.onClick ~= nil and 'function' == type(params.onClick))
+
+    local group = {
+        id = params.id,
+        z = self.z,
+        scale = self.scale,
+        rotation = self.rotation,
+        createElement = self.createElement,
+        parent = self, -- Use this to jump a layer (on child, use self.parent)
+        checkboxes = {},
+        checkedImage = params.checkedImage or 'checked',
+        checkedColors = params.checkedColors or Ui.VISIBLE_COLORS,
+        uncheckedImage = params.uncheckedImage,
+        uncheckedColors = params.uncheckedColors or Ui.INVISIBLE_COLORS,
+        onClick = params.onClick,
+    }
+    setmetatable(group, Ui)
+
+    return group
+end
+
+-- grouped == true if part of a checkboxGroup
+function Ui:checkbox(params, grouped)
+    local checkbox = (grouped and self.parent or self):createElement('Button', params)
     checkbox.z = self.z
 
-    checkbox.checkedImage = params.checkedImage or 'checked'
-    checkbox.checkedColors = Ui.VISIBLE_COLORS
-    checkbox.uncheckedColors = Ui.INVISIBLE_COLORS
+    checkbox.checkedImage = params.checkedImage or self.checkedImage or 'checked'
+    checkbox.checkedColors = params.checkedColors or self.checkedColors or Ui.VISIBLE_COLORS
+    
+    -- The or 'checked' here somehow shows the checked image when hovering, it looks cool
+    checkbox.uncheckedImage = params.uncheckedImage or self.uncheckedImage or 'checked' 
+    checkbox.uncheckedColors = params.uncheckedColors or self.uncheckedColors or Ui.INVISIBLE_COLORS
 
-    checkbox.attributes.image = checkbox.checkedImage
     if params.checked then
+        checkbox.attributes.image = checkbox.checkedImage
         checkbox.attributes.colors = checkbox.checkedColors
     else
+        checkbox.attributes.image = checkbox.uncheckedImage
         checkbox.attributes.colors = checkbox.uncheckedColors
+    end
+
+    if grouped then
+        checkbox.group = self
+        checkbox.select = Ui.checkboxGroupSelect
+        table.insert(self.checkboxes, checkbox)
     end
 
     setmetatable(checkbox, Ui)
     if params.onClick then
         checkbox:registerOnClick(params.onClick)
+    elseif grouped and self.onClick then
+        checkbox:registerOnClick(function() self.onClick(checkbox) end)
     end
 
     return checkbox
+end
+
+function Ui:checkboxGroupSelect()
+    for _, checkbox in ipairs(self.group.checkboxes) do
+        if checkbox == self then
+            checkbox:setChecked(true)
+        else
+            checkbox:setChecked(false)
+        end
+    end
 end
 
 function Ui:text(params)
@@ -414,35 +462,23 @@ function Ui:input(params)
     assert(params.lineType == nil or 'string' == type(params.lineType))
     assert(params.placeholder == nil or 'string' == type(params.placeholder))
     assert(params.characterValidation == nil or 'string' == type(params.characterValidation))
+    assert(params.textAlignment == nil or 'string' == type(params.textAlignment))
 
     local input = self:createElement('InputField', params)
     input.z = self.z
     -- input.rotation = '0 0 0'
     -- input.scale = self.scale
     input.attributes.verticalOverflow = 'Overflow'
-
     input.attributes.textColor = params.textColor or '#323232'
     input.attributes.colors = params.colors or '#FFFFFF|#FFFFFF|#C8C8C8|rgba(0.78,0.78,0.78,0.5)'
 
-    if params.text ~= nil then
-        input.attributes.text = params.text
-    end
-
-    if params.fontSize ~= nil then
-        input.attributes.fontSize = params.fontSize
-    end
-
-    if params.lineType ~= nil then
-        input.attributes.lineType = params.lineType
-    end
-
-    if params.placeholder ~= nil then
-        input.attributes.placeholder = params.placeholder
-    end
-
-    if params.characterValidation ~= nil then
-        input.attributes.characterValidation = params.characterValidation
-    end
+    if params.text ~= nil then input.attributes.text = params.text end
+    if params.fontSize ~= nil then input.attributes.fontSize = params.fontSize end
+    if params.lineType ~= nil then input.attributes.lineType = params.lineType end
+    if params.placeholder ~= nil then input.attributes.placeholder = params.placeholder end
+    if params.characterLimit ~= nil then input.attributes.characterLimit = params.characterLimit end
+    if params.characterValidation ~= nil then input.attributes.characterValidation = params.characterValidation end
+    if params.textAlignment ~= nil then input.attributes.textAlignment = params.textAlignment end
 
     setmetatable(input, Ui)
     if params.onValueChanged then
@@ -597,10 +633,13 @@ function Ui:setOffsetXY(offsetXY) self:setAttribute('offsetXY', 'string', offset
 function Ui:setActive(active) self:setAttribute('active', 'boolean', active) end
 function Ui:setImage(value) self:setAttribute('image', 'string', value ~= nil and tostring(value) or '') end
 function Ui:setIcon(value) self:setAttribute('icon', 'string', value ~= nil and tostring(value) or '') end
+function Ui:setFontSize(value) self:setAttribute('fontSize', 'number', value ~= nil and value or 14) end
 function Ui:setChecked(checked)
     if checked then
+        self:setImage(self.checkedImage)
         self:setColors(self.checkedColors)
     else
+        self:setImage(self.uncheckedImage)
         self:setColors(self.uncheckedColors)
     end
 end
@@ -688,5 +727,7 @@ return {
     globalRefresh = Ui.globalRefresh,
     getRoot = Ui.getRoot,
     getRootPerObject = Ui.getRootPerObject,
-    createRootOnObject = Ui.createRootOnObject
+    createRootOnObject = Ui.createRootOnObject,
+
+    TRANSPARENT_INPUT_COLORS = Ui.TRANSPARENT_INPUT_COLORS,
 }

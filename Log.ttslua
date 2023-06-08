@@ -9,8 +9,10 @@ local Utils = require('Utils')
 Log.logsByModule = {}
 Log.levelByModule = {
     ['Global'] = Constants.DEBUG,
+    ['Argo'] = Constants.DEBUG,
     ['Argonaut'] = Constants.DEBUG,
     ['BattleBoard'] = Constants.DEBUG,
+    ['Titan'] = Constants.DEBUG,
     ['Triskelion'] = Constants.DEBUG,
 }
 

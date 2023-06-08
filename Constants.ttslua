@@ -3,6 +3,13 @@ Constants.__index = Constants
 
 ------------------------------------------------------
 
+Constants.CUSTOM_ASSETS = {
+    {
+        name = 'checked',
+        url = 'http://cloud-3.steamusercontent.com/ugc/2057628267251746049/3647F426FC0701F65CD80005CF410D4C1B7C0BFF/',
+    }
+}
+
 -- Logging
 Constants.DEBUG = 1
 Constants.INFO = 2
@@ -25,9 +32,57 @@ Constants.FATE = 'Fate'
 
 -- Tags
 Constants.PRIMORDIAL = 'Primordial'
+Constants.TRISKELION = 'Triskelion'
 Constants.TITAN = 'Titan'
+Constants.TITAN_SHEET = 'TitanSheet'
 Constants.TERRAIN = 'Terrain'
 Constants.ARGONAUT_SHEET = 'ArgonautSheet'
+Constants.ARGO_SHEET = 'ArgoSheet'
+Constants.TIMELINE_SHEET = 'TimelineSheet'
+
+-- Cycles
+Constants.ONWARDS_ODYSSEY = 'Onwards Odyssey'
+Constants.CYCLE_I = 'I'
+Constants.CYCLE_II = 'II'
+Constants.CYCLE_III = 'III'
+
+-- Factions
+Constants.MINOANS = 'Minoans'
+Constants.LABYRINTHIANS = 'Labyrinthians'
+Constants.HORNSWORN = 'Hornsworn'
+Constants.HELOTS = 'Helots'
+Constants.CYCLOPES = 'Cyclopes'
+Constants.SYMMACHY = 'Symmachy'
+Constants.SUNHEIRS = 'Sunheirs'
+Constants.DELPHIANS = 'Delphians'
+Constants.TWILIGHT_WATCH = 'Twilight Watch'
+
+-- Adventures
+Constants.FATED_CONUNDRUM = 'Fated Conundrum'
+Constants.PLIGHT_OF_THE_PEOPLE = 'Plight of the People'
+Constants.HIDDEN_IN_PLAIN_SIGHT = 'Hidden in Plain Sight'
+Constants.MAN_OF_PURPOSE = 'Man of Purpose'
+Constants.UNEASY_RESTS_THE_HEAD = 'Uneasy Rests the Head'
+Constants.TEARS_OF_A_MINOTAUR = 'Tears of a Minotaur'
+Constants.DREAMS_LAID_BARE = 'Dreams Laid Bare'
+Constants.TUTORIAL = 'Tutorial'
+
+Constants.CONSIDER_THE_ANT = 'Consider the Ant'
+Constants.THE_OTHER_THERMOPYLAE = 'The Other Thermopylae'
+Constants.FROM_THE_ASHES = 'From the Ashes'
+Constants.INTENDED_PURPOSE = 'Intended Purpose'
+Constants.MISERY_INDUSTRY = 'Misery Industry'
+Constants.PARABLE_OF_THE_BUTTERFLY = 'Parable of the Butterfly'
+Constants.TRUTH_TO_WEAKNESS = 'Truth to Weakness'
+Constants.WHEN_THE_LAND_MEETS_THE_SEA = 'When the Land Meets the Sea'
+
+Constants.ROAD_LESS_TRAVELED = 'Road Less Traveled'
+Constants.CHILDREN_OF_THE_SUN = 'Children of the Sun'
+Constants.WHAT_WE_LEFT_BEHIND = 'What We Left Behind'
+Constants.OF_WAX_AND_PROMISES = 'Of Wax And Promises'
+Constants.CANT_GO_BACK = 'Can\'t Go Back'
+Constants.SIN_OF_THE_FATHERS = 'Sin of the Fathers'
+Constants.COMING_OF_AGE = 'Coming of Age'
 
 ------------------------------------------------------
 

@@ -24,18 +24,11 @@ Argonaut.ARGONAUTS = {
 }
 Argonaut.ARGONAUT_SHEETS = {}
 
-Argonaut.CUSTOM_ASSETS = {
-    {
-        name = 'checked',
-        url = 'http://cloud-3.steamusercontent.com/ugc/2057628267251746049/3647F426FC0701F65CD80005CF410D4C1B7C0BFF/',
-    }
-}
-
 Argonaut.SHEET_URL = 'http://cloud-3.steamusercontent.com/ugc/2064383278577605984/7CF66AC45D1C97F24EC2D3E38D106CC3787E9A5C/'
 Argonaut.SHEET_SCALE = {6.92, 1.00, 6.92}
 
-function Argonaut.init(saved_data)
-    for index, argonaut in ipairs(saved_data or {}) do
+function Argonaut.init(savedData)
+    for index, argonaut in ipairs(savedData or {}) do
         Argonaut.ARGONAUTS[argonaut.id] = ArgonautClass.create(argonaut)
         Argonaut.ARGONAUT_SHEETS[argonaut.id] = ArgonautSheetClass.create(Argonaut.ARGONAUTS[argonaut.id], getObjectFromGUID(argonaut.sheetGUID))
     end
@@ -141,21 +134,20 @@ function ArgonautSheetClass.create(argonaut, object)
     }
     setmetatable(sheet, ArgonautSheetClass)
 
-    local inputColors = '#FFFFFF00|#32323222|#FFFFFF00|rgba(0.78,0.78,0.78,0.5)'
     local name = 'argonaut-sheet-'..sheet.argonaut.id
-    sheet.root = Ui.createRootOnObject(name .. '-root', object, 1.2)
+    sheet.root = Ui.createRootOnObject(name .. '-root', object, 1)
 
     -- Name/Player
     local panel = sheet.root:panel({ id = name .. '-name-panel', x = -2, y = -75.8, width = 450, height = 100, })
     -- panel.attributes.color = 'Green'
     sheet.name_input = panel:input({ id = name .. '-name-input', fontSize = 45, 
-                                        colors = inputColors, height = 50,
+                                        colors = Ui.TRANSPARENT_INPUT_COLORS, height = 50,
                                         text = argonaut.name, placeholder = ' ', onValueChanged = function(_, value)
         argonaut.name = value
     end })
 
     sheet.player_input = panel:input({ id = name .. '-player-input', fontSize = 45, y = -44.5, 
-                                        colors = inputColors, height = 50,
+                                        colors = Ui.TRANSPARENT_INPUT_COLORS, height = 50,
                                         text = argonaut.player, placeholder = ' ', onValueChanged = function(_, value)
         argonaut.player = value
     end })
@@ -167,7 +159,7 @@ function ArgonautSheetClass.create(argonaut, object)
     for i = 1, 3, 1 do
         sheet.katharsis_input[i] = panel:input({ id = name .. '-katharsis-' .. i, fontSize = 50, x = 48 * (i - 1), 
                                 width = 50, height = 50,
-                                colors = inputColors, text = argonaut.katharsis[i], placeholder = ' ', onValueChanged = function(_, value)
+                                colors = Ui.TRANSPARENT_INPUT_COLORS, text = argonaut.katharsis[i], placeholder = ' ', onValueChanged = function(_, value)
             argonaut.katharsis[i] = value
         end })
         sheet.katharsis_input[i].attributes.characterLimit = 1
@@ -178,7 +170,7 @@ function ArgonautSheetClass.create(argonaut, object)
     local panel = sheet.root:verticalLayout({ id = name .. '-skills-panel', x = 25.8, y = -41.2, width = 74, height = 372, })
     -- panel.attributes.color = 'Green'
     sheet.courage_button = panel:button({ id = name .. '-courage-button', fontSize = 55,
-                            colors = inputColors, horizontalOverflow = 'Overflow',
+                            colors = Ui.TRANSPARENT_INPUT_COLORS, horizontalOverflow = 'Overflow',
                             text = tostring(argonaut.courage), onClick = function(_, button)
         if button == '-2' then
             argonaut.courage = argonaut.courage - 1
@@ -188,7 +180,7 @@ function ArgonautSheetClass.create(argonaut, object)
         sheet.courage_button:setText(argonaut.courage)
     end })
     sheet.cunning_button = panel:button({ id = name .. '-cunning-button', fontSize = 55, 
-                            colors = inputColors, horizontalOverflow = 'Overflow',
+                            colors = Ui.TRANSPARENT_INPUT_COLORS, horizontalOverflow = 'Overflow',
                             text = tostring(argonaut.cunning), onClick = function(_, button)
         if button == '-2' then
             argonaut.cunning = argonaut.cunning - 1
@@ -198,7 +190,7 @@ function ArgonautSheetClass.create(argonaut, object)
         sheet.cunning_button:setText(argonaut.cunning)
     end })
     sheet.endurance_button = panel:button({ id = name .. '-endurance-button', fontSize = 55, 
-                            colors = inputColors, horizontalOverflow = 'Overflow',
+                            colors = Ui.TRANSPARENT_INPUT_COLORS, horizontalOverflow = 'Overflow',
                             text = tostring(argonaut.endurance), onClick = function(_, button)
         if button == '-2' then
             argonaut.endurance = argonaut.endurance - 1
@@ -208,7 +200,7 @@ function ArgonautSheetClass.create(argonaut, object)
         sheet.endurance_button:setText(argonaut.endurance)
     end })
     sheet.fury_button = panel:button({ id = name .. '-fury-button', fontSize = 55,
-                            colors = inputColors, horizontalOverflow = 'Overflow',
+                            colors = Ui.TRANSPARENT_INPUT_COLORS, horizontalOverflow = 'Overflow',
                             text = tostring(argonaut.fury), onClick = function(_, button)
         if button == '-2' then
             argonaut.fury = argonaut.fury - 1
@@ -218,7 +210,7 @@ function ArgonautSheetClass.create(argonaut, object)
         sheet.fury_button:setText(argonaut.fury)
     end })
     sheet.will_button = panel:button({ id = name .. '-will-button', fontSize = 55,
-                            colors = inputColors, horizontalOverflow = 'Overflow',
+                            colors = Ui.TRANSPARENT_INPUT_COLORS, horizontalOverflow = 'Overflow',
                             text = tostring(argonaut.will), onClick = function(_, button)
         if button == '-2' then
             argonaut.will = argonaut.will - 1
@@ -228,7 +220,7 @@ function ArgonautSheetClass.create(argonaut, object)
         sheet.will_button:setText(argonaut.will)
     end })
     sheet.wisdom_button = panel:button({ id = name .. '-wisdom-button', fontSize = 55,
-                            colors = inputColors, horizontalOverflow = 'Overflow',
+                            colors = Ui.TRANSPARENT_INPUT_COLORS, horizontalOverflow = 'Overflow',
                             text = tostring(argonaut.wisdom), onClick = function(_, button)
         if button == '-2' then
             argonaut.wisdom = argonaut.wisdom - 1
@@ -243,7 +235,7 @@ function ArgonautSheetClass.create(argonaut, object)
     -- panel.attributes.color = 'Green'
 
     sheet.abilities_input = panel:input({ id = name .. '-abilities-input', fontSize = 38, lineType = 'MultiLineNewLine',
-                                colors = inputColors, 
+                                colors = Ui.TRANSPARENT_INPUT_COLORS, 
                                 text = argonaut.abilities, placeholder = ' ', onValueChanged = function(_, value)
             argonaut.abilities = value
         end
@@ -259,7 +251,7 @@ function ArgonautSheetClass.create(argonaut, object)
         -- panel.attributes.color = 'Green'
         sheet.mnemoses[mnemosIndex] = {
             name_input = panel:input({ id = name .. '-mnemos-' .. mnemosIndex .. '-name-input', fontSize = 38,
-                        colors = inputColors, 
+                        colors = Ui.TRANSPARENT_INPUT_COLORS, 
                         x = -435,
                         y = -15 + yStep * (mnemosIndex - 1), 
                         width = 325, text = currentMnemos.name, placeholder = ' ', onValueChanged = function(_, value)
@@ -325,8 +317,8 @@ function ArgonautSheetClass.create(argonaut, object)
 
             for subBIndex = 1, 4, 1 do
                 sheet.mnemoses[mnemosIndex].breakthroughNumbers[bIndex][subBIndex] = panel:input({ id = name .. '-mnemos-' .. mnemosIndex .. '-breakthrough-' .. bIndex .. '-input', 
-                                    colors = inputColors, fontSize = 25, 
-                                    text = currentMnemos.breakthroughNumbers[bIndex][subBIndex], placeholder = ' ', width = 35, height = 35, 
+                                    colors = Ui.TRANSPARENT_INPUT_COLORS, fontSize = 20, 
+                                    text = currentMnemos.breakthroughNumbers[bIndex][subBIndex], placeholder = ' ', width = 40, height = 35, 
                                     x = -215 + (globalIndex - 1) * xStep  + (mnemosIndex - 1) * 0.3 - 51 + subXStep * (subBIndex - 1),
                                     y = 72.8 + yStep * (mnemosIndex - 1),
                                     onValueChanged = function(_, value)
@@ -344,13 +336,13 @@ function ArgonautSheetClass.create(argonaut, object)
     -- panel.attributes.color = 'Green'
 
     sheet.notes_input = panel:input({ id = name .. '-notes-input', fontSize = 35, lineType = 'MultiLineNewLine',
-                                colors = inputColors, 
+                                colors = Ui.TRANSPARENT_INPUT_COLORS, 
                                 text = argonaut.notes, placeholder = ' ', onValueChanged = function(_, value)
             argonaut.notes = value
         end
     })
 
-    sheet.object.UI.setCustomAssets(Argonaut.CUSTOM_ASSETS)
+    sheet.object.UI.setCustomAssets(Constants.CUSTOM_ASSETS)
     sheet.root:refresh()
 
     Log:debug('Created new %s', sheet)

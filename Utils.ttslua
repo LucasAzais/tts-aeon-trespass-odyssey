@@ -164,6 +164,27 @@ function Utils.getFirstElementAbove(object)
     end
 end
 
+function Utils.castAndTagFilter(startPosition, direction, tag)
+    local results = Physics.cast({
+        origin       = startPosition,
+        direction    = Vector(direction):normalize(),
+        type         = 1,
+        debug        = false,
+    })
+
+    if results and #results > 0 then
+        for index, result in ipairs(results) do
+            if result.hit_object.hasTag(tag) then
+                return result.hit_object
+            end
+        end
+        
+        return nil
+    else 
+        return nil
+    end
+end
+
 function Utils.getAllElementsAbove(object)
     local results = Physics.cast({
         origin       = object.getPosition(),
@@ -204,21 +225,34 @@ function Utils.format(message, ...)
     message = message or ''
 
     local args = table.pack(...)
-    for i, arg in ipairs(args) do
-        if arg == nil then
+    for i = 1, args.n do
+        if args[i] == nil then
             args[i] = '<nil>'
-        elseif type(arg) == 'table' then
+        elseif type(args[i]) == 'table' then
             -- TODO: Serialise table?
-            args[i] = tostring(arg)
+            args[i] = tostring(args[i])
         end
     end
 
     local result = ''
     if not pcall(function() result = string.format(message, table.unpack(args)) end) then
         result = 'Formatting Error: message = "' .. message .. '"'
+        for i = 1, args.n do
+            result = result .. ', arg'.. i .. '=' .. tostring(args[i])
+        end
     end
 
     return result
+end
+
+function Utils.clamp(value, min, max)
+    if min ~= nil and value < min then
+        return min
+    elseif max ~= nil and value > max then
+        return max
+    else
+        return value
+    end
 end
 
 ------------------------------------------------------

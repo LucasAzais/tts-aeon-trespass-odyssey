@@ -7,7 +7,7 @@ local Ui = require('Ui')
 
 ------------------------------------------------------
 
-function GlobalUi.init(saved_data)
+function GlobalUi.init(savedData)
    
 end
 
