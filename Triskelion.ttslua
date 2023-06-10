@@ -104,6 +104,7 @@ function Triskelion.init(savedData)
                     linkTriskelion.titanGUID = sheet.getGUID()
                     Triskelion.createTitanUi(linkTriskelion.titanGUID)
                     Log:debug('Linked %s triskelion with titan sheet %s', linkColor, sheet.getGUID())
+                    broadcastToAll('Linked successfully.', Color.Green)
                 end
             end
         end
@@ -153,13 +154,15 @@ function Triskelion.decrementValue(color, type)
 end
 
 function Triskelion.updateTriskelionDisplay(color, type)
-    if not Triskelion.TRISKELIONS[color] or Triskelion.TRISKELIONS[color][type] == nil then return end
+    if not Triskelion.TRISKELIONS[color] or (type ~= nil and Triskelion.TRISKELIONS[color][type] == nil) then return end
 
-    if type == Constants.RAGE then
+    if type == nil or type == Constants.RAGE then
         Triskelion.TRISKELIONS[color].rage_button:setText(Triskelion.TRISKELIONS[color][Constants.RAGE])
-    elseif type == Constants.DANGER then
+    end
+    if type == nil or type == Constants.DANGER then
         Triskelion.TRISKELIONS[color].danger_button:setText(Triskelion.TRISKELIONS[color][Constants.DANGER])
-    elseif type == Constants.FATE then
+    end
+    if type == nil or type == Constants.FATE then
         Triskelion.TRISKELIONS[color].fate_button:setText(Triskelion.TRISKELIONS[color][Constants.FATE])
     end
 end
@@ -238,6 +241,20 @@ function Triskelion.updateLinkedTitanDisplay(color, type)
     -- end
 end
 
+function Triskelion.resetAll()
+    for color, _ in pairs(Triskelion.TRISKELIONS) do
+        Triskelion.reset(color)
+    end
+end
+
+function Triskelion.reset(color)
+    Triskelion.TRISKELIONS[color][Constants.RAGE] = 0
+    Triskelion.TRISKELIONS[color][Constants.FATE] = 0
+    Triskelion.TRISKELIONS[color][Constants.DANGER] = 0
+
+    Triskelion.updateTriskelionDisplay(color)
+end
+
 function Triskelion.save()
     local flatData = {}
 
@@ -258,4 +275,5 @@ end
 return {
     init = Triskelion.init,
     save = Triskelion.save,
+    resetAll = Triskelion.resetAll,
 }

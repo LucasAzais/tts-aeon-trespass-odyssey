@@ -28,7 +28,7 @@ Argonaut.SHEET_URL = 'http://cloud-3.steamusercontent.com/ugc/206438327857760598
 Argonaut.SHEET_SCALE = {6.92, 1.00, 6.92}
 
 function Argonaut.init(savedData)
-    for index, argonaut in ipairs(savedData or {}) do
+    for index, argonaut in ipairs(savedData.argonauts or {}) do
         Argonaut.ARGONAUTS[argonaut.id] = ArgonautClass.create(argonaut)
         Argonaut.ARGONAUT_SHEETS[argonaut.id] = ArgonautSheetClass.create(Argonaut.ARGONAUTS[argonaut.id], getObjectFromGUID(argonaut.sheetGUID))
     end
@@ -134,8 +134,11 @@ function ArgonautSheetClass.create(argonaut, object)
     }
     setmetatable(sheet, ArgonautSheetClass)
 
+    -- Link Argonaut with sheet
+    sheet.argonaut.sheetGUID = object.getGUID()
+
     local name = 'argonaut-sheet-'..sheet.argonaut.id
-    sheet.root = Ui.createRootOnObject(name .. '-root', object, 1)
+    sheet.root = Ui.createRootOnObject(name .. '-root', object, 1.2)
 
     -- Name/Player
     local panel = sheet.root:panel({ id = name .. '-name-panel', x = -2, y = -75.8, width = 450, height = 100, })

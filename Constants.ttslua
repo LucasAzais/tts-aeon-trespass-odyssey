@@ -31,6 +31,7 @@ Constants.DANGER = 'Danger'
 Constants.FATE = 'Fate'
 
 -- Tags
+Constants.DISPOSABLE = 'Disposable'
 Constants.PRIMORDIAL = 'Primordial'
 Constants.TRISKELION = 'Triskelion'
 Constants.TITAN = 'Titan'
@@ -39,6 +40,9 @@ Constants.TERRAIN = 'Terrain'
 Constants.ARGONAUT_SHEET = 'ArgonautSheet'
 Constants.ARGO_SHEET = 'ArgoSheet'
 Constants.TIMELINE_SHEET = 'TimelineSheet'
+
+-- Battle types
+Constants.MNESTIS_THEATRE = 'Mnestis Theatre'
 
 -- Cycles
 Constants.ONWARDS_ODYSSEY = 'Onwards Odyssey'
@@ -92,6 +96,25 @@ Constants.OF_WAX_AND_PROMISES = 'Of Wax And Promises'
 Constants.CANT_GO_BACK = 'Can\'t Go Back'
 Constants.SIN_OF_THE_FATHERS = 'Sin of the Fathers'
 Constants.COMING_OF_AGE = 'Coming of Age'
+
+-- Levels
+Constants.LEVEL_0 = 0
+Constants.LEVEL_1 = 1
+Constants.LEVEL_2 = 2
+Constants.LEVEL_3 = 3
+Constants.LEVEL_4 = 4
+Constants.LEVEL_5 = 5
+Constants.LEVEL_6 = 6
+Constants.LEVEL_7 = 7
+Constants.LEVEL_8 = 8
+Constants.LEVEL_9 = 9
+Constants.LEVEL_10 = 10
+
+-- Cardinal Rotations
+Constants.ROTATION_NORTH = {0, 0, 0}
+Constants.ROTATION_EAST = {0, 90, 0}
+Constants.ROTATION_SOUTH = {0, 180, 0}
+Constants.ROTATION_WEST = {0, 270, 0}
 
 ------------------------------------------------------
 

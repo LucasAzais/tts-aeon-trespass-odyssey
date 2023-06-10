@@ -1,0 +1,112 @@
+local Grid = {}
+Grid.__index = Grid
+
+local Constants = require('Constants')
+local Utils = require('Utils')
+
+------------------------------------------------------
+
+function Grid.create(params)
+    assert(Utils.isObject(params.object))
+    assert(Utils.isNumber(params.left))
+    assert(Utils.isNumber(params.right))
+    assert(Utils.isNumber(params.top))
+    assert(Utils.isNumber(params.bottom))
+    assert(Utils.isNumber(params.columns))
+    assert(Utils.isNumber(params.rows))
+
+    assert(params.columns >= 2 and params.rows >= 2)
+
+    local grid = {
+        anchor = params.object,
+        left = params.left,
+        right = params.right,
+        top = params.top,
+        bottom = params.bottom,
+        columns = params.columns,
+        rows = params.rows,
+        -- This doesn't use math.abs, in case we want to reverse the order of rows and columns (if these are negative)
+        column_size = (params.right - params.left) / (params.columns - 1),
+        row_size = (params.top - params.bottom) / (params.rows - 1),
+    }
+    setmetatable(grid, Grid)
+    
+    return grid
+end
+
+function Grid:showDebugLines()
+    -- Debug code to show the grid that's being used
+    local debugGrid = {}
+    for i = 0, self.columns - 1 do
+        table.insert(debugGrid, {
+            points = { {self.left + i * self.column_size, 1.5, self.top}, {self.left + i * self.column_size, 1.5, self.bottom} },
+            color = {1,0,0},
+            thickness = 0.2,
+        })
+    end
+    for i = 0, self.rows - 1 do
+        table.insert(debugGrid, {
+            points = { {self.left, 1.5, self.top - i * self.row_size}, {self.right, 1.5, self.top - i * self.row_size} },
+            color = {1,0,0},
+            thickness = 0.2,
+        })
+    end
+    
+    Global.setVectorLines(debugGrid)
+end
+
+-- This hides all vector lines but we're not using them anyway?
+function Grid:hideDebugLines()
+    Global.setVectorLines({})
+end
+
+-- Keep an eye on these two functions, they modify the grid to start indexed at 1
+function Grid:getColumnRow(position)
+    local column = (position.x - self.left) / self.column_size
+    local row = (position.z - self.bottom) / self.row_size
+
+    return row + 1, column + 1
+end
+
+function Grid:getXZ(currentRow, currentColumn)
+    local x = self.left + ((currentColumn - 1) * self.column_size)
+    local z = self.bottom + ((currentRow - 1) * self.row_size)
+
+    return x, z
+end
+
+-- Turn x/z pos into col/row then back into x/z
+function Grid:snapPosition(object, size)
+    assert(Utils.isObject(object))
+    assert(Utils.isTable(size))
+    assert(Utils.isNumber(size.width))
+    assert(Utils.isNumber(size.height))
+
+    local worldPosition = object.getPosition()
+
+    local currentRow, currentColumn = self:getColumnRow(worldPosition)
+
+    local snapCol = ((size.width%2 == 0) and math.floor(currentColumn) + 0.5) or math.floor(currentColumn + 0.5)
+    local snapRow = ((size.height%2 == 0) and math.floor(currentRow) + 0.5) or math.floor(currentRow + 0.5)
+    local widthRadius = size.width / 2
+    local heightRadius = size.height / 2
+    local epsilon = 0.001
+
+    if -- Outside the grid, just do nothing
+        snapCol - widthRadius < -0.5 - epsilon
+        or snapCol + widthRadius >= self.columns + epsilon
+        or snapRow - heightRadius < -0.5 - epsilon
+        or snapRow + heightRadius >= self.rows + epsilon
+    then
+        return worldPosition
+    else
+        local x, z = self:getXZ(snapRow, snapCol)
+        return {x, worldPosition.y, z}
+    end
+end
+
+------------------------------------------------------
+
+return {
+    create = Grid.create,
+}
