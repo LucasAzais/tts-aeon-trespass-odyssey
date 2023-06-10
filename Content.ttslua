@@ -1,23 +1,467 @@
 local Content = {}
 Content.__index = Content
 
+local Constants = require('Constants')
+
 ------------------------------------------------------
+
+Content.battles = {
+    ['Tutorial Battle'] = {
+        {
+            levels = { Constants.LEVEL_0, },
+            primordials = { Constants.HEKATON, },
+            primordial_start_position_rotation = { 
+                { position = { row = 7.5, column = 10.5 }, weight = 1,
+                            rotations = { { rotation = Constants.ROTATION_NORTH, weight = 1 },
+                                          { rotation = Constants.ROTATION_EAST, weight = 1 },
+                                          { rotation = Constants.ROTATION_SOUTH, weight = 1 },
+                                          { rotation = Constants.ROTATION_WEST, weight = 1 } },
+                },
+            },
+            titan_start_positions = {
+                { row = 5, column = 8 }, { row = 5, column = 13 }, { row = 10, column = 8 }, { row = 10, column = 13 },
+            },
+            terrains = {
+                {
+                    name = 'Column',
+                    positions = { 
+                        { row = 2, column = 9 }, { row = 2, column = 12 }, { row = 3, column = 4 }, { row = 3, column = 17 }, { row = 6, column = 6 },
+                        { row = 6, column = 15 }, { row = 7, column = 3 }, { row = 7, column = 18 }, { row = 8, column = 3 }, { row = 8, column = 18 },
+                        { row = 9, column = 6 }, { row = 9, column = 15 }, { row = 12, column = 4 }, { row = 12, column = 17 }, { row = 13, column = 9 },
+                        { row = 13, column = 12 },
+                    },
+                    rotations = {
+                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                        { x = 0, y = 180, z = 0 },
+                    },
+                },
+            }
+        },
+    },
+    ['Hekaton Battle'] = {
+        {
+            levels = { Constants.LEVEL_1, Constants.LEVEL_2, Constants.LEVEL_3, },
+            primordials = { Constants.HEKATON, },
+            primordial_start_position_rotation = { 
+                { position = { row = 7.5, column = 10.5 }, weight = 1,
+                            rotations = { { rotation = Constants.ROTATION_NORTH, weight = 1 },
+                                          { rotation = Constants.ROTATION_EAST, weight = 1 },
+                                          { rotation = Constants.ROTATION_SOUTH, weight = 1 },
+                                          { rotation = Constants.ROTATION_WEST, weight = 1 } },
+                },
+            },
+            titan_start_positions = {
+                { row = 5, column = 13 }, { row = 6, column = 14 }, { row = 9, column = 7 }, { row = 10, column = 8 },
+            },
+            terrains = {
+                {
+                    name = 'Column',
+                    positions = { 
+                        { row = 2, column = 9 }, { row = 2, column = 12 }, { row = 3, column = 4 }, { row = 3, column = 17 }, { row = 5, column = 15 },
+                        { row = 6, column = 6 }, { row = 7, column = 3 }, { row = 7, column = 18 }, { row = 8, column = 3 }, { row = 8, column = 18 },
+                        { row = 9, column = 15 }, { row = 10, column = 6 }, { row = 12, column = 4 }, { row = 12, column = 17 }, { row = 13, column = 9 },
+                        { row = 13, column = 12 },
+                    },
+                    rotations = {
+                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                        { x = 0, y = 180, z = 0 },
+                    },
+                },
+                {
+                    name = 'City',
+                    positions = { 
+                        { row = 5, column = 17 }, { row = 10, column = 4 },
+                    },
+                    rotations = {
+                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                    },
+                },
+            }
+        },
+        {
+            levels = { Constants.LEVEL_4, },
+            primordials = { Constants.HEKATON },
+            primordial_start_position_rotation = { 
+                { position = { row = 7.5, column = 10.5 }, weight = 1,
+                            rotations = { { rotation = Constants.ROTATION_NORTH, weight = 1 },
+                                          { rotation = Constants.ROTATION_EAST, weight = 1 },
+                                          { rotation = Constants.ROTATION_SOUTH, weight = 1 },
+                                          { rotation = Constants.ROTATION_WEST, weight = 1 } },
+                },
+            },
+            titan_start_positions = {
+                { row = 5, column = 13 }, { row = 6, column = 14 }, { row = 9, column = 7 }, { row = 10, column = 8 },
+            },
+            terrains = {
+                {
+                    name = 'Column',
+                    positions = { 
+                        { row = 2, column = 9 }, { row = 3, column = 4 }, { row = 3, column = 17 }, { row = 5, column = 15 }, { row = 6, column = 6 }, 
+                        { row = 8, column = 18 }, { row = 9, column = 15 }, { row = 10, column = 6 }, { row = 12, column = 4 }, { row = 12, column = 17 },
+                        { row = 13, column = 12 },
+                    },
+                    rotations = {
+                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                        { x = 0, y = 180, z = 0 },
+                    },
+                },
+                {
+                    name = 'City',
+                    positions = { 
+                        { row = 5, column = 17 }, { row = 10, column = 4 },
+                    },
+                    rotations = {
+                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                    },
+                },
+                {
+                    name = 'Maze Fissure L',
+                    positions = { 
+                        { row = 8, column = 9.5 },
+                    },
+                    rotations = {
+                        { x = 0, y = 270, z = 180 },
+                    },
+                },
+                {
+                    name = 'Maze Fissure O',
+                    positions = { 
+                        { row = 12.5, column = 8.5 },
+                    },
+                    rotations = {
+                        { x = 0, y = 180, z = 0 },
+                    },
+                },
+                {
+                    name = 'Maze Fissure I',
+                    positions = { 
+                        { row = 6.5, column = 3 }, { row = 7, column = 16.5 },
+                    },
+                    rotations = {
+                        { x = 0, y = 270, z = 0 }, { x = 0, y = 180, z = 0 },
+                    },
+                },
+            }
+        },
+    },
+    ['Labyrinthauros Battle'] = {
+        {
+            end_setup = 'endLabyrinthaurosSetup',
+            levels = { Constants.LEVEL_1, Constants.LEVEL_2, Constants.LEVEL_3, Constants.LEVEL_4, },
+            primordials = { Constants.LABYRINTHAUROS, },
+            primordial_start_position_rotation = { 
+                { position = { row = 7.5, column = 3.5 }, weight = 6,
+                            rotations = { { rotation = Constants.ROTATION_EAST, weight = 1 }, },
+                },
+                { position = { row = 7.5, column = 17.5 }, weight = 6,
+                            rotations = { { rotation = Constants.ROTATION_WEST, weight = 1 } },
+                },
+                { position = nil, weight = 3, },
+            },
+            titan_start_positions = {
+                { row = 6, column = 9 }, { row = 6, column = 12 }, { row = 9, column = 9 }, { row = 9, column = 12 },
+            },
+            terrains = {
+                {
+                    name = 'Labyrinth I',
+                    positions = { { row = 5, column = 7.5 }, },
+                    rotations = { { x = 0, y = 180, z = 0 }, },
+                },
+                {
+                    name = 'Labyrinth Z',
+                    positions = { { row = 5, column = 12.5 }, },
+                    rotations = { { x = 0, y = 270, z = 180 }, },
+                },
+                {
+                    name = 'Labyrinth O',
+                    positions = { { row = 9.5, column = 7.5 }, },
+                    rotations = { { x = 0, y = 180, z = 0 }, },
+                },
+                {
+                    name = 'Labyrinth L',
+                    positions = { { row = 9.5, column = 12 }, },
+                    rotations = { { x = 0, y = 0, z = 180 }, },
+                },
+                {
+                    name = 'City',
+                    positions = { 
+                        { row = 4, column = 3 }, { row = 11, column = 15 },
+                    },
+                    rotations = {
+                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                    },
+                },
+            }
+        },
+    },
+    ['Ambush Battle'] = {
+        {
+            special_setup = 'setupAmbushBattleCycleI',
+            levels = { Constants.LEVEL_1, Constants.LEVEL_2, Constants.LEVEL_3, Constants.LEVEL_4, },
+            primordials = nil,
+            primordial_start_position_rotation = { 
+                { position = { row = 7.5, column = 15.5 }, weight = 1,
+                            rotations = { { rotation = Constants.ROTATION_WEST, weight = 1 }, },
+                },
+            },
+            titan_start_positions = {
+                { row = 7, column = 9 }, { row = 7, column = 11 }, { row = 8, column = 10 }, { row = 8, column = 11 },
+            },
+            terrains = {
+                {
+                    name = 'Labyrinth I',
+                    positions = { { row = 4.5, column = 12 }, },
+                    rotations = { { x = 0, y = 90, z = 0 }, },
+                },
+                {
+                    name = 'Labyrinth L',
+                    positions = { { row = 9, column = 7.5 }, },
+                    rotations = { { x = 0, y = 90, z = 0 }, },
+                },
+                {
+                    name = 'Column',
+                    positions = { 
+                        { row = 6, column = 4 }, { row = 6, column = 15 }, { row = 7, column = 6 }, { row = 9, column = 15 }, { row = 10, column = 11 }, 
+                        { row = 11, column = 13 }, { row = 12, column = 12 }, { row = 13, column = 9 }, 
+                    },
+                    rotations = {
+                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                    },
+                },
+                {
+                    name = 'City',
+                    positions = { 
+                        { row = 4, column = 4 }, { row = 11, column = 4 },
+                    },
+                    rotations = {
+                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                    },
+                },
+            }
+        },
+    },
+    ['Temenos Battle'] = {
+        {
+            levels = { Constants.LEVEL_1, },
+            primordials = { Constants.ALPHA_TEMENOS, },
+            primordial_start_position_rotation = { 
+                { position = { row = 7, column = 11 }, weight = 1,
+                            rotations = { { rotation = Constants.ROTATION_NORTH, weight = 1 },
+                                          { rotation = Constants.ROTATION_EAST, weight = 1 },
+                                          { rotation = Constants.ROTATION_SOUTH, weight = 1 },
+                                          { rotation = Constants.ROTATION_WEST, weight = 1 } },
+                },
+            },
+            titan_start_positions = {
+                { row = 4, column = 8 }, { row = 4, column = 14 }, { row = 10, column = 8 }, { row = 10, column = 14 },
+            },
+            terrains = {
+                {
+                    name = 'Labyrinth I',
+                    positions = { { row = 7, column = 7.5 }, },
+                    rotations = { { x = 0, y = 180, z = 0 }, },
+                },
+                {
+                    name = 'Labyrinth Z',
+                    positions = { { row = 2.5, column = 10 }, },
+                    rotations = { { x = 0, y = 180, z = 180 }, },
+                },
+                {
+                    name = 'Labyrinth O',
+                    positions = { { row = 12.5, column = 12.5 }, },
+                    rotations = { { x = 0, y = 180, z = 0 }, },
+                },
+                {
+                    name = 'Labyrinth L',
+                    positions = { { row = 7.5, column = 14 }, },
+                    rotations = { { x = 0, y = 180, z = 0 }, },
+                },
+                {
+                    name = 'Column',
+                    positions = { 
+                        { row = 3, column = 7 }, { row = 3, column = 15 }, { row = 4, column = 5 }, { row = 4, column = 17 }, { row = 10, column = 5 }, 
+                        { row = 10, column = 17 }, { row = 11, column = 7 }, { row = 11, column = 15 }, 
+                    },
+                    rotations = {
+                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                    },
+                },
+                {
+                    name = 'City',
+                    positions = { 
+                        { row = 2, column = 17 }, { row = 12, column = 5 },
+                    },
+                    rotations = {
+                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                    },
+                },
+            }
+        },
+    },
+    ['There is No Maze Battle'] = {
+        {
+            levels = { Constants.LEVEL_1, },
+            primordials = { Constants.ALPHA_TEMENOS, },
+            primordial_start_position_rotation = { 
+                { position = { row = 7, column = 11 }, weight = 1,
+                            rotations = { { rotation = Constants.ROTATION_NORTH, weight = 1 },
+                                          { rotation = Constants.ROTATION_EAST, weight = 1 },
+                                          { rotation = Constants.ROTATION_SOUTH, weight = 1 },
+                                          { rotation = Constants.ROTATION_WEST, weight = 1 } },
+                },
+            },
+            titan_start_positions = {
+                { row = 4, column = 8 }, { row = 4, column = 14 }, { row = 10, column = 8 }, { row = 10, column = 14 },
+            },
+            terrains = {
+                {
+                    name = 'Labyrinth I',
+                    positions = { { row = 7, column = 7.5 }, },
+                    rotations = { { x = 0, y = 180, z = 0 }, },
+                },
+                {
+                    name = 'Labyrinth Z',
+                    positions = { { row = 2.5, column = 10 }, },
+                    rotations = { { x = 0, y = 180, z = 180 }, },
+                },
+                {
+                    name = 'Labyrinth O',
+                    positions = { { row = 12.5, column = 12.5 }, },
+                    rotations = { { x = 0, y = 180, z = 0 }, },
+                },
+                {
+                    name = 'Labyrinth L',
+                    positions = { { row = 7.5, column = 14 }, },
+                    rotations = { { x = 0, y = 180, z = 0 }, },
+                },
+                {
+                    name = 'Column',
+                    positions = { 
+                        { row = 3, column = 7 }, { row = 3, column = 15 }, { row = 4, column = 5 }, { row = 4, column = 17 }, { row = 10, column = 5 }, 
+                        { row = 10, column = 17 }, { row = 11, column = 7 }, { row = 11, column = 15 }, 
+                    },
+                    rotations = {
+                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                    },
+                },
+                {
+                    name = 'City',
+                    positions = { 
+                        { row = 2, column = 17 }, { row = 12, column = 5 },
+                    },
+                    rotations = {
+                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                    },
+                },
+            }
+        },
+    },
+    ['Pursuer Battle'] = {
+        {
+            levels = { Constants.LEVEL_1, },
+            primordials = { Constants.HERMESIAN_PURSUER, },
+            primordial_start_position_rotation = { 
+                { position = { row = 7.5, column = 10.5 }, weight = 1,
+                            rotations = { { rotation = Constants.ROTATION_NORTH, weight = 1 },
+                                          { rotation = Constants.ROTATION_EAST, weight = 1 },
+                                          { rotation = Constants.ROTATION_SOUTH, weight = 1 },
+                                          { rotation = Constants.ROTATION_WEST, weight = 1 } },
+                },
+            },
+            titan_start_positions = {
+                { row = 5, column = 8 }, { row = 5, column = 13 }, { row = 10, column = 8 }, { row = 10, column = 13 },
+            },
+            terrains = {
+                {
+                    name = 'Ambrosia Pool',
+                    positions = { { row = 2.5, column = 10.5 }, { row = 7.5, column = 5.5 }, { row = 7.5, column = 14.5 }, { row = 10.5, column = 10.5 }, },
+                    rotations = { { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, },
+                },
+                {
+                    name = 'Column',
+                    positions = { 
+                        { row = 2, column = 9 }, { row = 2, column = 12 }, { row = 3, column = 17 }, { row = 4, column = 5 }, { row = 5, column = 3 },
+                        { row = 6, column = 3 }, { row = 6, column = 6 }, { row = 6, column = 15 }, { row = 9, column = 6 }, { row = 9, column = 15 },
+                        { row = 9, column = 18 }, { row = 10, column = 18 }, { row = 12, column = 4 }, { row = 12, column = 15 }, { row = 13, column = 9 },
+                        { row = 13, column = 12 },
+                    },
+                    rotations = {
+                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                        { x = 0, y = 180, z = 0 },
+                    },
+                },
+            }
+        },
+    },
+    ['Pursuit\'s End Battle'] = {
+        {
+            levels = { Constants.LEVEL_1, },
+            primordials = { Constants.HERMESIAN_PURSUER, },
+            primordial_start_position_rotation = { 
+                { position = { row = 7.5, column = 10.5 }, weight = 1,
+                            rotations = { { rotation = Constants.ROTATION_NORTH, weight = 1 },
+                                          { rotation = Constants.ROTATION_EAST, weight = 1 },
+                                          { rotation = Constants.ROTATION_SOUTH, weight = 1 },
+                                          { rotation = Constants.ROTATION_WEST, weight = 1 } },
+                },
+            },
+            titan_start_positions = {
+                { row = 5, column = 8 }, { row = 5, column = 13 }, { row = 10, column = 8 }, { row = 10, column = 13 },
+            },
+            terrains = {
+                {
+                    name = 'Ambrosia Pool',
+                    positions = { { row = 2.5, column = 10.5 }, { row = 7.5, column = 8.5 }, { row = 7.5, column = 12.5 }, { row = 10.5, column = 10.5 }, },
+                    rotations = { { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, },
+                },
+                {
+                    name = 'Ambrosia Trail',
+                    positions = { { row = 4, column = 15 }, { row = 8, column = 4 }, { row = 13, column = 7 }, },
+                    rotations = { { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, },
+                },
+                {
+                    name = 'Column',
+                    positions = { 
+                        { row = 2, column = 9 }, { row = 3, column = 17 }, { row = 4, column = 5 }, { row = 5, column = 3 }, { row = 6, column = 6 }, 
+                        { row = 6, column = 15 }, { row = 9, column = 6 }, { row = 9, column = 18 }, { row = 10, column = 18 }, { row = 12, column = 4 }, 
+                        { row = 12, column = 15 }, { row = 13, column = 12 },
+                    },
+                    rotations = {
+                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                    },
+                },
+            }
+        },
+    },
+}
 
 Content.primordials = {
     {
-        name = 'Hekaton',
+        name = Constants.HEKATON,
         size = {width = 2, height = 2},
     },
     {
-        name = 'Labyrinthauros',
+        name = Constants.LABYRINTHAUROS,
         size = {width = 2, height = 2},
     },
     {
-        name = 'Hermesian Pursuer',
+        name = Constants.HERMESIAN_PURSUER,
         size = {width = 2, height = 2},
     },
     {
-        name = 'Alpha Temenos',
+        name = Constants.ALPHA_TEMENOS,
         size = {width = 2, height = 2},
     }
 }
@@ -68,12 +512,20 @@ Content.terrain = {
         size = {width = 2, height = 2},
     },
     {
+        name = 'Hyperborean Ruins',
+        size = {width = 3, height = 3},
+    },
+    {
         name = 'Column',
         size = {width = 1, height = 1},
     },
     {
         name = 'Ambrosia Pool',
         size = {width = 2, height = 2},
+    },
+    {
+        name = 'Ambrosia Trail',
+        size = {width = 3, height = 3},
     },
     {
         name = 'Giant Shell',

@@ -1,0 +1,559 @@
+local Battle = {}
+Battle.__index = Battle
+
+local Argo = require('Argo')
+local BattleBoard = require('BattleBoard')
+local Content = require('Content')
+local Constants = require('Constants')
+local EventManager = require('EventManager')
+local Log = require('Log').ForModule('Battle')
+local Triskelion = require('Triskelion')
+local Ui = require('Ui')
+local Utils = require('Utils')
+
+------------------------------------------------------
+
+-- Change all this, need to be detected live?
+Battle.TEMP_PRIMORDIAL_BAG_GUID = 'de1845'
+Battle.TERRAIN_BAG = 'c1095a'
+Battle.TERRAIN_CARDS_BAG = 'dbf84f'
+Battle.TITAN_START_URL = 'http://cloud-3.steamusercontent.com/ugc/2055377100667437499/43D1B7D4B60C4D4F9DB15D8702FC59C209A28EFD/'
+Battle.PRIMORDIAL_BAG_POSITION = {24.27, 0.80, -23.44}
+
+Battle.DROP_HEIGHT = 1.60
+
+function Battle.init(savedData)
+    if savedData.current_battle then
+        local battle = Battle.create({ 
+            name = savedData.current_battle.name,
+            level = savedData.current_battle.level,
+            schematics = savedData.current_battle.schematics
+        })
+        Battle.current_battle = battle
+
+        Battle.current_battle.primordialSheet = getObjectFromGUID(savedData.current_battle.primordialSheetGUID)
+        Battle.current_battle.primordialBag = getObjectFromGUID(savedData.current_battle.primordialBagGUID)
+    else
+        Battle.current_battle = nil
+    end
+
+    -- Add 'Disposable' tag to cards that leave the AI/BP and other decks
+    EventManager.addHandler('onObjectLeaveContainer', function(container, object)
+        if container.hasTag(Constants.DISPOSABLE) then
+            object.addTag(Constants.DISPOSABLE)
+        end
+    end)
+end
+
+function Battle.create(params)
+    if not BattleBoard.getGrid() then return nil end
+
+    local battle = {
+        name = params.name,
+        level = params.level,
+        grid = BattleBoard.getGrid(),
+        schematics = params.schematics,
+    }
+
+    setmetatable(battle, Battle)
+    return battle
+end
+
+function Battle.setupBattle(name, level)
+    if Battle.current_battle ~= nil and Battle.current_battle.setupInProgress == true then
+        broadcastToAll('Setup in progress.', Color.Red)
+        return
+    end
+
+    if not Content.battles[name] then
+        broadcastToAll('Battle "' .. name .. '" could not be found', Color.Red)
+    end
+
+    for _, schematics in ipairs(Content.battles[name]) do
+        if level == nil or Utils.contains(schematics.levels, level) then
+            Battle.cleanupCurrentBattle()
+
+            Log:debug('Setting up %s - Level %s.', name, level or 'TBD')
+
+            Battle.current_battle = Battle.create({name = name, level = level, schematics = schematics})
+
+            if Battle.current_battle.schematics.special_setup ~= nil then
+                Battle[Battle.current_battle.schematics.special_setup]()
+            else
+                Battle.current_battle:setup()
+            end
+
+            return Battle.current_battle
+        end
+    end
+
+    -- If not found, return error
+    broadcastToAll('Battle "' .. name .. '"  has no setup for Level "' .. level .. '".', Color.Red)
+end
+
+function Battle:setup()
+    if not self.schematics then return end
+
+    self.setupInProgress = true
+
+    -- Pull out the corresponding battle bag and copy it
+    local primordialsBag = getObjectFromGUID(Battle.TEMP_PRIMORDIAL_BAG_GUID)
+    self.primordialBag = nil
+
+    local existingObject = Utils.castAndTagFilter(Battle.PRIMORDIAL_BAG_POSITION, Vector(0, 1, 0), nil)
+    if existingObject then
+        existingObject.destruct()
+    end
+
+    if type(self.schematics.primordials) == 'string' then
+        Battle[self.schematics.primordials]()
+        return
+    else
+        local pulledPrimordials = 0
+
+        for _, object in ipairs(primordialsBag.getObjects()) do
+            if self.schematics.primordials[1] == object.name and #self.schematics.primordials == 1 then
+
+                primordialsBag.takeObject({
+                    guid = object.guid,
+                    smooth = false,
+                    callback_function = function(spawnedObject)
+                        self.primordialBag = spawnedObject.clone({ position = Battle.PRIMORDIAL_BAG_POSITION })
+                        self.primordialBag.addTag(Constants.DISPOSABLE)
+                        primordialsBag.putObject(spawnedObject)
+
+                        -- Setup terrain first
+                        self:setupTerrains()
+
+                        -- Setup primordial next
+                        self:setupPrimordial()
+
+                        -- Setup titan starting spaces
+                        self:setupTitanStartPositions()
+
+                        -- Shuffle Trauma/Kratos/Moiros decks
+                        self:shuffleDecks()
+
+                        if self.schematics.end_setup ~= nil then
+                            Battle[self.schematics.end_setup]()
+                        end
+
+                        Log:debug('Setup done for %s.', self)
+                        self.setupInProgress = false
+                    end
+                })
+
+                return
+            elseif Utils.contains(self.schematics.primordials, object.name) and #self.schematics.primordials > 1 then
+                local currentPrimordialIndex = pulledPrimordials
+                primordialsBag.takeObject({
+                    guid = object.guid,
+                    smooth = false,
+                    callback_function = function(spawnedObject)
+                        self.primordialBag = spawnedObject.clone({ position = (Vector(Battle.PRIMORDIAL_BAG_POSITION) + Vector(3 * currentPrimordialIndex, 0, 0)) })
+                        self.primordialBag.addTag(Constants.DISPOSABLE)
+                        primordialsBag.putObject(spawnedObject)
+                    end
+                })
+
+                pulledPrimordials = pulledPrimordials + 1
+            end
+        end
+
+        if #self.schematics.primordials > 1 then
+            -- Setup terrain first
+            self:setupTerrains()
+
+            -- Setup titan starting spaces
+            self:setupTitanStartPositions()
+
+            Log:debug('Setup done for battle %s - Level %s, except Primordials.', self.name, self.level)
+            self.setupInProgress = false
+        end
+    end
+end
+
+function Battle:setupTerrains()
+    local cardIndex = 1
+    for terrainIndex, terrain in ipairs(self.schematics.terrains) do
+        local infiniteTerrainBag, terrainCard = nil, nil
+
+        -- Search table for terrain card (it can it was pulled out already)
+        for _, card in ipairs(getObjectsWithTag(Constants.TERRAIN)) do
+            if card.type == 'Card' then
+                for terrainName in string.gmatch(card.name, "([^/]+)") do
+                    -- Starts with (Labyrinth Z -> Labyrinth)
+                    if terrain.name:sub(1, terrainName:len()) == terrainName then
+                        terrainCard = card
+                    end
+                end
+            end
+        end
+
+        -- Search for the terrain card and add it next if it's not already on the table
+        if not terrainCard then
+            local terrainCardsBag = getObjectFromGUID(Battle.TERRAIN_CARDS_BAG)
+            for _, card in ipairs(terrainCardsBag.getObjects()) do
+                -- Split the card name and check for terrain
+                for terrainName in string.gmatch(card.name, "([^/]+)") do
+                    -- Starts with (Labyrinth Z -> Labyrinth)
+                    if terrain.name:sub(1, terrainName:len()) == terrainName then
+                        terrainCard = terrainCardsBag.takeObject({
+                            guid = card.guid,
+                            position = {3.75 + 4 * (cardIndex-1), 1.00, 12.29},
+                            rotation = {0, 180, 0},
+                        })
+                        cardIndex = cardIndex + 1
+                    end
+                end
+            end
+        end
+
+        -- Search for the infinite terrain bag and place it above the card
+        local terrainsBag = getObjectFromGUID(Battle.TERRAIN_BAG)
+        for _, infiniteTerrain in ipairs(terrainsBag.getObjects()) do
+            if infiniteTerrain.name == terrain.name then
+                infiniteTerrainBag = terrainsBag.takeObject({
+                    guid = infiniteTerrain.guid,
+                })
+            end
+        end
+
+        -- Pull the terrain tiles and set them up
+        for index, position in ipairs(terrain.positions) do
+            local x, z = self.grid:getXZ(position.row, position.column)
+
+            infiniteTerrainBag.takeObject({
+                position = {x, Battle.DROP_HEIGHT, z},
+                rotation = terrain.rotations[index],
+                callback_function = function(spawnedObject)
+                    spawnedObject.addTag(Constants.DISPOSABLE)
+                end
+            })
+        end
+
+        -- Put back the infinite terrain bag
+        terrainsBag.putObject(infiniteTerrainBag)
+    end
+end
+
+function Battle:setupTitanStartPositions()
+    for _, position in ipairs(self.schematics.titan_start_positions) do
+        local x, z = self.grid:getXZ(position.row, position.column)
+
+        spawnObject({
+            type = 'Custom_Tile',
+            sound = false,
+            position = {x, Battle.DROP_HEIGHT, z},
+            scale = {0.91, 1, 0.91},
+            callback_function = function(spawnedObject)
+                spawnedObject.setColorTint({192/255, 176/255, 169/255})
+                spawnedObject.addTag(Constants.DISPOSABLE)
+            end
+        }).setCustomObject({
+            image = Battle.TITAN_START_URL,
+            type = 2,
+            thickness = 0.1,
+        })
+    end
+end
+
+function Battle:setupPrimordial()
+    ----------------------------------------
+    -- Calculate all starting values here --
+    ----------------------------------------
+
+    -- Draw the random starting setup
+    local startIndex = 1
+    local startPosition, startRotation = nil, nil
+    if #self.schematics.primordial_start_position_rotation > 1 then
+        -- Setup a random draw. Add all the indexes "weight" amount of times and take a random index from there
+        local randomDraw = {}
+        for index, element in ipairs(self.schematics.primordial_start_position_rotation) do
+            for ballIndex = 1, (element.weight or 1) do
+                table.insert(randomDraw, index)
+            end
+        end
+
+        randomDraw = Utils.knuthShuffle(randomDraw)
+        startIndex = randomDraw[1]
+    end
+
+    -- Get the position
+    startPosition = self.schematics.primordial_start_position_rotation[startIndex].position
+
+    -- If still nil, the players choose
+    if startPosition == nil then
+        broadcastToAll('The players get to choose the starting position.', Constants.WARNING_COLOR)
+    else
+        local x, z = self.grid:getXZ(startPosition.row, startPosition.column)
+        startPosition = {x, Battle.DROP_HEIGHT, z}
+
+        -- Get the rotation
+        startRotation = self.schematics.primordial_start_position_rotation[startIndex].rotations[1]
+        if #self.schematics.primordial_start_position_rotation[startIndex].rotations then
+            -- Setup a random draw. Add all the indexes "weight" amount of times and take a random index from there
+            local randomDraw = {}
+            for index, element in ipairs(self.schematics.primordial_start_position_rotation[startIndex].rotations) do
+                for ballIndex = 1, (element.weight or 1) do
+                    table.insert(randomDraw, index)
+                end
+            end
+
+            randomDraw = Utils.knuthShuffle(randomDraw)
+            startRotation = self.schematics.primordial_start_position_rotation[startIndex].rotations[randomDraw[1]].rotation
+
+            -- If still nil, the players choose
+            if startRotation == nil then
+                broadcastToAll('The players get to choose the starting rotation.', Constants.WARNING_COLOR)
+            end
+        end
+    end
+
+    -- Actually pull the elements
+    for _, object in ipairs(self.primordialBag.getObjects()) do
+        if Utils.contains(object.tags, Constants.PRIMORDIAL) then
+            self.primordialBag.takeObject({
+                guid = object.guid,
+                position = startPosition or (Vector(self.primordialBag.getPosition()) + Vector(6, 0, 0)),
+                rotation = startRotation or Constants.ROTATION_SOUTH,
+                callback_function = function(spawnedObject)
+                    spawnedObject.addTag(Constants.DISPOSABLE)
+                end
+            })
+        elseif object.gm_notes == 'AI1' then
+            self.primordialBag.takeObject({
+                guid = object.guid,
+                position = Vector({-20.52, 1.00, -27.63}) + Vector(0, Battle.DROP_HEIGHT, 0),
+                rotation = {0, 180, 180},
+                callback_function = function(spawnedObject)
+                    spawnedObject.addTag(Constants.DISPOSABLE)
+                    spawnedObject.shuffle()
+                end
+            })
+        elseif object.gm_notes == 'AI2' then
+            self.primordialBag.takeObject({
+                guid = object.guid,
+                position = Vector({-20.48, 1.00, -33.28}) + Vector(0, Battle.DROP_HEIGHT, 0),
+                rotation = {0, 180, 180},
+                callback_function = function(spawnedObject)
+                    spawnedObject.addTag(Constants.DISPOSABLE)
+                    spawnedObject.shuffle()
+                end
+            })
+        elseif object.gm_notes == 'AI3' then
+            self.primordialBag.takeObject({
+                guid = object.guid,
+                position = Vector({-20.48, 1.00, -38.63}) + Vector(0, Battle.DROP_HEIGHT, 0),
+                rotation = {0, 180, 180},
+                callback_function = function(spawnedObject)
+                    spawnedObject.addTag(Constants.DISPOSABLE)
+                    spawnedObject.shuffle()
+                end
+            })
+        elseif object.gm_notes == 'BP1' then
+            self.primordialBag.takeObject({
+                guid = object.guid,
+                position = Vector({-11.33, 1.00, -27.58}) + Vector(0, Battle.DROP_HEIGHT, 0),
+                rotation = {0, 180, 180},
+                callback_function = function(spawnedObject)
+                    spawnedObject.addTag(Constants.DISPOSABLE)
+                    spawnedObject.shuffle()
+                end
+            })
+        elseif object.gm_notes == 'BP2' then
+            self.primordialBag.takeObject({
+                guid = object.guid,
+                position = Vector({-11.33, 1.00, -33.28}) + Vector(0, Battle.DROP_HEIGHT, 0),
+                rotation = {0, 180, 180},
+                callback_function = function(spawnedObject)
+                    spawnedObject.addTag(Constants.DISPOSABLE)
+                    spawnedObject.shuffle()
+                end
+            })
+        elseif object.gm_notes == 'BP3' then
+            self.primordialBag.takeObject({
+                guid = object.guid,
+                position = Vector({-11.33, 1.00, -38.63}) + Vector(0, Battle.DROP_HEIGHT, 0),
+                rotation = {0, 180, 180},
+                callback_function = function(spawnedObject)
+                    spawnedObject.addTag(Constants.DISPOSABLE)
+                    spawnedObject.shuffle()
+                end
+            })
+        elseif object.gm_notes == 'Sheet' then
+            self.primordialSheet = self.primordialBag.takeObject({
+                guid = object.guid,
+                position = Vector({12.68, 0.98, -29.11}),
+                rotation = self.schematics.primordial_sheet_rotation or {0, 180, 0},
+                callback_function = function(spawnedObject)
+                    spawnedObject.addTag(Constants.DISPOSABLE)
+                    spawnedObject.setLock(true)
+                end
+            })
+        elseif object.gm_notes == 'Routine' then
+            local rotation = {0, 180, 0}
+            if self.schematics.type == Constants.MNESTIS_THEATRE then
+                rotation = {0, 180, 180}
+            end
+
+            self.primordialBag.takeObject({
+                guid = object.guid,
+                position = Vector({4.76, 1.00, -30.17}) + Vector(0, Battle.DROP_HEIGHT, 0),
+                rotation = rotation,
+                callback_function = function(spawnedObject)
+                    spawnedObject.addTag(Constants.DISPOSABLE)
+                end
+            })
+        elseif object.gm_notes == 'Signature' then
+            self.primordialBag.takeObject({
+                guid = object.guid,
+                position = Vector({20.63, 1.00, -30.17}) + Vector(0, Battle.DROP_HEIGHT, 0),
+                rotation = {0, 180, 0},
+                callback_function = function(spawnedObject)
+                    spawnedObject.addTag(Constants.DISPOSABLE)
+                end
+            })
+        end
+    end
+end
+
+function Battle:shuffleDecks()
+    -- This assumes we're not moving the decks from their position relative to the board
+    local board = BattleBoard.getBoard()
+
+    local deck = Utils.castAndTagFilter(board.positionToWorld({1.033637, 0, -1.118403}), Vector(0, 1, 0), nil)
+    if deck ~= nil then deck.shuffle() end
+    deck = Utils.castAndTagFilter(board.positionToWorld({0.8682172, 0, -1.116671}), Vector(0, 1, 0), nil)
+    if deck ~= nil then deck.shuffle() end
+    deck = Utils.castAndTagFilter(board.positionToWorld({0.7037947, 0, -1.11486}), Vector(0, 1, 0), nil)
+    if deck ~= nil then deck.shuffle() end
+    deck = Utils.castAndTagFilter(board.positionToWorld({0.5501335, 0, -1.115513}), Vector(0, 1, 0), nil)
+    if deck ~= nil then deck.shuffle() end
+    deck = Utils.castAndTagFilter(board.positionToWorld({0.3137448, 0, -1.164969}), Vector(0, 1, 0), nil)
+    if deck ~= nil then deck.shuffle() end
+    deck = Utils.castAndTagFilter(board.positionToWorld({0.05157612, 0, -1.164673}), Vector(0, 1, 0), nil)
+    if deck ~= nil then deck.shuffle() end
+end
+
+function Battle.endLabyrinthaurosSetup()
+    -- This is using absolute positions, otherwise we have to use "wait.time"
+    -- to wait for the primordial sheet to be in position...
+    -- Setup Gaze of Temenos card
+    for _, object in ipairs(Battle.current_battle.primordialBag.getObjects()) do
+        if object.gm_notes == 'Gaze of Temenos' then
+            Battle.current_battle.primordialBag.takeObject({
+                guid = object.guid,
+                position = {26.09, 1.00, -30.17}, -- Battle.current_battle.primordialSheet.positionToWorld({-3.212472, 0.03, 0.2579071}),
+                rotation = {0, 180, 0},
+                callback_function = function(spawnedObject)
+                    spawnedObject.addTag(Constants.DISPOSABLE)
+                end
+            })
+        end
+    end
+
+    -- Setup laby tracker token
+    getObjectFromGUID('508d02').takeObject({
+        position = {17.41, 1.08, -25.57}, -- Battle.current_battle.primordialSheet.positionToWorld({-1.153458, 0.03, -0.8559913}),
+        rotation = {0, 180, 0},
+        callback_function = function(spawnedObject)
+            spawnedObject.addTag(Constants.DISPOSABLE)
+        end
+    })
+end
+
+function Battle.setupAmbushBattleCycleI()
+    Battle.current_battle.schematics = Utils.shallowCopy(Battle.current_battle.schematics)
+
+    -- Find the correct level
+    local hekatonBattles, labyrinthaurosBattles = 0, 0
+    local lastMarkedLevelHekaton, lastMarkedLevelLabyrinthauros = 0, 0
+
+    for index, element in ipairs(Argo.getEvolutionTracks()) do
+        if element[Constants.HEKATON] == true then
+            hekatonBattles = hekatonBattles + 1
+            lastMarkedLevelHekaton = Argo.getLevelFromEvolutionIndex(index)
+        end
+
+        if element[Constants.LABYRINTHAUROS] == true then
+            labyrinthaurosBattles = labyrinthaurosBattles + 1
+            lastMarkedLevelLabyrinthauros = Argo.getLevelFromEvolutionIndex(index)
+        end
+    end
+
+    if hekatonBattles > labyrinthaurosBattles then
+        Battle.current_battle.level = lastMarkedLevelLabyrinthauros or Constants.LEVEL_1
+        Battle.current_battle.schematics.primordials = { Constants.LABYRINTHAUROS }
+        broadcastToAll('Ambushed by Labyrinthauros, at Level ' .. lastMarkedLevelLabyrinthauros, Constants.WARNING_COLOR)
+    elseif hekatonBattles < labyrinthaurosBattles then
+        Battle.current_battle.level = lastMarkedLevelHekaton or Constants.LEVEL_1
+        Battle.current_battle.schematics.primordials = { Constants.HEKATON }
+        broadcastToAll('Ambushed by Hekaton, at Level ' .. lastMarkedLevelHekaton, Constants.WARNING_COLOR)
+    else
+        Battle.current_battle.schematics.primordials = { Constants.HEKATON, Constants.LABYRINTHAUROS }
+        broadcastToAll('Ambush levels are equal, you get to choose and set it up.', Constants.WARNING_COLOR)
+    end
+    
+    Battle.current_battle:setup()
+end
+
+function Battle.cleanupCurrentBattle()
+    if not Battle.current_battle then return end
+
+    Battle.current_battle:cleanup()
+    Battle.current_battle = nil
+end
+
+function Battle:cleanup()
+    -- Destroy all Disposable content
+    for _, object in ipairs(getObjectsWithTag(Constants.DISPOSABLE)) do
+        object.destruct()
+    end
+
+    -- Put the terrain away
+    local terrainCardsBag = getObjectFromGUID(Battle.TERRAIN_CARDS_BAG)
+    for _, card in ipairs(getObjectsWithTag(Constants.TERRAIN)) do
+        if card.type == 'Card' then
+            terrainCardsBag.putObject(getObjectFromGUID(card.guid))
+        end
+    end
+
+    -- Reset all triskelions
+    Triskelion.resetAll()
+
+    Log:debug('%s cleaned up.', self)
+end
+
+function Battle:__tostring()
+    return Utils.format('Battle{name = %s, level = %s}', self.name, self.level or 'nil')
+end
+
+function Battle.save()
+    local battle = nil
+    if Battle.current_battle ~= nil then
+        battle = {
+            name = Battle.current_battle.name,
+            level = Battle.current_battle.level,
+            schematics = Battle.current_battle.schematics,
+        }
+
+        battle.primordialSheetGUID = Battle.current_battle.primordialSheet.getGUID()
+        battle.primordialBagGUID = Battle.current_battle.primordialBag.getGUID()
+    end
+
+    local flatData = {
+        current_battle = battle,
+    }
+
+    return flatData
+end
+
+------------------------------------------------------
+
+return {
+    init = Battle.init,
+    setupBattle = Battle.setupBattle,
+    cleanupCurrentBattle = Battle.cleanupCurrentBattle,
+    save = Battle.save,
+}

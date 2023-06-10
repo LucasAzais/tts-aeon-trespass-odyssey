@@ -1,6 +1,7 @@
 local GlobalUi = {}
 GlobalUi.__index = GlobalUi
 
+local Battle = require('Battle')
 local Constants = require('Constants')
 local Options = require('Options')
 local Ui = require('Ui')
@@ -8,7 +9,127 @@ local Ui = require('Ui')
 ------------------------------------------------------
 
 function GlobalUi.init(savedData)
-   
+    GlobalUi.confirmation_panel = Ui.getRoot():panel({
+        id = 'confirmation-panel', height = 250, width = 400, active = false, rectAlignment = 'MiddleCenter'
+    })
+    GlobalUi.confirmation_panel.attributes.color = '#e3e0da'
+
+    GlobalUi.confirmation_text = GlobalUi.confirmation_panel:text({ id = 'confirmation-text', text = '', 
+                    width = 390, height = 200, textAlignment = 'UpperCenter', rectAlignment = 'UpperCenter', 
+                    fontSize = 35,
+    })
+    GlobalUi.confirmation_yes_button = GlobalUi.confirmation_panel:button({ 
+            id = 'confirmation-yes-button', text = '', width = 130, height = 50, 
+            x = -80, y = 10, fontSize = 30,
+            textAlignment = 'MiddleCenter', rectAlignment = 'LowerCenter', onClick = function(_, button) end
+    })
+    GlobalUi.confirmation_no_button = GlobalUi.confirmation_panel:button({ 
+            id = 'confirmation-no-button', text = '', width = 130, height = 50, 
+            x = 80, y = 10, fontSize = 30,
+            textAlignment = 'MiddleCenter', rectAlignment = 'LowerCenter', onClick = function(_, button) end
+    })
+
+   -- Create the collapsible UI
+   local globalWidth = 380
+   GlobalUi.menu_panel = Ui.getRoot():verticalLayout({
+        id = 'options-panel', height = 400, width = globalWidth, rectAlignment = 'UpperLeft', x = 120, y = -10, padding = '5 5 5 5', active = false
+    })
+    GlobalUi.menu_panel.attributes.color = '#05050559'
+    GlobalUi.menu_panel.attributes.allowDragging = true
+    GlobalUi.menu_panel.attributes.returnToOriginalPositionWhenReleased = false
+    GlobalUi.menu_panel.attributes.childForceExpandWidth = false
+
+    GlobalUi.toggle_button = Ui.getRoot():button({
+        id = 'options-menu-toggle', height = 40, width = 40, rectAlignment = 'UpperLeft', x = 70, y = -10, onClick = function() GlobalUi.expandMenu() end
+    })
+    GlobalUi.toggle_button.attributes.fontSize = 35
+    GlobalUi.toggle_button.attributes.text = '\u{25BC}'
+    GlobalUi.toggle_button.attributes.verticalOverflow = 'Overflow'
+    GlobalUi.toggle_button.attributes.horizontalOverflow = 'Overflow'
+    GlobalUi.toggle_button.attributes.allowDragging = true
+    GlobalUi.toggle_button.attributes.returnToOriginalPositionWhenReleased = false
+
+    local fontSize = 25
+    GlobalUi.menu_panel:button({ id = 'cleanup-button', text = 'Cleanup', fontSize = fontSize, width = globalWidth - 10, height = 40,
+                                    colors = '#d64e45|#eb3e31|#cf817c|rgba(0.78,0.78,0.78,0.5)', onClick = function()
+        Battle.cleanupCurrentBattle()
+    end })
+
+    local hekatonLayout = GlobalUi.menu_panel:horizontalLayout({ id = 'hekaton-layout-button', width = globalWidth - 10, height = 40, })
+    hekatonLayout:text({ id = 'hekaton-label', text = Constants.HEKATON, fontSize = fontSize, width = 100, color = 'White' })
+    for _, level in ipairs({ Constants.LEVEL_0, Constants.LEVEL_1, Constants.LEVEL_2, Constants.LEVEL_3, Constants.LEVEL_4, }) do
+        hekatonLayout:button({ id = 'hekaton-' .. level .. '-button', fontSize = fontSize, text = tostring(level), onClick = function()
+            if level == Constants.LEVEL_0 then
+                Battle.setupBattle('Tutorial Battle', level)
+            else
+                Battle.setupBattle('Hekaton Battle', level)
+            end
+        end })
+    end
+
+    local labyrinthaurosLayout = GlobalUi.menu_panel:horizontalLayout({ id = 'labyrinthauros-layout-button', width = globalWidth - 10, height = 40, })
+    labyrinthaurosLayout:text({ id = 'labyrinthauros-label', text = Constants.LABYRINTHAUROS, fontSize = fontSize, width = 145, color = 'White' })
+    for _, level in ipairs({ Constants.LEVEL_1, Constants.LEVEL_2, Constants.LEVEL_3, Constants.LEVEL_4, }) do
+        labyrinthaurosLayout:button({ id = 'labyrinthauros-' .. level .. '-button', fontSize = fontSize, text = tostring(level), onClick = function()
+            Battle.setupBattle('Labyrinthauros Battle', level)
+        end })
+    end
+
+    local pursuerLayout = GlobalUi.menu_panel:horizontalLayout({ id = 'pursuer-layout-button', width = globalWidth - 10, height = 40, })
+    pursuerLayout:text({ id = 'pursuer-label', text = Constants.HERMESIAN_PURSUER, fontSize = fontSize, width = 100, color = 'White' })
+    for _, level in ipairs({ Constants.LEVEL_1, }) do
+        pursuerLayout:button({ id = 'pursuer-' .. level .. '-button', fontSize = fontSize, text = tostring(level), onClick = function()
+            Battle.setupBattle('Pursuer Battle', level)
+        end })
+    end
+
+    local temenosLayout = GlobalUi.menu_panel:horizontalLayout({ id = 'temenos-layout-button', width = globalWidth - 10, height = 40, })
+    temenosLayout:text({ id = 'temenos-label', text = Constants.ALPHA_TEMENOS, fontSize = fontSize, width = 100, color = 'White' })
+    for _, level in ipairs({ Constants.LEVEL_1,  }) do
+        temenosLayout:button({ id = 'temenos-' .. level .. '-button', fontSize = fontSize, text = tostring(level), onClick = function()
+            Battle.setupBattle('Temenos Battle', level)
+        end })
+    end
+
+    GlobalUi.menu_panel:button({ id = 'ambush-button', text = 'Ambush Battle', fontSize = fontSize, width = globalWidth - 10, height = 40, onClick = function()
+        Battle.setupBattle('Ambush Battle', nil)
+    end })
+
+    GlobalUi.menu_panel:button({ id = 'no-maze-button', text = 'There is No Maze Battle', fontSize = fontSize, width = globalWidth - 10, height = 40, onClick = function()
+        Battle.setupBattle('There is No Maze Battle', Constants.LEVEL_1)
+    end })
+
+    GlobalUi.menu_panel:button({ id = 'pursuit-end-button', text = 'Pursuit\'s End Battle', fontSize = fontSize, width = globalWidth - 10, height = 40, onClick = function()
+        Battle.setupBattle('Pursuit\'s End Battle', Constants.LEVEL_1)
+    end })
+end
+
+function GlobalUi.expandMenu()
+    GlobalUi.toggle_button:setText('\u{25B2}')
+    GlobalUi.toggle_button:setOnClick(function() GlobalUi.collapseMenu() end)
+
+    -- Display vertical menu
+    GlobalUi.menu_panel:show()
+end
+
+function GlobalUi.collapseMenu()
+    GlobalUi.toggle_button:setText('\u{25BC}')
+    GlobalUi.toggle_button:setOnClick(function() GlobalUi.expandMenu() end)
+
+    -- Hide vertical menu
+    GlobalUi.menu_panel:hide()
+end
+
+-- Message is a string
+-- ... has one table for each button { text = '', callback = F }
+function GlobalUi.showConfirmationDialog(message, yesText, yesCallback, noText, noCallback)
+    GlobalUi.confirmation_text:setText(message)
+    GlobalUi.confirmation_yes_button:setText(yesText)
+    GlobalUi.confirmation_yes_button:setOnClick(function(color, button, id) GlobalUi.confirmation_panel:hide() if yesCallback ~= nil then yesCallback(color, button, id) end end)
+    GlobalUi.confirmation_no_button:setText(noText or 'Cancel')
+    GlobalUi.confirmation_no_button:setOnClick(function(color, button, id) GlobalUi.confirmation_panel:hide() if noCallback ~= nil then noCallback(color, button, id) end end)
+
+    GlobalUi.confirmation_panel:show()
 end
 
 function GlobalUi.save()
@@ -24,4 +145,5 @@ end
 return {
     init = GlobalUi.init,
     save = GlobalUi.save,
+    showConfirmationDialog = GlobalUi.showConfirmationDialog
 }
