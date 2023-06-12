@@ -1,4 +1,5 @@
 local Argo = {}
+Argo.__index = Argo
 
 -- Used for dynamic loading of the Battle class
 local Battle
