@@ -201,12 +201,13 @@ function Utils.getFirstElementAbove(object)
     end
 end
 
-function Utils.castAndTagFilter(startPosition, direction, tag)
+function Utils.castAndTagFilter(startPosition, direction, tag, distance)
     local results = Physics.cast({
         origin       = startPosition,
         direction    = Vector(direction):normalize(),
+        max_distance = distance or 100,
         type         = 1,
-        debug        = false,
+        debug        = true,
     })
 
     if results and #results > 0 then

@@ -462,7 +462,7 @@ Content.primordials = {
     },
     {
         name = Constants.ALPHA_TEMENOS,
-        size = {width = 2, height = 2},
+        size = {width = 3, height = 3},
     }
 }
 

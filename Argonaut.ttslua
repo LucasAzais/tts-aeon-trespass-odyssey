@@ -80,9 +80,9 @@ function ArgonautClass.create(argonaut)
         fury = argonaut.fury or 0,
         will = argonaut.will or 0,
         wisdom = argonaut.wisdom or 0,
-        abilities = argonaut.abilities,
+        abilities = argonaut.abilities or {'', '', '', '', '', '', '', '',},
         mnemoses = {},
-        notes = argonaut.notes,
+        notes = argonaut.notes or {'', '', '', ''},
         sheetGUID = argonaut.sheetGUID,
     }
 
@@ -234,15 +234,17 @@ function ArgonautSheetClass.create(argonaut, object)
     end })
 
     -- Abilities
-    local panel = sheet.root:panel({ id = name .. '-abilities-panel', x = -22, y = -41, width = 740, height = 380, })
+    local panel = sheet.root:panel({ id = name .. '-abilities-panel', x = -22, y = -58, width = 740, height = 380, })
     -- panel.attributes.color = 'Green'
 
-    sheet.abilities_input = panel:input({ id = name .. '-abilities-input', fontSize = 38, lineType = 'MultiLineNewLine',
-                                colors = Ui.TRANSPARENT_INPUT_COLORS, 
-                                text = argonaut.abilities, placeholder = ' ', onValueChanged = function(_, value)
-            argonaut.abilities = value
-        end
-    })
+    for index = 1, 8 do
+        sheet['abilities_input_' .. index] = panel:input({ id = name .. '-abilities-input-' .. index, fontSize = 38,
+                                    colors = Ui.TRANSPARENT_INPUT_COLORS, height = 44.5, y = (index-1) * -44,
+                                    text = argonaut.abilities[index], placeholder = ' ', onValueChanged = function(_, value)
+                argonaut.abilities[index] = value
+            end
+        })
+    end
 
     -- Mnemos
     sheet.mnemoses = {}
@@ -253,7 +255,7 @@ function ArgonautSheetClass.create(argonaut, object)
         local panel = sheet.root:panel({ id = name .. '-mnemos-' .. mnemosIndex .. '-panel', x = 2, y = -5, width = 1300, height = 50, })
         -- panel.attributes.color = 'Green'
         sheet.mnemoses[mnemosIndex] = {
-            name_input = panel:input({ id = name .. '-mnemos-' .. mnemosIndex .. '-name-input', fontSize = 38,
+            name_input = panel:input({ id = name .. '-mnemos-' .. mnemosIndex .. '-name-input', fontSize = 34,
                         colors = Ui.TRANSPARENT_INPUT_COLORS, 
                         x = -435,
                         y = -15 + yStep * (mnemosIndex - 1), 
@@ -319,7 +321,8 @@ function ArgonautSheetClass.create(argonaut, object)
             sheet.mnemoses[mnemosIndex].breakthroughNumbers[bIndex] = {nil, nil, nil, nil}
 
             for subBIndex = 1, 4, 1 do
-                sheet.mnemoses[mnemosIndex].breakthroughNumbers[bIndex][subBIndex] = panel:input({ id = name .. '-mnemos-' .. mnemosIndex .. '-breakthrough-' .. bIndex .. '-input', 
+                sheet.mnemoses[mnemosIndex].breakthroughNumbers[bIndex][subBIndex] = panel:input({ 
+                                    id = name .. '-mnemos-' .. mnemosIndex .. '-breakthrough-' .. bIndex .. '-' .. subBIndex .. '-input', 
                                     colors = Ui.TRANSPARENT_INPUT_COLORS, fontSize = 20, 
                                     text = currentMnemos.breakthroughNumbers[bIndex][subBIndex], placeholder = ' ', width = 40, height = 35, 
                                     x = -215 + (globalIndex - 1) * xStep  + (mnemosIndex - 1) * 0.3 - 51 + subXStep * (subBIndex - 1),
@@ -335,15 +338,19 @@ function ArgonautSheetClass.create(argonaut, object)
     end
 
     -- Notes
-    local panel = sheet.root:panel({ id = name .. '-notes-panel', x = 3.3, y = 82, width = 1220, height = 178, })
+    local panel = sheet.root:panel({ id = name .. '-notes-panel', x = 3.3, y = 75.6, width = 1220, height = 178, })
     -- panel.attributes.color = 'Green'
 
-    sheet.notes_input = panel:input({ id = name .. '-notes-input', fontSize = 35, lineType = 'MultiLineNewLine',
-                                colors = Ui.TRANSPARENT_INPUT_COLORS, 
-                                text = argonaut.notes, placeholder = ' ', onValueChanged = function(_, value)
-            argonaut.notes = value
-        end
-    })
+    for index = 1, 4 do
+        sheet['notes_input_' .. index] = panel:input({ id = name .. '-notes-input-' .. index, fontSize = 35,
+                                    colors = Ui.TRANSPARENT_INPUT_COLORS, height = 44.5, y = (index-1) * -39.3,
+                                    textAlignment = 'LeftCenter',
+                                    text = argonaut.notes[index], placeholder = ' ', onValueChanged = function(_, value)
+                argonaut.notes[index] = value
+                Log:debug('Argonaut ID %s, notes %s set to %s', argonaut.id, index, argonaut.notes[index])
+            end
+        })
+    end
 
     sheet.object.UI.setCustomAssets(Constants.CUSTOM_ASSETS)
     sheet.root:refresh()

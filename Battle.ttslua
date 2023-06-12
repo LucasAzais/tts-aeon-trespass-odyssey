@@ -1,7 +1,7 @@
 local Battle = {}
 Battle.__index = Battle
 
-local Argo = require('Argo')
+local Argo
 local BattleBoard = require('BattleBoard')
 local Content = require('Content')
 local Constants = require('Constants')
@@ -23,6 +23,8 @@ Battle.PRIMORDIAL_BAG_POSITION = {24.27, 0.80, -23.44}
 Battle.DROP_HEIGHT = 1.60
 
 function Battle.init(savedData)
+    Argo = Argo or require('Argo')
+
     if savedData.current_battle then
         local battle = Battle.create({ 
             name = savedData.current_battle.name,
@@ -411,7 +413,7 @@ function Battle:setupPrimordial()
                 position = Vector({20.63, 1.00, -30.17}) + Vector(0, Battle.DROP_HEIGHT, 0),
                 rotation = {0, 180, 0},
                 callback_function = function(spawnedObject)
-                    spawnedObject.addTag(Constants.DISPOSABLE)
+                    spawnedObject.addTag(Constants.DISPOSABLE) 
                 end
             })
         end
@@ -422,17 +424,17 @@ function Battle:shuffleDecks()
     -- This assumes we're not moving the decks from their position relative to the board
     local board = BattleBoard.getBoard()
 
-    local deck = Utils.castAndTagFilter(board.positionToWorld({1.033637, 0, -1.118403}), Vector(0, 1, 0), nil)
+    local deck = Utils.castAndTagFilter(board.positionToWorld({1.033637, -1.10, -1.118403}), Vector(0, 1, 0), nil, 10)
     if deck ~= nil then deck.shuffle() end
-    deck = Utils.castAndTagFilter(board.positionToWorld({0.8682172, 0, -1.116671}), Vector(0, 1, 0), nil)
+    deck = Utils.castAndTagFilter(board.positionToWorld({0.8682172, -1.10, -1.116671}), Vector(0, 1, 0), nil, 10)
     if deck ~= nil then deck.shuffle() end
-    deck = Utils.castAndTagFilter(board.positionToWorld({0.7037947, 0, -1.11486}), Vector(0, 1, 0), nil)
+    deck = Utils.castAndTagFilter(board.positionToWorld({0.7037947, -1.10, -1.11486}), Vector(0, 1, 0), nil, 10)
     if deck ~= nil then deck.shuffle() end
-    deck = Utils.castAndTagFilter(board.positionToWorld({0.5501335, 0, -1.115513}), Vector(0, 1, 0), nil)
+    deck = Utils.castAndTagFilter(board.positionToWorld({0.5501335, -1.10, -1.115513}), Vector(0, 1, 0), nil, 10)
     if deck ~= nil then deck.shuffle() end
-    deck = Utils.castAndTagFilter(board.positionToWorld({0.3137448, 0, -1.164969}), Vector(0, 1, 0), nil)
+    deck = Utils.castAndTagFilter(board.positionToWorld({0.3137448, -1.10, -1.164969}), Vector(0, 1, 0), nil, 10)
     if deck ~= nil then deck.shuffle() end
-    deck = Utils.castAndTagFilter(board.positionToWorld({0.05157612, 0, -1.164673}), Vector(0, 1, 0), nil)
+    deck = Utils.castAndTagFilter(board.positionToWorld({0.05157612, -1.10, -1.164673}), Vector(0, 1, 0), nil, 10)
     if deck ~= nil then deck.shuffle() end
 end
 
@@ -469,7 +471,7 @@ function Battle.setupAmbushBattleCycleI()
     -- Find the correct level
     local hekatonBattles, labyrinthaurosBattles = 0, 0
     local lastMarkedLevelHekaton, lastMarkedLevelLabyrinthauros = 0, 0
-
+    
     for index, element in ipairs(Argo.getEvolutionTracks()) do
         if element[Constants.HEKATON] == true then
             hekatonBattles = hekatonBattles + 1

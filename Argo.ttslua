@@ -53,7 +53,21 @@ function Argo.init(savedData)
     Argo.current_titans = savedData.current_titans or 0
     Argo.max_titans = savedData.max_titans or 0
     Argo.titans_list1 = savedData.titans_list1
+    if Argo.titans_list1 == nil then
+        Argo.titans_list1 = {}
+        for i = 1, 10 do
+            table.insert(Argo.titans_list1, '')
+        end
+    end
+
     Argo.titans_list2 = savedData.titans_list2
+    if Argo.titans_list2 == nil then
+        Argo.titans_list2 = {}
+        for i = 1, 10 do
+            table.insert(Argo.titans_list2, '')
+        end
+    end
+
     Argo.adventure_tracks = savedData.adventure_tracks or {
         [Constants.CYCLE_I] = {
             [Constants.FATED_CONUNDRUM] = {false, 0, 0, 0, false},
@@ -127,37 +141,37 @@ function Argo.init(savedData)
 
     -- Cycle I resources
     Argo.trireme = savedData.trireme or 0
-    Argo.trireme_note = savedData.trireme_note
+    Argo.trireme_note = savedData.trireme_note or {'', ''}
     Argo.monument = savedData.monument or 0
-    Argo.monument_note = savedData.monument_note
+    Argo.monument_note = savedData.monument_note or {'', ''}
     Argo.armament = savedData.armament or 0
-    Argo.armament_note = savedData.armament_note
+    Argo.armament_note = savedData.armament_note or {'', ''}
 
     Argo.muscle_cluster = savedData.muscle_cluster or 0
-    Argo.muscle_cluster_note = savedData.muscle_cluster_note
+    Argo.muscle_cluster_note = savedData.muscle_cluster_note or {'', ''}
     Argo.calcified_knucle_bone = savedData.calcified_knucle_bone or 0
-    Argo.calcified_knucle_bone_note = savedData.calcified_knucle_bone_note
+    Argo.calcified_knucle_bone_note = savedData.calcified_knucle_bone_note or {'', ''}
     Argo.infused_mechanism = savedData.infused_mechanism or 0
-    Argo.infused_mechanism_note = savedData.infused_mechanism_note
+    Argo.infused_mechanism_note = savedData.infused_mechanism_note or {'', ''}
     Argo.fleshy_mantle = savedData.fleshy_mantle or 0
-    Argo.fleshy_mantle_note = savedData.fleshy_mantle_note
+    Argo.fleshy_mantle_note = savedData.fleshy_mantle_note or {'', ''}
     Argo.fear_essence = savedData.fear_essence or 0
-    Argo.fear_essence_note = savedData.fear_essence_note
+    Argo.fear_essence_note = savedData.fear_essence_note or {'', ''}
     Argo.maze_fragment = savedData.maze_fragment or 0
-    Argo.maze_fragment_note = savedData.maze_fragment_note
+    Argo.maze_fragment_note = savedData.maze_fragment_note or {'', ''}
     Argo.grotesque_beak = savedData.grotesque_beak or 0
-    Argo.grotesque_beak_note = savedData.grotesque_beak_note
+    Argo.grotesque_beak_note = savedData.grotesque_beak_note or {'', ''}
     Argo.powdered_matter = savedData.powdered_matter or 0
-    Argo.powdered_matter_note = savedData.powdered_matter_note
+    Argo.powdered_matter_note = savedData.powdered_matter_note or {'', ''}
     Argo.raw_ambrosia = savedData.raw_ambrosia or 0
-    Argo.raw_ambrosia_note = savedData.raw_ambrosia_note
-    Argo.cores_note = savedData.cores_note
+    Argo.raw_ambrosia_note = savedData.raw_ambrosia_note or {'', ''}
+    Argo.cores_note = savedData.cores_note or {'', ''}
 
     Argo.priests = savedData.priests or 0
-    Argo.priests_note = savedData.priests_note
+    Argo.priests_note = savedData.priests_note or {'', ''}
     Argo.sisyphus_tears = savedData.sisyphus_tears or 0
-    Argo.sisyphus_tears_note = savedData.sisyphus_tears_note
-    Argo.rare_resources_note = savedData.rare_resources_note
+    Argo.sisyphus_tears_note = savedData.sisyphus_tears_note or {'', ''}
+    Argo.rare_resources_note = savedData.rare_resources_note or {'', ''}
 
     Argo.argo_sheet = getObjectsWithTag(Constants.ARGO_SHEET)[1]
     if not Argo.argo_sheet then
@@ -285,7 +299,7 @@ function Argo.createSheetUi(cycle)
 
         ------------------------
         -- Titans
-        Argo.ui.abilities_limit_input = Argo.ui.main_panel:input({ id = 'story-card-input', width = 95, height = 45, x = -92.5, y = 274, 
+        Argo.ui.abilities_limit_input = Argo.ui.main_panel:input({ id = 'abilities-limit-input', width = 95, height = 45, x = -92.5, y = 274, 
                             fontSize = 45, placeholder = ' ', text = tostring(Argo.abilities_limit), colors = Ui.TRANSPARENT_INPUT_COLORS,
                             textAlignment = 'MiddleCenter', characterValidation = 'Integer', onValueChanged = function(_, value) 
                                 Argo.abilities_limit = value
@@ -304,19 +318,23 @@ function Argo.createSheetUi(cycle)
                                 Log:debug('Max titans set to %s', value)
                             end })
 
-        Argo.ui.titans_input1 = Argo.ui.main_panel:input({ id = 'titans-list1-input', fontSize = 30, lineType = 'MultiLineNewLine',
-                                colors = Ui.TRANSPARENT_INPUT_COLORS, width = 585, height = 355, x = -957, y = 18,
-                                text = Argo.titans_list1, placeholder = ' ', onValueChanged = function(_, value)
-            Argo.titans_list1 = value
-            Log:debug('Titans list 1 set to %s', Argo.titans_list1)
-        end })
+        for index, text in ipairs(Argo.titans_list1) do
+            Argo.ui['titans_input1_line' .. index] = Argo.ui.main_panel:input({ id = 'titans-list1-input-' .. index, fontSize = 30, 
+                                    colors = Ui.TRANSPARENT_INPUT_COLORS, width = 585, height = 40, x = -957, y = 170 + (index-1)*-33.9 ,
+                                    text = text, placeholder = ' ', onValueChanged = function(_, value)
+                Argo.titans_list1[index] = value
+                Log:debug('Titans list 1 line %s set to %s', index, Argo.titans_list1[index])
+            end })
+        end
 
-        Argo.ui.titans_input2 = Argo.ui.main_panel:input({ id = 'titans-list2-input', fontSize = 30, lineType = 'MultiLineNewLine',
-                                colors = Ui.TRANSPARENT_INPUT_COLORS, width = 585, height = 355, x = -348, y = 18,
-                                text = Argo.titans_list2, placeholder = ' ', onValueChanged = function(_, value)
-            Argo.titans_list2 = value
-            Log:debug('Titans list 2 set to %s', Argo.titans_list2)
-        end })
+        for index, text in ipairs(Argo.titans_list2) do
+            Argo.ui['titans_input2_line' .. index] = Argo.ui.main_panel:input({ id = 'titans-list2-input-' .. index, fontSize = 30, 
+                                    colors = Ui.TRANSPARENT_INPUT_COLORS, width = 585, height = 40, x = -348, y = 170 + (index-1)*-33.9 ,
+                                    text = text, placeholder = ' ', onValueChanged = function(_, value)
+                Argo.titans_list2[index] = value
+                Log:debug('Titans list 2 line %s set to %s', index, Argo.titans_list2[index])
+            end })
+        end
 
         ------------------------
         -- Adventure tracks
@@ -376,7 +394,7 @@ function Argo.createSheetUi(cycle)
 
                 Argo.ui[factionName .. '_'..i..'_checkbox'] = Argo.ui[factionName .. '_checkbox_group']:checkbox({ id = factionName .. '-'..i..'-checkbox', 
                                     width = 50, height = 50, x = -1008 + jump + (10 + i) * 41, y = -767 + (index - 1) * -49,
-                                    checked = (Argo.hull == i) }, true)
+                                    checked = (cycleTracks[factionName] == i) }, true)
                 Argo.ui[factionName .. '_'..i..'_checkbox'].checkboxValue = i
             end
         end
@@ -630,15 +648,17 @@ function Argo.createSheetUi(cycle)
                 Log:debug('Resource %s set to %s', resource, Argo[resource])
             end })
 
-            Argo.ui[resource .. '_note_input'] = Argo.ui.main_panel:input({ id = resource .. '-note-button', fontSize = 24, 
-                                width = 240, height = 70, lineType = 'MultiLineNewLine',
-                                x = xStart + 90, y = yStart - 72 + (index-1) * -134 + (index == 3 and 5 or 0), -- Somehow the boxes aren't linear
-                                colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ',
-                                text = Argo[resource .. '_note'], onValueChanged = function(_, newValue)
-                
-                Argo[resource .. '_note'] = newValue
-                Log:debug('Note for resource %s set to %s', resource, Argo[resource .. '_note'])
-            end })
+            for jndex = 1, 2 do
+                Argo.ui[resource .. '_note_input_' .. jndex] = Argo.ui.main_panel:input({ id = resource .. '-note-button-' .. jndex,
+                                    fontSize = 24, width = 240, height = 35, textAlignment = 'LeftCenter',
+                                    x = xStart + 90, y = yStart - 56 + (index-1) * -132 + (jndex-1) * -28, -- Somehow the boxes aren't linear
+                                    colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ',
+                                    text = Argo[resource .. '_note'][jndex], onValueChanged = function(_, newValue)
+                    
+                    Argo[resource .. '_note'][jndex] = newValue
+                    Log:debug('Note for resource %s set to %s', resource, Argo[resource .. '_note'][jndex])
+                end })
+            end
         end
 
         -- Primordial resources
@@ -671,24 +691,28 @@ function Argo.createSheetUi(cycle)
                 Log:debug('Resource %s set to %s', resource, Argo[resource])
             end })
 
-            Argo.ui[resource .. '_note_input'] = Argo.ui.main_panel:input({ id = resource .. '-note-button', fontSize = 24, 
-                                width = 220, height = 70, x = x + 84, y = y - 72 + (index > 4 and 7 or 0),
-                                colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ', lineType = 'MultiLineNewLine',
-                                text = Argo[resource .. '_note'], onValueChanged = function(_, newValue)
-                
-                Argo[resource .. '_note'] = newValue
-                Log:debug('Note for resource %s set to %s', resource, Argo[resource .. '_note'])
-            end })
+            for jndex = 1, 2 do
+                Argo.ui[resource .. '_note_input_' .. jndex] = Argo.ui.main_panel:input({ id = resource .. '-note-button-' .. jndex, 
+                                    fontSize = 24, width = 220, height = 35, x = x + 84, y = y - 56 + (index > 4 and 7 or 0) + (jndex-1) * -28,
+                                    colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ',
+                                    text = Argo[resource .. '_note'][jndex], onValueChanged = function(_, newValue)
+                    
+                    Argo[resource .. '_note'][jndex] = newValue
+                    Log:debug('Note for resource %s set to %s', resource, Argo[resource .. '_note'][jndex])
+                end })
+            end
         end
 
-        Argo.ui['cores_note_input'] = Argo.ui.main_panel:input({ id = 'cores-note-button', fontSize = 24, 
-                                width = 690, height = 70, x = 912, y = -575,
-                                colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ', lineType = 'MultiLineNewLine',
-                                text = Argo['cores_note'], onValueChanged = function(_, newValue)
+        for jndex = 1, 2 do
+            Argo.ui['cores_note_input_' .. jndex] = Argo.ui.main_panel:input({ id = 'cores-note-button-' .. jndex, fontSize = 24, 
+                                width = 690, height = 35, x = 912, y = -559 + (jndex-1) * -28,
+                                colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ',
+                                text = Argo['cores_note'][jndex], onValueChanged = function(_, newValue)
                 
-                Argo['cores_note'] = newValue
-                Log:debug('Note for resource %s set to %s', 'cores', Argo['cores_note'])
+                Argo['cores_note'][jndex] = newValue
+                Log:debug('Note for resource %s set to %s', 'cores', Argo['cores_note'][jndex])
             end })
+        end
 
         ------------------------
         -- Divine resources
@@ -717,14 +741,16 @@ function Argo.createSheetUi(cycle)
                 end })
             end
 
-            Argo.ui[resource .. '_note_input'] = Argo.ui.main_panel:input({ id = resource .. '-note-button', fontSize = 24, 
-                                    width = 300, height = 70, x = xStart + 110 + (index-1) * 374, y = yStart - 74,
-                                    colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ', lineType = 'MultiLineNewLine',
-                                    text = Argo[resource .. '_note'], onValueChanged = function(_, newValue)
-                    
-                    Argo[resource .. '_note'] = newValue
-                    Log:debug('Note for resource %s set to %s', resource, Argo[resource .. '_note'])
-                end })
+            for jndex = 1, 2 do
+                Argo.ui[resource .. '_note_input_' .. jndex] = Argo.ui.main_panel:input({ id = resource .. '-note-button-' .. jndex, 
+                                        fontSize = 24, width = 300, height = 35, x = xStart + 110 + (index-1) * 374, y = yStart - 58 + (jndex-1) * -28,
+                                        colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ',
+                                        text = Argo[resource .. '_note'][jndex], onValueChanged = function(_, newValue)
+                        
+                        Argo[resource .. '_note'][jndex] = newValue
+                        Log:debug('Note for resource %s set to %s', resource, Argo[resource .. '_note'][jndex])
+                    end })
+                end
             end
     end
 end

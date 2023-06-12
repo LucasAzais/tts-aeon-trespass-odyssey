@@ -55,6 +55,12 @@ function Timeline.init(savedData)
 
     Timeline.map_notes = savedData.map_notes or {}
     Timeline.notes = savedData.notes
+    if Timeline.notes == nil then
+        Timeline.notes = {}
+        for i = 1, 22 do
+            table.insert(Timeline.notes, '')
+        end
+    end
 
     Timeline.timeline_sheet = getObjectsWithTag(Constants.TIMELINE_SHEET)[1]
     if not Timeline.timeline_sheet then
@@ -190,13 +196,15 @@ function Timeline.createSheetUi(cycle)
 
         ------------------------
         -- Notes
-        Timeline.ui.notes_input = Timeline.ui.main_panel:input({ id = 'notes-input', fontSize = 38, lineType = 'MultiLineNewLine',
-                                colors = Ui.TRANSPARENT_INPUT_COLORS, 
-                                width = 590, height = 980, x = 985, y = -350,
-                                text = Timeline.notes, placeholder = ' ', onValueChanged = function(_, value)
-            Timeline.notes = value
-            Log:debug('Notes set to %s', Timeline.notes)
-        end })
+        for jndex = 1, 22 do
+            Timeline.ui['notes_input_' .. jndex] = Timeline.ui.main_panel:input({ id = 'notes-input-' .. jndex, fontSize = 38,
+                                    colors = Ui.TRANSPARENT_INPUT_COLORS, 
+                                    width = 590, height = 45, x = 985, y = 116 + (jndex-1) * -43.9,
+                                    text = Timeline.notes[jndex], placeholder = ' ', onValueChanged = function(_, value)
+                Timeline.notes[jndex] = value
+                Log:debug('Notes %s set to %s', jndex, Timeline.notes[jndex])
+            end })
+        end
     end
 end
 
