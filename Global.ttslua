@@ -53,7 +53,7 @@ function onLoad(script_state)
     BattleBoard.init()
     Battle.init(savedData.battle or {})
 
-    Ui.globalRefresh()
+    Ui.globalRefresh(true)
 
     -- if Setup.isSetupComplete() then
     --     broadcastToAll('Game loaded', Color.Green)

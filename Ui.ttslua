@@ -569,7 +569,11 @@ function Ui:show(id)
     end, nil, nil)
 end
 
-function Ui.globalRefresh()
+function Ui.globalRefresh(broadcast)
+    if broadcast then
+        broadcastToAll('Initialising the Ui.', Color.Red)
+    end
+
     Wait.condition(function()
         if #Ui.root.children > 0 then
             Ui.root.object.UI.setXmlTable(Ui.root.children)
@@ -582,16 +586,33 @@ function Ui.globalRefresh()
 
     -- This needs to wait until Ui.root isn't loading.
     -- I don't know why but it puts blank images otherwise...
+    local loadingCount = 0
+    local loadedCount = 0
     for _, root in pairs(Ui.rootPerObject) do
+        loadingCount = loadingCount + 1
         Wait.condition(function()
             if #root.children > 0 then
                 root.object.UI.setXmlTable(root.children)
             else
                 root.object.UI.setXml('')
             end
+
+            Wait.condition(function()
+                loadedCount = loadedCount + 1
+            end, function()
+                return not root.object.UI.loading
+            end, 10, nil)
         end, function() 
             return not Ui.root.object.UI.loading 
         end, nil, nil)
+    end
+
+    if broadcast then
+        Wait.condition(function()
+            broadcastToAll('Ready to play!', Color.Red)
+        end, function() 
+            return loadingCount == loadedCount
+        end, 10, nil)
     end
 end
 
