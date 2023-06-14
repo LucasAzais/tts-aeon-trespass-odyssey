@@ -13,6 +13,7 @@ Log.levelByModule = {
     ['Argonaut'] = Constants.DEBUG,
     ['Battle'] = Constants.DEBUG,
     ['BattleBoard'] = Constants.DEBUG,
+    ['Map'] = Constants.DEBUG,
     ['Timeline'] = Constants.DEBUG,
     ['Titan'] = Constants.DEBUG,
     ['Triskelion'] = Constants.DEBUG,

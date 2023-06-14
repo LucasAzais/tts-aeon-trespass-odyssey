@@ -1,0 +1,307 @@
+local Map = {}
+Map.__index = Map
+
+local MapTile = {}
+MapTile.__index = MapTile
+function MapTile.Is(x) return getmetatable(x) == MapTile end
+
+local Constants = require('Constants')
+local Cycle = require('Cycle')
+local EventManager = require('EventManager')
+local Log = require('Log').ForModule('Map')
+local Ui = require('Ui')
+local Utils = require('Utils')
+
+------------------------------------------------------
+
+Map.TILES_BAG_GUID = 'e7d3c7'
+
+Map.TOP_LEFT = 'top-left'
+Map.TOP_MIDDLE = 'top-middle'
+Map.TOP_RIGHT = 'top-right'
+Map.RIGHT_TOP = 'right-top'
+Map.RIGHT_MIDDLE = 'right-middle'
+Map.RIGHT_BOTTOM = 'right-bottom'
+Map.BOTTOM_LEFT = 'bottom-left'
+Map.BOTTOM_MIDDLE = 'bottom-middle'
+Map.BOTTOM_RIGHT = 'bottom-right'
+Map.LEFT_TOP = 'left-top'
+Map.LEFT_MIDDLE = 'left-middle'
+Map.LEFT_BOTTOM = 'left-bottom'
+
+-- A map tile has name, a list of icons and a list of connected tiles
+Map.TILES_LIST = {
+    -- Tutorial is part of Cycle I
+    [Constants.CYCLE_I] = {
+        { name = 'T00', connectedTiles = { [Map.TOP_MIDDLE] = '', [Map.RIGHT_MIDDLE] = 'T01', [Map.BOTTOM_MIDDLE] = '', [Map.LEFT_MIDDLE] = '' }, },
+        { name = 'T01', connectedTiles = { [Map.TOP_MIDDLE] = '', [Map.RIGHT_MIDDLE] = 'T02', [Map.BOTTOM_MIDDLE] = '', [Map.LEFT_MIDDLE] = 'T00' }, },
+        { name = 'T02', connectedTiles = { [Map.TOP_MIDDLE] = '', [Map.RIGHT_MIDDLE] = 'T03', [Map.BOTTOM_MIDDLE] = '', [Map.LEFT_MIDDLE] = 'T01' }, },
+        { name = 'T03', connectedTiles = { [Map.TOP_MIDDLE] = '', [Map.RIGHT_MIDDLE] = 'T04', [Map.BOTTOM_MIDDLE] = '', [Map.LEFT_MIDDLE] = 'T02' }, },
+        { name = 'T04', connectedTiles = { [Map.TOP_MIDDLE] = '', [Map.RIGHT_MIDDLE] = 'T05', [Map.BOTTOM_MIDDLE] = 'T06' }, [Map.LEFT_MIDDLE] = 'T03', },
+        { name = 'T05', connectedTiles = { [Map.TOP_MIDDLE] = '', [Map.RIGHT_MIDDLE] = '', [Map.BOTTOM_MIDDLE] = '027', [Map.LEFT_MIDDLE] = 'T04' }, },
+        { name = 'T06', connectedTiles = { [Map.TOP_MIDDLE] = 'T04', [Map.RIGHT_MIDDLE] = '027', [Map.BOTTOM_MIDDLE] = '', [Map.LEFT_MIDDLE] = '' }, },
+
+        { name = '001', connectedTiles = { [Map.TOP_MIDDLE] = '', [Map.RIGHT_MIDDLE] = '002', [Map.BOTTOM_MIDDLE] = '006', [Map.LEFT_MIDDLE] = '' }, },
+        { name = '002', connectedTiles = { [Map.TOP_MIDDLE] = '', [Map.RIGHT_MIDDLE] = '003', [Map.BOTTOM_MIDDLE] = '', [Map.LEFT_MIDDLE] = '001', }, },
+        { name = '003', connectedTiles = { [Map.TOP_MIDDLE] = '', [Map.RIGHT_MIDDLE] = '004', [Map.BOTTOM_MIDDLE] = '008', [Map.LEFT_MIDDLE] = '002', }, },
+        { name = '004', connectedTiles = { [Map.TOP_MIDDLE] = '', [Map.RIGHT_MIDDLE] = '005', [Map.BOTTOM_MIDDLE] = '009', [Map.LEFT_MIDDLE] = '003', }, },
+        { name = '005', connectedTiles = { [Map.TOP_MIDDLE] = '', [Map.RIGHT_MIDDLE] = '041', [Map.BOTTOM_MIDDLE] = '010', [Map.LEFT_MIDDLE] = '004', }, },
+        { name = '006', connectedTiles = { [Map.TOP_MIDDLE] = '001', [Map.RIGHT_MIDDLE] = '007', [Map.BOTTOM_MIDDLE] = '011', [Map.LEFT_MIDDLE] = '', }, },
+        { name = '007', connectedTiles = { [Map.TOP_MIDDLE] = '', [Map.RIGHT_MIDDLE] = '008', [Map.BOTTOM_MIDDLE] = '012', [Map.LEFT_MIDDLE] = '006', }, },
+        { name = '008', connectedTiles = { [Map.TOP_MIDDLE] = '003', [Map.RIGHT_MIDDLE] = '009', [Map.BOTTOM_MIDDLE] = '013', [Map.LEFT_MIDDLE] = '007', }, },
+        { name = '009', connectedTiles = { [Map.TOP_MIDDLE] = '004', [Map.RIGHT_TOP] = '010', [Map.RIGHT_BOTTOM] = '010', [Map.BOTTOM_MIDDLE] = '014', [Map.LEFT_MIDDLE] = '008', }, },
+        { name = '010', connectedTiles = { [Map.TOP_MIDDLE] = '005', [Map.RIGHT_TOP] = '046', [Map.RIGHT_BOTTOM] = '046', [Map.BOTTOM_MIDDLE] = '015', [Map.LEFT_TOP] = '009', [Map.LEFT_BOTTOM] = '009', }, },
+        { name = '011', connectedTiles = { [Map.TOP_MIDDLE] = '006', [Map.RIGHT_MIDDLE] = '012', [Map.BOTTOM_MIDDLE] = '016', [Map.LEFT_MIDDLE] = '', }, },
+        { name = '012', connectedTiles = { [Map.TOP_MIDDLE] = '007', [Map.RIGHT_MIDDLE] = '013', [Map.BOTTOM_MIDDLE] = '017', [Map.LEFT_MIDDLE] = '011', }, },
+        { name = '013', connectedTiles = { [Map.TOP_MIDDLE] = '008', [Map.RIGHT_MIDDLE] = '014', [Map.BOTTOM_MIDDLE] = '018', [Map.LEFT_MIDDLE] = '012', }, },
+        { name = '014', connectedTiles = { [Map.TOP_MIDDLE] = '009', [Map.RIGHT_MIDDLE] = '015', [Map.BOTTOM_MIDDLE] = '019', [Map.LEFT_MIDDLE] = '013', }, },
+        { name = '015', connectedTiles = { [Map.TOP_MIDDLE] = '010', [Map.RIGHT_MIDDLE] = '051', [Map.BOTTOM_MIDDLE] = '', [Map.LEFT_MIDDLE] = '014', }, },
+        { name = '016', connectedTiles = { [Map.TOP_MIDDLE] = '011', [Map.RIGHT_MIDDLE] = '017', [Map.BOTTOM_MIDDLE] = '021', [Map.LEFT_MIDDLE] = '', }, },
+        { name = '017', connectedTiles = { [Map.TOP_MIDDLE] = '012', [Map.RIGHT_MIDDLE] = '018', [Map.BOTTOM_MIDDLE] = '022', [Map.LEFT_MIDDLE] = '016', }, },
+        { name = '018', connectedTiles = { [Map.TOP_MIDDLE] = '013', [Map.RIGHT_MIDDLE] = '019', [Map.BOTTOM_MIDDLE] = '', [Map.LEFT_MIDDLE] = '017', }, },
+        { name = '019', connectedTiles = { [Map.TOP_MIDDLE] = '014', [Map.RIGHT_MIDDLE] = '', [Map.BOTTOM_MIDDLE] = '024', [Map.LEFT_MIDDLE] = '018', }, },
+        { name = '020', connectedTiles = { [Map.TOP_MIDDLE] = '', [Map.RIGHT_MIDDLE] = '056', [Map.BOTTOM_MIDDLE] = '025', [Map.LEFT_MIDDLE] = '', }, },
+        { name = '021', connectedTiles = { [Map.TOP_MIDDLE] = '016', [Map.RIGHT_MIDDLE] = '022', [Map.BOTTOM_MIDDLE] = '026', [Map.LEFT_MIDDLE] = '', }, },
+        { name = '022', connectedTiles = { [Map.TOP_MIDDLE] = '017', [Map.RIGHT_MIDDLE] = '', [Map.BOTTOM_MIDDLE] = '027', [Map.LEFT_MIDDLE] = '021', }, },
+        { name = '023', connectedTiles = { [Map.TOP_MIDDLE] = '', [Map.RIGHT_MIDDLE] = '024', [Map.BOTTOM_MIDDLE] = '', [Map.LEFT_MIDDLE] = '', }, },
+        { name = '024', connectedTiles = { [Map.TOP_MIDDLE] = '019', [Map.RIGHT_MIDDLE] = '025', [Map.BOTTOM_MIDDLE] = '', [Map.LEFT_MIDDLE] = '023', }, },
+        { name = '025', connectedTiles = { [Map.TOP_MIDDLE] = '020', [Map.RIGHT_MIDDLE] = '', [Map.BOTTOM_MIDDLE] = '030', [Map.LEFT_MIDDLE] = '024', }, },
+        { name = '026', connectedTiles = { [Map.TOP_MIDDLE] = '021', [Map.RIGHT_MIDDLE] = '027', [Map.BOTTOM_MIDDLE] = '031', [Map.LEFT_MIDDLE] = '', }, },
+        { name = '027', connectedTiles = { [Map.TOP_MIDDLE] = '022', [Map.BOTTOM_MIDDLE] = '032', [Map.LEFT_MIDDLE] = '026', }, },
+        { name = '028', connectedTiles = { [Map.TOP_MIDDLE] = '', [Map.RIGHT_MIDDLE] = '029', [Map.BOTTOM_MIDDLE] = '033', [Map.LEFT_MIDDLE] = '', }, },
+        { name = '029', connectedTiles = { [Map.TOP_MIDDLE] = '', [Map.RIGHT_MIDDLE] = '', [Map.BOTTOM_MIDDLE] = '034', [Map.LEFT_MIDDLE] = '028', }, },
+        { name = '030', connectedTiles = { [Map.TOP_MIDDLE] = '025', [Map.RIGHT_MIDDLE] = '066', [Map.BOTTOM_MIDDLE] = '035', [Map.LEFT_MIDDLE] = '', }, },
+        { name = '031', connectedTiles = { [Map.TOP_MIDDLE] = '026', [Map.RIGHT_MIDDLE] = '032', [Map.BOTTOM_MIDDLE] = '036', [Map.LEFT_MIDDLE] = '', }, },
+        { name = '032', connectedTiles = { [Map.TOP_MIDDLE] = '027', [Map.RIGHT_MIDDLE] = '033', [Map.BOTTOM_MIDDLE] = '037', [Map.LEFT_MIDDLE] = '031', }, },
+        { name = '033', connectedTiles = { [Map.TOP_MIDDLE] = '028', [Map.RIGHT_MIDDLE] = '034', [Map.BOTTOM_MIDDLE] = '038', [Map.LEFT_MIDDLE] = '032', }, },
+        { name = '034', connectedTiles = { [Map.TOP_MIDDLE] = '029', [Map.RIGHT_MIDDLE] = '035', [Map.BOTTOM_MIDDLE] = '039', [Map.LEFT_MIDDLE] = '033', }, },
+        { name = '035', connectedTiles = { [Map.TOP_MIDDLE] = '030', [Map.RIGHT_MIDDLE] = '071', [Map.BOTTOM_MIDDLE] = '040', [Map.LEFT_MIDDLE] = '034', }, },
+        { name = '036', connectedTiles = { [Map.TOP_MIDDLE] = '031', [Map.RIGHT_MIDDLE] = '037', [Map.BOTTOM_MIDDLE] = '', [Map.LEFT_MIDDLE] = '', }, },
+        { name = '037', connectedTiles = { [Map.TOP_MIDDLE] = '032', [Map.RIGHT_MIDDLE] = '038', [Map.BOTTOM_MIDDLE] = '', [Map.LEFT_MIDDLE] = '036', }, },
+        { name = '038', connectedTiles = { [Map.TOP_MIDDLE] = '033', [Map.RIGHT_MIDDLE] = '039', [Map.BOTTOM_MIDDLE] = '', [Map.LEFT_MIDDLE] = '037', }, },
+        { name = '039', connectedTiles = { [Map.TOP_MIDDLE] = '034', [Map.RIGHT_MIDDLE] = '040', [Map.BOTTOM_MIDDLE] = '', [Map.LEFT_MIDDLE] = '038', }, },
+        { name = '040', connectedTiles = { [Map.TOP_MIDDLE] = '035', [Map.RIGHT_MIDDLE] = '', [Map.BOTTOM_MIDDLE] = '', [Map.LEFT_MIDDLE] = '039', }, },
+        { name = '041', connectedTiles = { [Map.TOP_MIDDLE] = '', [Map.RIGHT_MIDDLE] = '042', [Map.BOTTOM_MIDDLE] = '046', [Map.LEFT_MIDDLE] = '005', }, },
+        { name = '042', connectedTiles = { [Map.TOP_MIDDLE] = '', [Map.RIGHT_MIDDLE] = '043', [Map.BOTTOM_MIDDLE] = '', [Map.LEFT_MIDDLE] = '041', }, },
+        { name = '043', connectedTiles = { [Map.TOP_MIDDLE] = '', [Map.RIGHT_MIDDLE] = '044', [Map.BOTTOM_MIDDLE] = '048', [Map.LEFT_MIDDLE] = '042', }, },
+        { name = '044', connectedTiles = { [Map.TOP_MIDDLE] = '', [Map.RIGHT_MIDDLE] = '045', [Map.BOTTOM_MIDDLE] = '049', [Map.LEFT_MIDDLE] = '043', }, },
+        { name = '045', connectedTiles = { [Map.TOP_MIDDLE] = '', [Map.RIGHT_MIDDLE] = '', [Map.BOTTOM_MIDDLE] = '050', [Map.LEFT_MIDDLE] = '044', }, },
+        { name = '046', connectedTiles = { [Map.TOP_MIDDLE] = '041', [Map.RIGHT_MIDDLE] = '047', [Map.BOTTOM_MIDDLE] = '051', [Map.LEFT_BOTTOM] = '010', [Map.LEFT_TOP] = '010', }, },
+        { name = '047', connectedTiles = { [Map.TOP_MIDDLE] = '', [Map.RIGHT_MIDDLE] = '048', [Map.BOTTOM_MIDDLE] = '052', [Map.LEFT_MIDDLE] = '046', }, },
+        { name = '048', connectedTiles = { [Map.TOP_MIDDLE] = '043', [Map.RIGHT_MIDDLE] = '049', [Map.BOTTOM_MIDDLE] = '053', [Map.LEFT_MIDDLE] = '047', }, },
+        { name = '049', connectedTiles = { [Map.TOP_MIDDLE] = '044', [Map.RIGHT_MIDDLE] = '050', [Map.BOTTOM_MIDDLE] = '054', [Map.LEFT_MIDDLE] = '048', }, },
+        { name = '050', connectedTiles = { [Map.TOP_MIDDLE] = '045', [Map.RIGHT_MIDDLE] = '', [Map.BOTTOM_MIDDLE] = '055', [Map.LEFT_MIDDLE] = '049', }, },
+        { name = '051', connectedTiles = { [Map.TOP_MIDDLE] = '046', [Map.RIGHT_MIDDLE] = '052', [Map.BOTTOM_MIDDLE] = '', [Map.LEFT_MIDDLE] = '015', }, },
+        { name = '052', connectedTiles = { [Map.TOP_MIDDLE] = '047', [Map.RIGHT_MIDDLE] = '053', [Map.BOTTOM_MIDDLE] = '', [Map.LEFT_MIDDLE] = '051', }, },
+        { name = '053', connectedTiles = { [Map.TOP_MIDDLE] = '048', [Map.RIGHT_MIDDLE] = '054', [Map.BOTTOM_MIDDLE] = '058', [Map.LEFT_MIDDLE] = '052', }, },
+        { name = '054', connectedTiles = { [Map.TOP_MIDDLE] = '049', [Map.RIGHT_MIDDLE] = '055', [Map.BOTTOM_MIDDLE] = '059', [Map.LEFT_MIDDLE] = '053', }, },
+        { name = '055', connectedTiles = { [Map.TOP_MIDDLE] = '050', [Map.RIGHT_MIDDLE] = '', [Map.BOTTOM_MIDDLE] = '060', [Map.LEFT_MIDDLE] = '054', }, },
+        { name = '056', connectedTiles = { [Map.TOP_MIDDLE] = '', [Map.RIGHT_MIDDLE] = '', [Map.BOTTOM_MIDDLE] = '061', [Map.LEFT_MIDDLE] = '020', }, },
+        { name = '057', connectedTiles = { [Map.TOP_MIDDLE] = '', [Map.RIGHT_MIDDLE] = '058', [Map.BOTTOM_MIDDLE] = '062', [Map.LEFT_MIDDLE] = '', }, },
+        { name = '058', connectedTiles = { [Map.TOP_MIDDLE] = '053', [Map.RIGHT_MIDDLE] = '', [Map.BOTTOM_MIDDLE] = '', [Map.LEFT_MIDDLE] = '057', }, },
+        { name = '059', connectedTiles = { [Map.TOP_MIDDLE] = '054', [Map.RIGHT_MIDDLE] = '060', [Map.BOTTOM_MIDDLE] = '064', [Map.LEFT_MIDDLE] = '', }, },
+        { name = '060', connectedTiles = { [Map.TOP_MIDDLE] = '055', [Map.RIGHT_MIDDLE] = '', [Map.BOTTOM_MIDDLE] = '065', [Map.LEFT_MIDDLE] = '059', }, },
+        { name = '061', connectedTiles = { [Map.TOP_MIDDLE] = '056', [Map.RIGHT_MIDDLE] = '062', [Map.BOTTOM_MIDDLE] = '', [Map.LEFT_MIDDLE] = '', }, },
+        { name = '062', connectedTiles = { [Map.TOP_MIDDLE] = '057', [Map.RIGHT_MIDDLE] = '063', [Map.BOTTOM_MIDDLE] = '067', [Map.LEFT_MIDDLE] = '061', }, },
+        { name = '063', connectedTiles = { [Map.TOP_MIDDLE] = '', [Map.RIGHT_MIDDLE] = '', [Map.BOTTOM_MIDDLE] = '068', [Map.LEFT_MIDDLE] = '062', }, },
+        { name = '064', connectedTiles = { [Map.TOP_MIDDLE] = '059', [Map.RIGHT_MIDDLE] = '065', [Map.BOTTOM_MIDDLE] = '069', [Map.LEFT_MIDDLE] = '', }, },
+        { name = '065', connectedTiles = { [Map.TOP_MIDDLE] = '060', [Map.RIGHT_MIDDLE] = '', [Map.BOTTOM_MIDDLE] = '070', [Map.LEFT_MIDDLE] = '064', }, },
+        { name = '066', connectedTiles = { [Map.TOP_MIDDLE] = '', [Map.RIGHT_MIDDLE] = '', [Map.BOTTOM_MIDDLE] = '071', [Map.LEFT_MIDDLE] = '030', }, },
+        { name = '067', connectedTiles = { [Map.TOP_MIDDLE] = '062', [Map.RIGHT_MIDDLE] = '', [Map.BOTTOM_MIDDLE] = '', [Map.LEFT_MIDDLE] = '', }, },
+        { name = '068', connectedTiles = { [Map.TOP_MIDDLE] = '063', [Map.RIGHT_MIDDLE] = '069', [Map.BOTTOM_MIDDLE] = '073', [Map.LEFT_MIDDLE] = '', }, },
+        { name = '069', connectedTiles = { [Map.TOP_MIDDLE] = '064', [Map.RIGHT_MIDDLE] = '070', [Map.BOTTOM_MIDDLE] = '074', [Map.LEFT_MIDDLE] = '068', }, },
+        { name = '070', connectedTiles = { [Map.TOP_MIDDLE] = '065', [Map.RIGHT_MIDDLE] = '', [Map.BOTTOM_MIDDLE] = '075', [Map.LEFT_MIDDLE] = '069', }, },
+        { name = '071', connectedTiles = { [Map.TOP_MIDDLE] = '066', [Map.RIGHT_MIDDLE] = '072', [Map.BOTTOM_MIDDLE] = '076', [Map.LEFT_MIDDLE] = '035', }, },
+        { name = '072', connectedTiles = { [Map.TOP_MIDDLE] = '', [Map.RIGHT_MIDDLE] = '073', [Map.BOTTOM_MIDDLE] = '077', [Map.LEFT_MIDDLE] = '071', }, },
+        { name = '073', connectedTiles = { [Map.TOP_MIDDLE] = '068', [Map.RIGHT_MIDDLE] = '074', [Map.BOTTOM_MIDDLE] = '078', [Map.LEFT_MIDDLE] = '072', }, },
+        { name = '074', connectedTiles = { [Map.TOP_MIDDLE] = '069', [Map.RIGHT_MIDDLE] = '075', [Map.BOTTOM_MIDDLE] = '079', [Map.LEFT_MIDDLE] = '073', }, },
+        { name = '075', connectedTiles = { [Map.TOP_MIDDLE] = '070', [Map.RIGHT_MIDDLE] = '', [Map.BOTTOM_MIDDLE] = '080', [Map.LEFT_MIDDLE] = '074', }, },
+        { name = '076', connectedTiles = { [Map.TOP_MIDDLE] = '071', [Map.RIGHT_MIDDLE] = '077', [Map.BOTTOM_MIDDLE] = '', [Map.LEFT_MIDDLE] = '', }, },
+        { name = '077', connectedTiles = { [Map.TOP_MIDDLE] = '072', [Map.RIGHT_MIDDLE] = '078', [Map.BOTTOM_MIDDLE] = '', [Map.LEFT_MIDDLE] = '076', }, },
+        { name = '078', connectedTiles = { [Map.TOP_MIDDLE] = '073', [Map.RIGHT_MIDDLE] = '079', [Map.BOTTOM_MIDDLE] = '', [Map.LEFT_MIDDLE] = '077', }, },
+        { name = '079', connectedTiles = { [Map.TOP_MIDDLE] = '074', [Map.RIGHT_MIDDLE] = '080', [Map.BOTTOM_MIDDLE] = '', [Map.LEFT_MIDDLE] = '078', }, },
+        { name = '080', connectedTiles = { [Map.TOP_MIDDLE] = '075', [Map.RIGHT_MIDDLE] = '', [Map.BOTTOM_MIDDLE] = '', [Map.LEFT_MIDDLE] = '079', }, },
+    },
+    [Constants.CYCLE_II] = {
+
+    },
+    [Constants.CYCLE_III] = {
+
+    },
+}
+
+function Map.init(savedData)
+    Map.map = {}
+    Map.discovered_map = savedData.discovered_map or {
+        ['T00'] = 'dee6ee',
+    }
+
+    if not getObjectFromGUID(Map.TILES_BAG_GUID) then
+        broadcastToAll('Missing map tiles bag with GUID ' .. Map.TILES_BAG_GUID, Color.Red)
+    end
+
+    for index, tile in ipairs(Map.TILES_LIST[Cycle.getCurrentCycle()]) do
+        Map.map[tile.name] = MapTile.create(tile)
+
+        if Map.map[tile.name].object and Map.map[tile.name]:hasUndiscoveredConnections() then
+           -- Create the tile UI 
+           Map.map[tile.name]:createUi()
+        end
+    end
+
+    EventManager.addHandler('onObjectLeaveContainer', function(container, object)
+        if container.getGUID() == Map.TILES_BAG_GUID and object.hasTag(Constants.MAP_TILE) and Map.map[object.getName()] then
+            Map.map[object.getName()].guid = object.getGUID()
+            Map.map[object.getName()].object = object
+            Map.map[object.getName()]:createUi(true)
+        end
+    end)
+end
+
+function Map.save()
+    local flatData = {
+        discovered_map = Map.discovered_map
+    }
+
+    return flatData
+end
+
+function MapTile.create(mapTile)
+    assert(Utils.isString(mapTile.name))
+
+    local newMapTile = {
+        name = mapTile.name,
+        guid = mapTile.guid,
+        -- icons = mapTile.icon or {},
+        connectedTiles = mapTile.connectedTiles or {},
+    }
+    setmetatable(newMapTile, MapTile)
+
+    if Map.discovered_map[newMapTile.name] and not newMapTile.guid then
+        newMapTile.guid = Map.discovered_map[newMapTile.name]
+        newMapTile.object = getObjectFromGUID(newMapTile.guid)
+    end
+
+    Log:debug('Created %s', newMapTile)
+    return newMapTile
+end
+
+function MapTile:hasUndiscoveredConnections()
+    local connectionCount = #self.connectedTiles
+    local discoveredConnections = 0
+
+    for _, discoveredTile in ipairs(Map.discovered_map) do
+        for _, tile in ipairs(self.connectedTiles) do
+            if tile == discoveredTile then
+                discoveredConnections = discoveredConnections + 1
+            end
+
+            if discoveredConnections == connectionCount then
+                return false
+            end
+        end
+    end
+
+    return true
+end
+
+function MapTile:createUi(refresh)
+    self.ui = {}
+    self.ui.root = Ui.createRootOnObject(self.name .. '-tile', self.object, 1.2)
+    self.ui.panel = self.ui.root:panel({ id = self.name .. '-panel', width = 2000, height = 2000, })
+
+    -- for _, _ in ipairs({ 'top-left', Map.TOP_MIDDLE, 'top-bottom', 'right-top', Map.RIGHT_MIDDLE, 'right-bottom', 
+    --                 'bottom-left', Map.BOTTOM_MIDDLE, 'bottom-right', 'left-top', Map.LEFT_MIDDLE, 'left-bottom' }) do
+    for direction, tileName in pairs(self.connectedTiles) do
+        local x, y = 0, 0
+        if direction == Map.TOP_MIDDLE then
+            x = 0
+            y = 850
+        elseif direction == Map.RIGHT_MIDDLE then
+            x = 850
+            y = 0
+        elseif direction == Map.BOTTOM_MIDDLE then
+            x = 0
+            y = -850
+        elseif direction == Map.LEFT_MIDDLE then
+            x = -850
+            y = 0
+        end
+
+        self.ui[direction .. '-button'] = self.ui.panel:button({ id = self.name .. '-' .. direction .. '-button', 
+                                width = 300, height = 300, colors = Ui.TRANSPARENT_INPUT_COLORS,
+                                x = x, y = y, active = (Map.discovered_map[tileName] == nil),
+                                onClick = function()
+                                    self:pullNext(direction)
+                                end })
+    end
+
+    if refresh then
+        self.ui.root:refresh()
+    end
+end
+
+function MapTile:pullNext(direction)
+    if not direction or not self.connectedTiles[direction] then return end
+
+    local tileName = self.connectedTiles[direction]
+
+    -- Check if the tile is already on the table
+    if Map.discovered_map[tileName] or (Map.map[self.connectedTiles[direction]] 
+                    and Map.map[self.connectedTiles[direction]].object) then
+        if self.connectedTiles[direction] == '027' then
+            Player.Black.pingTable(Map.map[self.connectedTiles[direction]].object.getPosition())
+        end
+        return
+    end
+
+    self.ui[direction .. '-button']:setActive(false)
+
+    -- Calculate the new position
+    local newPosition = Vector(self.object.getPosition())
+    local size = self.object.getBounds().size
+    local epsilon = 0.02
+
+    if direction == Map.TOP_MIDDLE then
+        newPosition = newPosition + Vector(0, 0, size.z + epsilon)
+    elseif direction == Map.RIGHT_MIDDLE then
+        newPosition = newPosition + Vector(size.x + epsilon, 0, 0)
+    elseif direction == Map.BOTTOM_MIDDLE then
+        newPosition = newPosition + Vector(0, 0, -(size.z + epsilon))
+    elseif direction == Map.LEFT_MIDDLE then
+        newPosition = newPosition + Vector(-(size.x + epsilon), 0, 0)
+    end
+    
+    local tilesBag = getObjectFromGUID(Map.TILES_BAG_GUID)
+    for _, object in ipairs(tilesBag.getObjects()) do
+        if object.name == tileName then
+            tilesBag.takeObject({
+                guid = object.guid,
+                position = newPosition,
+                rotation = {0, 180, 0},
+                callback_function = function(tile)
+                    tile.setLock(true)
+                    Map.discovered_map[tileName] = object.guid
+                    Map.map[tileName].guid = object.guid
+                    Map.map[tileName].object = tile
+                    Map.map[tileName]:createUi(true)
+                    Log:debug('Pulled %s', Map.map[tileName])
+                end
+            })
+            return
+        end
+    end
+
+    broadcastToAll('Tile ' .. tileName .. ' not found, please look for it in the map tiles bag.', Color.Red)
+end
+
+function MapTile:__tostring()
+    return Utils.format('MapTile{name = %s, guid = %s}', self.name or nil, self.guid or nil)
+end
+
+------------------------------------------------------
+
+return {
+    init = Map.init,
+    save = Map.save,
+}

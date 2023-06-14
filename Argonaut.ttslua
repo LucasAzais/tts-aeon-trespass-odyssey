@@ -1,4 +1,5 @@
 local Argonaut = {}
+Argonaut.__index = Argonaut
 
 local ArgonautClass = {}
 ArgonautClass.__index = ArgonautClass

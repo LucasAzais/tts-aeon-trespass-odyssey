@@ -13,6 +13,7 @@ local BattleBoard = require('BattleBoard')
 local Constants = require('Constants')
 local Cycle = require('Cycle')
 local GlobalUi = require('GlobalUi')
+local Map = require('Map')
 local Timeline = require('Timeline')
 local Triskelion = require('Triskelion')
 local Ui = require('Ui')
@@ -23,7 +24,7 @@ local Log = require('Log').ForModule("Global")
 -- TODO: Create a Terrain class and map the various terrain-card-bags when the mod is loaded to avoid string matching everytime
 
 local NOT_INTERACTABLE = {
-    
+    '77cbc9',
 }
 
 function onLoad(script_state)
@@ -44,6 +45,7 @@ function onLoad(script_state)
     Ui.init()
     GlobalUi.init()
     Cycle.init(savedData.cycle or {})
+    Map.init(savedData.map or {})
     Argo.init(savedData.argo or {})
     Timeline.init(savedData.timeline or {})
     Triskelion.init(savedData.triskelions or {})
@@ -71,6 +73,7 @@ function onSave()
         dataToSave.argo = Argo.save()
         dataToSave.timeline = Timeline.save()
         dataToSave.battle = Battle.save()
+        dataToSave.map = Map.save()
     -- end
 
     return JSON.encode(dataToSave)

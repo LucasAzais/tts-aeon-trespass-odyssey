@@ -40,6 +40,7 @@ Constants.TERRAIN = 'Terrain'
 Constants.ARGONAUT_SHEET = 'ArgonautSheet'
 Constants.ARGO_SHEET = 'ArgoSheet'
 Constants.TIMELINE_SHEET = 'TimelineSheet'
+Constants.MAP_TILE = 'MapTile'
 
 -- Battle types
 Constants.MNESTIS_THEATRE = 'Mnestis Theatre'
