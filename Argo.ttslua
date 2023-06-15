@@ -506,6 +506,37 @@ function Argo.createSheetUi(cycle)
                                                 level[Constants.MIXED] = not level[Constants.MIXED]
                                                 Argo.ui['evolution_' .. index .. '_' .. Constants.MIXED .. '_checkbox']:setChecked(level[Constants.MIXED])
                                                 Log:debug('Evolution track section %s set to %s.', index, tostring(level[Constants.MIXED]))
+
+                                                if(level[Constants.MIXED]) then
+                                                    -- Find the correct level, up to the current evolution level
+                                                    local lastMarkedHekatonIndex, lastMarkedLabyrinthaurosIndex = 0, 0
+        
+                                                    for jndex, element in ipairs(Argo.getEvolutionTracks()) do
+                                                        if jndex >= index then break end
+
+                                                        if element[Constants.HEKATON] == true then
+                                                            lastMarkedHekatonIndex = jndex
+                                                        end
+
+                                                        if element[Constants.LABYRINTHAUROS] == true then
+                                                            lastMarkedLabyrinthaurosIndex = jndex
+                                                        end
+                                                    end
+
+                                                    local allowHekaton, allowLabyrinthauros = false, false
+                                                    if index == lastMarkedHekatonIndex + 1 then allowHekaton = true end
+                                                    if index == lastMarkedLabyrinthaurosIndex + 1 then allowLabyrinthauros = true end
+
+                                                    -- Let the player choose which Primordial to setup
+                                                    local confirmationText = 'Which primordial do you want to setup?'
+                                                    if not allowHekaton and not allowLabyrinthauros then confirmationText = 'You cannot fill this box' end
+
+                                                    GlobalUi.showConfirmationDialog(confirmationText, (allowHekaton and 'Hekaton') or false, (allowHekaton and function()
+                                                        Battle.setupBattle('Hekaton Battle', Argo.EVOLUTION_INDEX_TO_LEVEL[index])
+                                                    end) or nil, (allowLabyrinthauros and 'Labyrinthauros') or false, (allowLabyrinthauros and function()
+                                                        Battle.setupBattle('Labyrinthauros Battle', Argo.EVOLUTION_INDEX_TO_LEVEL[index])
+                                                    end) or nil)
+                                                end
                                             end })
             else
                 if level[Constants.HEKATON] ~= nil then

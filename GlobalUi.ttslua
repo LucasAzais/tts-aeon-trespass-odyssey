@@ -9,6 +9,9 @@ local Ui = require('Ui')
 ------------------------------------------------------
 
 function GlobalUi.init(savedData)
+    ------------------------------------------------
+    -- Generic UI for a choice/confirmation panel --
+    ------------------------------------------------
     GlobalUi.confirmation_panel = Ui.getRoot():panel({
         id = 'confirmation-panel', height = 250, width = 400, active = false, rectAlignment = 'MiddleCenter'
     })
@@ -18,26 +21,39 @@ function GlobalUi.init(savedData)
                     width = 390, height = 200, textAlignment = 'UpperCenter', rectAlignment = 'UpperCenter', 
                     fontSize = 35,
     })
-    GlobalUi.confirmation_yes_button = GlobalUi.confirmation_panel:button({ 
-            id = 'confirmation-yes-button', text = '', width = 130, height = 50, 
-            x = -80, y = 10, fontSize = 30,
-            textAlignment = 'MiddleCenter', rectAlignment = 'LowerCenter', onClick = function(_, button) end
-    })
-    GlobalUi.confirmation_no_button = GlobalUi.confirmation_panel:button({ 
-            id = 'confirmation-no-button', text = '', width = 130, height = 50, 
-            x = 80, y = 10, fontSize = 30,
-            textAlignment = 'MiddleCenter', rectAlignment = 'LowerCenter', onClick = function(_, button) end
+    GlobalUi.confirmation_close_button = GlobalUi.confirmation_panel:button({ 
+            id = 'confirmation-close-button', text = 'X', width = 30, height = 30, 
+            x = -5, y = -5, fontSize = 25,
+            textAlignment = 'MiddleCenter', rectAlignment = 'UpperRight', onClick = function(_, button) GlobalUi.confirmation_panel:hide() end
     })
 
-   -- Create the collapsible UI
+    GlobalUi.confirmation_hlayout = GlobalUi.confirmation_panel:horizontalLayout({ id = 'confirmation-hl', 
+            rectAlignment = 'LowerCenter', width = 390, height = 50, spacing = 30, padding = '30 30 0 0', y = 10 })
+
+    GlobalUi.confirmation_yes_button = GlobalUi.confirmation_hlayout:button({ 
+            id = 'confirmation-yes-button', text = '',
+            textAlignment = 'MiddleCenter', onClick = function(_, button) end
+    })
+    GlobalUi.confirmation_yes_button.attributes.resizeTextForBestFit = true
+    GlobalUi.confirmation_yes_button.attributes.resizeTextMaxSize = 25
+    GlobalUi.confirmation_no_button = GlobalUi.confirmation_hlayout:button({ 
+            id = 'confirmation-no-button', text = '',
+            textAlignment = 'MiddleCenter', onClick = function(_, button) end
+    })
+    GlobalUi.confirmation_no_button.attributes.resizeTextForBestFit = true
+    GlobalUi.confirmation_no_button.attributes.resizeTextMaxSize = 25
+
+   -----------------------------------
+    -- Collapsible Battle Selection --
+    ----------------------------------
    local globalWidth = 380
-   GlobalUi.menu_panel = Ui.getRoot():verticalLayout({
+   GlobalUi.battle_menu_panel = Ui.getRoot():verticalLayout({
         id = 'options-panel', height = 400, width = globalWidth, rectAlignment = 'UpperLeft', x = 120, y = -10, padding = '5 5 5 5', active = false
     })
-    GlobalUi.menu_panel.attributes.color = '#05050559'
-    GlobalUi.menu_panel.attributes.allowDragging = true
-    GlobalUi.menu_panel.attributes.returnToOriginalPositionWhenReleased = false
-    GlobalUi.menu_panel.attributes.childForceExpandWidth = false
+    GlobalUi.battle_menu_panel.attributes.color = '#05050559'
+    GlobalUi.battle_menu_panel.attributes.allowDragging = true
+    GlobalUi.battle_menu_panel.attributes.returnToOriginalPositionWhenReleased = false
+    GlobalUi.battle_menu_panel.attributes.childForceExpandWidth = false
 
     GlobalUi.toggle_button = Ui.getRoot():button({
         id = 'options-menu-toggle', height = 40, width = 40, rectAlignment = 'UpperLeft', x = 70, y = -10, onClick = function() GlobalUi.expandMenu() end
@@ -50,12 +66,12 @@ function GlobalUi.init(savedData)
     GlobalUi.toggle_button.attributes.returnToOriginalPositionWhenReleased = false
 
     local fontSize = 25
-    GlobalUi.menu_panel:button({ id = 'cleanup-button', text = 'Cleanup', fontSize = fontSize, width = globalWidth - 10, height = 40,
+    GlobalUi.battle_menu_panel:button({ id = 'cleanup-button', text = 'Cleanup', fontSize = fontSize, width = globalWidth - 10, height = 40,
                                     colors = '#d64e45|#eb3e31|#cf817c|rgba(0.78,0.78,0.78,0.5)', onClick = function()
         Battle.cleanupCurrentBattle()
     end })
 
-    local hekatonLayout = GlobalUi.menu_panel:horizontalLayout({ id = 'hekaton-layout-button', width = globalWidth - 10, height = 40, })
+    local hekatonLayout = GlobalUi.battle_menu_panel:horizontalLayout({ id = 'hekaton-layout-button', width = globalWidth - 10, height = 40, })
     hekatonLayout:text({ id = 'hekaton-label', text = Constants.HEKATON, fontSize = fontSize, width = 100, color = 'White' })
     for _, level in ipairs({ Constants.LEVEL_0, Constants.LEVEL_1, Constants.LEVEL_2, Constants.LEVEL_3, Constants.LEVEL_4, }) do
         hekatonLayout:button({ id = 'hekaton-' .. level .. '-button', fontSize = fontSize, text = tostring(level), onClick = function()
@@ -67,7 +83,7 @@ function GlobalUi.init(savedData)
         end })
     end
 
-    local labyrinthaurosLayout = GlobalUi.menu_panel:horizontalLayout({ id = 'labyrinthauros-layout-button', width = globalWidth - 10, height = 40, })
+    local labyrinthaurosLayout = GlobalUi.battle_menu_panel:horizontalLayout({ id = 'labyrinthauros-layout-button', width = globalWidth - 10, height = 40, })
     labyrinthaurosLayout:text({ id = 'labyrinthauros-label', text = Constants.LABYRINTHAUROS, fontSize = fontSize, width = 145, color = 'White' })
     for _, level in ipairs({ Constants.LEVEL_1, Constants.LEVEL_2, Constants.LEVEL_3, Constants.LEVEL_4, }) do
         labyrinthaurosLayout:button({ id = 'labyrinthauros-' .. level .. '-button', fontSize = fontSize, text = tostring(level), onClick = function()
@@ -75,7 +91,7 @@ function GlobalUi.init(savedData)
         end })
     end
 
-    local pursuerLayout = GlobalUi.menu_panel:horizontalLayout({ id = 'pursuer-layout-button', width = globalWidth - 10, height = 40, })
+    local pursuerLayout = GlobalUi.battle_menu_panel:horizontalLayout({ id = 'pursuer-layout-button', width = globalWidth - 10, height = 40, })
     pursuerLayout:text({ id = 'pursuer-label', text = Constants.HERMESIAN_PURSUER, fontSize = fontSize, width = 100, color = 'White' })
     for _, level in ipairs({ Constants.LEVEL_1, }) do
         pursuerLayout:button({ id = 'pursuer-' .. level .. '-button', fontSize = fontSize, text = tostring(level), onClick = function()
@@ -83,7 +99,7 @@ function GlobalUi.init(savedData)
         end })
     end
 
-    local temenosLayout = GlobalUi.menu_panel:horizontalLayout({ id = 'temenos-layout-button', width = globalWidth - 10, height = 40, })
+    local temenosLayout = GlobalUi.battle_menu_panel:horizontalLayout({ id = 'temenos-layout-button', width = globalWidth - 10, height = 40, })
     temenosLayout:text({ id = 'temenos-label', text = Constants.ALPHA_TEMENOS, fontSize = fontSize, width = 100, color = 'White' })
     for _, level in ipairs({ Constants.LEVEL_1,  }) do
         temenosLayout:button({ id = 'temenos-' .. level .. '-button', fontSize = fontSize, text = tostring(level), onClick = function()
@@ -91,15 +107,15 @@ function GlobalUi.init(savedData)
         end })
     end
 
-    GlobalUi.menu_panel:button({ id = 'ambush-button', text = 'Ambush Battle', fontSize = fontSize, width = globalWidth - 10, height = 40, onClick = function()
+    GlobalUi.battle_menu_panel:button({ id = 'ambush-button', text = 'Ambush Battle', fontSize = fontSize, width = globalWidth - 10, height = 40, onClick = function()
         Battle.setupBattle('Ambush Battle', nil)
     end })
 
-    GlobalUi.menu_panel:button({ id = 'no-maze-button', text = 'There is No Maze Battle', fontSize = fontSize, width = globalWidth - 10, height = 40, onClick = function()
+    GlobalUi.battle_menu_panel:button({ id = 'no-maze-button', text = 'There is No Maze Battle', fontSize = fontSize, width = globalWidth - 10, height = 40, onClick = function()
         Battle.setupBattle('There is No Maze Battle', Constants.LEVEL_1)
     end })
 
-    GlobalUi.menu_panel:button({ id = 'pursuit-end-button', text = 'Pursuit\'s End Battle', fontSize = fontSize, width = globalWidth - 10, height = 40, onClick = function()
+    GlobalUi.battle_menu_panel:button({ id = 'pursuit-end-button', text = 'Pursuit\'s End Battle', fontSize = fontSize, width = globalWidth - 10, height = 40, onClick = function()
         Battle.setupBattle('Pursuit\'s End Battle', Constants.LEVEL_1)
     end })
 end
@@ -109,7 +125,7 @@ function GlobalUi.expandMenu()
     GlobalUi.toggle_button:setOnClick(function() GlobalUi.collapseMenu() end)
 
     -- Display vertical menu
-    GlobalUi.menu_panel:show()
+    GlobalUi.battle_menu_panel:show()
 end
 
 function GlobalUi.collapseMenu()
@@ -117,17 +133,28 @@ function GlobalUi.collapseMenu()
     GlobalUi.toggle_button:setOnClick(function() GlobalUi.expandMenu() end)
 
     -- Hide vertical menu
-    GlobalUi.menu_panel:hide()
+    GlobalUi.battle_menu_panel:hide()
 end
 
 -- Message is a string
 -- ... has one table for each button { text = '', callback = F }
 function GlobalUi.showConfirmationDialog(message, yesText, yesCallback, noText, noCallback)
     GlobalUi.confirmation_text:setText(message)
-    GlobalUi.confirmation_yes_button:setText(yesText)
-    GlobalUi.confirmation_yes_button:setOnClick(function(color, button, id) GlobalUi.confirmation_panel:hide() if yesCallback ~= nil then yesCallback(color, button, id) end end)
-    GlobalUi.confirmation_no_button:setText(noText or 'Cancel')
-    GlobalUi.confirmation_no_button:setOnClick(function(color, button, id) GlobalUi.confirmation_panel:hide() if noCallback ~= nil then noCallback(color, button, id) end end)
+    if yesText ~= false then
+        GlobalUi.confirmation_yes_button:setActive(true)
+        GlobalUi.confirmation_yes_button:setText(yesText or 'Cancel')
+        GlobalUi.confirmation_yes_button:setOnClick(function(color, button, id) GlobalUi.confirmation_panel:hide() if yesCallback ~= nil then yesCallback(color, button, id) end end)
+    else
+        GlobalUi.confirmation_yes_button:setActive(false)
+    end
+
+    if noText ~= false then
+        GlobalUi.confirmation_no_button:setActive(true)
+        GlobalUi.confirmation_no_button:setText(noText or 'Cancel')
+        GlobalUi.confirmation_no_button:setOnClick(function(color, button, id) GlobalUi.confirmation_panel:hide() if noCallback ~= nil then noCallback(color, button, id) end end)
+    else
+        GlobalUi.confirmation_no_button:setActive(false)
+    end
 
     GlobalUi.confirmation_panel:show()
 end
