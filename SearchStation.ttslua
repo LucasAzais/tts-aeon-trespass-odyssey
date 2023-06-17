@@ -1,0 +1,181 @@
+local SearchStation = {}
+SearchStation.__index = SearchStation
+
+local Constants = require('Constants')
+local EventManager = require('EventManager')
+local Log = require('Log').ForModule('SearchStation')
+local Ui = require('Ui')
+local Utils = require('Utils')
+
+SearchStation.STATION_GUID = '8d2a1c'
+SearchStation.SEARCH_ZONE_GUID = 'e3682f'
+
+------------------------------------------------------
+
+function SearchStation.init()
+    -- Find the search zone
+    SearchStation.search_zone = getObjectFromGUID(SearchStation.SEARCH_ZONE_GUID)
+    SearchStation.station = getObjectFromGUID(SearchStation.STATION_GUID)
+
+    -- Create the upgrade buttons
+    SearchStation.uiRoot = Ui.createRootOnObject('search-station-root', SearchStation.station, 0)
+    SearchStation.uiRoot.scale = '0.25 0.25 0.25'
+
+    local searchLayout = SearchStation.uiRoot:verticalLayout({
+        id = 'search-station-layout', spacing = 10, width = 600, height = 125, z = -15, y = -120
+    })
+
+    -- Search button
+    SearchStation.search_input = searchLayout:input({
+        id = 'search-station-input', text = '', active = true, fontSize = 100,
+        onValueChanged = function(_, text)
+            SearchStation.getResults(text)
+        end
+    })
+    SearchStation.search_input.attributes.placeholder = ' '
+
+    SearchStation.result_buttons = {}
+    for i = 1, 5 do
+        SearchStation.result_buttons[i] = SearchStation.uiRoot:button({
+            id = 'result-station-button-' .. i, text = '', active = false, fontSize = 80, width = 1500,
+            height = 90, z = -15, y = -130 - i * 25, colors = '#00000000|#00000088|#00000088|#00000000',
+            textColor = '#dddddd', onClick = function() end
+        })
+    end
+end
+
+function SearchStation.pullElement(params)
+    if not params or params.guid:gsub('%s+', '') == '' then
+        return
+    end
+
+    local spawnPosition = SearchStation.station.getPosition() + Vector(0, 1, 0)
+    if params.container then
+        params.container.takeObject({
+            position          = spawnPosition,
+            rotation          = {0, 180, 0},
+            smooth            = false,
+            guid              = params.guid,
+        })
+    else
+        getObjectFromGUID(params.guid).setPosition(spawnPosition)
+    end
+end
+
+function SearchStation.getResults(searchTerm)
+    if searchTerm:gsub('%s+', '') == '' then
+        SearchStation.displayResults({})
+        return
+    end
+
+    -- Get top 5 results
+    local results = {}
+
+    Log:debug('Starting search for %s', searchTerm)
+        
+    -- For each searcheable card tray
+    for _, container in ipairs(SearchStation.search_zone.getObjects()) do
+        if container.type == 'Bag' or container.type == 'Deck' then
+            for _, element in ipairs(container.getObjects()) do
+                if element.name:lower():find(searchTerm:lower()) then
+                    table.insert(results, {
+                        id = element.name,
+                        guid = element.guid,
+                        container = container,
+                        description = false,
+                    })
+                elseif element.description:lower():find(searchTerm:lower()) then
+                    table.insert(results, {
+                        id = element.description,
+                        guid = element.guid,
+                        container = container,
+                        description = true,
+                    })
+                end
+            
+                if #results >= 5 then
+                    SearchStation.displayResults(results)
+                    return
+                end
+            end
+        else
+            if container.getName():lower():find(searchTerm:lower()) then
+                table.insert(results, {
+                    id = container.getName(),
+                    guid = container.getGUID(),
+                    description = false,
+                })
+            elseif container.getDescription():lower():find(searchTerm:lower()) then
+                table.insert(results, {
+                    id = container.getDescription(),
+                    guid = container.getGUID(),
+                    description = true,
+                })
+            end
+        end
+    end
+
+    SearchStation.displayResults(results)
+end
+
+function SearchStation.displayResults(results)
+    -- Reset the results to empty if no results
+    if not results or #results == 0 then
+        for _, button in ipairs(SearchStation.result_buttons) do
+            button:setOnClick(nil)
+            button:setText('')
+            button:hide()
+        end
+        -- This should happen when we click on a result button, so reset the search as well
+        if not results then
+            SearchStation.search_input:setText('')
+        end
+    else
+        -- Sort the results by name
+        table.sort(results, function(l1, l2) return l1.id < l2.id end)
+
+        -- Display the results
+        for i = 1, math.min(#results, 5) do
+            SearchStation.result_buttons[i]:setOnClick(function()
+                SearchStation.displayResults(nil)
+                SearchStation.pullElement(results[i])
+            end)
+            -- Avoid the flickering effect of setText
+            if SearchStation.result_buttons[i].attributes.active ~= true then
+                SearchStation.result_buttons[i]:show()
+            end
+
+            -- Check if there's another result with the same name
+            local used = false
+            for _, element in ipairs(results) do
+                if element.id == results[i].id and element.guid ~= results[i].guid then
+                    used = true
+                end
+            end
+
+            if used and results[i].container and results[i].container.getName() ~= '' then
+                SearchStation.result_buttons[i]:setText(results[i].id .. ' - ' .. results[i].container.getName())
+            else
+                SearchStation.result_buttons[i]:setText(results[i].id)
+            end
+        end
+
+        -- Reset the rest of the buttons
+        for i = math.min(#results, 5) + 1, 5 do
+            SearchStation.result_buttons[i]:setOnClick(nil)
+            SearchStation.result_buttons[i]:setText(nil)
+            -- SearchStation.result_buttons[i]:hide()
+        end
+    end
+end
+
+function SearchStation.save()
+
+end
+
+------------------------------------------------------
+
+return {
+    init = SearchStation.init,
+    save = SearchStation.save,
+}
