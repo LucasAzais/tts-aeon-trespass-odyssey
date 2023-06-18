@@ -1,17 +1,24 @@
 local Options = {}
 Options.__index = Options
 
-local Constants = require('Constants')
-
 ------------------------------------------------------
 
+-- This class is mainly used to avoid cross-dependency loading of requires.
+-- So it goes Class -> Options -> Cycle -> Class instead of Class <--> Cycle
+-- Could also change all this to dynamically load the requires, that would likely work as well
 function Options.init(savedData)
-    
+    Options.campaign_started = savedData.campaign_started or false
+    Options.current_cycle = savedData.current_cycle or nil
+end
+
+function Options.getCurrentCycle()
+    return Options.current_cycle
 end
 
 function Options.save()
     local flatData = {
-        
+        campaign_started = Options.campaign_started,
+        current_cycle = Options.current_cycle,
     }
 
     return flatData

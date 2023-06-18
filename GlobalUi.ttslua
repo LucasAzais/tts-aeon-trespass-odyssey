@@ -8,7 +8,7 @@ local Ui = require('Ui')
 
 ------------------------------------------------------
 
-function GlobalUi.init(savedData)
+function GlobalUi.init()
     ------------------------------------------------
     -- Generic UI for a choice/confirmation panel --
     ------------------------------------------------
@@ -19,8 +19,10 @@ function GlobalUi.init(savedData)
 
     GlobalUi.confirmation_text = GlobalUi.confirmation_panel:text({ id = 'confirmation-text', text = '', 
                     width = 390, height = 200, textAlignment = 'UpperCenter', rectAlignment = 'UpperCenter', 
-                    fontSize = 35,
     })
+    GlobalUi.confirmation_text.attributes.resizeTextForBestFit = true
+    GlobalUi.confirmation_text.attributes.resizeTextMaxSize = 35
+
     GlobalUi.confirmation_close_button = GlobalUi.confirmation_panel:button({ 
             id = 'confirmation-close-button', text = 'X', width = 30, height = 30, 
             x = -5, y = -5, fontSize = 25,
@@ -118,6 +120,12 @@ function GlobalUi.init(savedData)
     GlobalUi.battle_menu_panel:button({ id = 'pursuit-end-button', text = 'Pursuit\'s End Battle', fontSize = fontSize, width = globalWidth - 10, height = 40, onClick = function()
         Battle.setupBattle('Pursuit\'s End Battle', Constants.LEVEL_1)
     end })
+
+    -----------------
+    -- Campaign UI --
+    -----------------
+    GlobalUi.campaign_setup_panel = Ui.getRoot():panel({ id = '', width = 1000, height = 800, rectAlignment = 'MiddleCenter', active = not Options.getCurrentCycle() })
+
 end
 
 function GlobalUi.expandMenu()
@@ -140,6 +148,7 @@ end
 -- ... has one table for each button { text = '', callback = F }
 function GlobalUi.showConfirmationDialog(message, yesText, yesCallback, noText, noCallback)
     GlobalUi.confirmation_text:setText(message)
+
     if yesText ~= false then
         GlobalUi.confirmation_yes_button:setActive(true)
         GlobalUi.confirmation_yes_button:setText(yesText or 'Cancel')

@@ -1,7 +1,6 @@
 local Grid = {}
 Grid.__index = Grid
 
-local Constants = require('Constants')
 local Utils = require('Utils')
 
 ------------------------------------------------------

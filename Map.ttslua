@@ -6,15 +6,13 @@ MapTile.__index = MapTile
 function MapTile.Is(x) return getmetatable(x) == MapTile end
 
 local Constants = require('Constants')
-local Cycle = require('Cycle')
 local EventManager = require('EventManager')
 local Log = require('Log').ForModule('Map')
+local Options = require('Options')
 local Ui = require('Ui')
 local Utils = require('Utils')
 
 ------------------------------------------------------
-
-Map.TILES_BAG_GUID = '4eec4f'
 
 Map.TOP_LEFT = 'top-left'
 Map.TOP_MIDDLE = 'top-middle'
@@ -131,32 +129,42 @@ Map.TILES_LIST = {
 }
 
 function Map.init(savedData)
-    Map.map = {}
-    Map.discovered_map = savedData.discovered_map or {
-        ['T00'] = 'dee6ee',
-        -- ['027'] = '194304',
-    }
-
-    if not getObjectFromGUID(Map.TILES_BAG_GUID) then
-        broadcastToAll('Missing map tiles bag with GUID ' .. Map.TILES_BAG_GUID, Color.Red)
+    -- Find the tiles bag
+    Map.map_tiles_bag = getObjectsWithTag(Constants.MAP_TILES_BAG)[1]
+    if not Map.map_tiles_bag then
+        broadcastToAll('Missing map tiles bag with tag ' .. Constants.MAP_TILES_BAG, Color.Red)
     end
 
-    for index, tile in ipairs(Map.TILES_LIST[Cycle.getCurrentCycle()]) do
-        Map.map[tile.name] = MapTile.create(tile)
-
-        if Map.map[tile.name].object and Map.map[tile.name]:hasUndiscoveredConnections() then
-           -- Create the tile UI 
-           Map.map[tile.name]:createUi()
-        end
+    if Options.getCurrentCycle() then
+        Map.reset(savedData)
     end
 
     -- Useless? If someone does it manually, they won't care about the map being registered right?
     -- EventManager.addHandler('onObjectLeaveContainer', function(container, object)
-    --     if container.getGUID() == Map.TILES_BAG_GUID and object.hasTag(Constants.MAP_TILE) 
+    --     if container == Map.map_tiles_bag and object.hasTag(Constants.MAP_TILE) 
     --                     and Map.map[object.getName()] and not object.isSmoothMoving() then
     --         Map.map[object.getName()]:registerObject(object, true)
     --     end
     -- end)
+end
+
+function Map.reset(params)
+    if not Options.getCurrentCycle() then return end
+
+    Map.discovered_map = params.discovered_map or {
+        -- ['T00'] = 'dee6ee',
+        -- ['027'] = '194304',
+    }
+
+    Map.map = {}
+    for index, tile in ipairs(Map.TILES_LIST[Options.getCurrentCycle()]) do
+        Map.map[tile.name] = MapTile.create(tile)
+
+        if Map.map[tile.name].object and Map.map[tile.name]:hasUndiscoveredConnections() then
+            -- Create the tile UI 
+            Map.map[tile.name]:createUi(true)
+        end
+    end
 end
 
 function Map.save()
@@ -211,6 +219,7 @@ function MapTile:createUi(refresh)
 
     self.ui = {}
     self.ui.root = Ui.createRootOnObject(self.name .. '-tile', self.object, 1.2)
+    self.ui.root:wipe()
     self.ui.panel = self.ui.root:panel({ id = self.name .. '-panel', width = 2000, height = 2000, })
 
     for direction, tileName in pairs(self.connectedTiles) do
@@ -307,10 +316,9 @@ function MapTile:pullNext(direction)
     end
     
     -- Try to pull out the tile
-    local tilesBag = getObjectFromGUID(Map.TILES_BAG_GUID)
-    for _, object in ipairs(tilesBag.getObjects()) do
+    for _, object in ipairs(Map.map_tiles_bag.getObjects()) do
         if object.name == tileName then
-            tilesBag.takeObject({
+            Map.map_tiles_bag.takeObject({
                 guid = object.guid,
                 position = newPosition,
                 rotation = {0, 180, 0},
@@ -363,4 +371,5 @@ end
 return {
     init = Map.init,
     save = Map.save,
+    reset = Map.reset,
 }

@@ -1,11 +1,9 @@
 local Timeline = {}
 
 local Constants = require('Constants')
-local Cycle = require('Cycle')
-local EventManager = require('EventManager')
 local Log = require('Log').ForModule('Timeline')
+local Options = require('Options')
 local Ui = require('Ui')
-local Utils = require('Utils')
 
 ------------------------------------------------------
 
@@ -16,45 +14,88 @@ Timeline.CUSTOM_ASSETS = {
     }
 }
 
+Timeline.SHEET_POSITION = {24.00, 15.27, 85.95}
+Timeline.SHEET_ROTATION = {60.45, 180.00, 0.00}
+Timeline.SHEET_SCALE = {16.46, 1.00, 16.46}
+Timeline.SHEET_URL = {
+    [Constants.CYCLE_I] = 'http://cloud-3.steamusercontent.com/ugc/2064383278577606310/BC5581142434D1EE85307B3769808936B81E659C/',
+    [Constants.CYCLE_II] = 'http://cloud-3.steamusercontent.com/ugc/2055377100655086204/93A47A6CA2CE9925253297EECD65CE19C1D06321/',
+    [Constants.CYCLE_III] = 'http://cloud-3.steamusercontent.com/ugc/2055377100655086309/124B8FC2229CBFABFD529CA2909A298CC01209C9/',
+}
+
 function Timeline.init(savedData)
-    Timeline.voyage_timeline = savedData.voyage_timeline or nil
+    if Options.getCurrentCycle() then
+        Timeline.reset(savedData)
+    end
+end
+
+function Timeline.spawnSheet(position)
+    if not Options.getCurrentCycle() then return end
+
+    local timelineSheet = spawnObject({
+        type = 'Custom_Tile',
+        sound = false,
+        position = Timeline.SHEET_POSITION,
+        rotation = Timeline.SHEET_ROTATION,
+        scale = Timeline.SHEET_SCALE,
+        callback_function = function(spawnedObject)
+            spawnedObject.setLock(true)
+            spawnedObject.addTag(Constants.TIMELINE_SHEET)
+            Timeline.reset()
+        end
+    })
+    
+    timelineSheet.setCustomObject({
+        image = Timeline.SHEET_URL[Options.getCurrentCycle()],
+        type = 0,
+        thickness = 0.1,
+    })
+
+    return timelineSheet
+end
+
+function Timeline.reset(params)
+    if not Options.getCurrentCycle() then return end
+    if not params then params = {} end 
+
+    Timeline.voyage_timeline = params.voyage_timeline or nil
     if not Timeline.voyage_timeline then
-        Timeline.voyage_timeline = {
-            [Constants.CYCLE_I] = {
+        Timeline.voyage_timeline = {}
 
-            }
-        }
+        if Options.getCurrentCycle() == Constants.CYCLE_I then
+            for index = 1, 87 do
+                local name = ''
+                if index <= 7 then
+                    name = 'T' .. tostring(index - 1)
+                elseif index > 7 and index < 17 then
+                    name = '0' .. tostring(index - 7)
+                else
+                    name = tostring(index - 7)
+                end
 
-        for index = 1, 87 do
-            local name = ''
-            if index <= 7 then
-                name = 'T' .. tostring(index - 1)
-            elseif index > 7 and index < 17 then
-                name = '0' .. tostring(index - 7)
-            else
-                name = tostring(index - 7)
+                table.insert(Timeline.voyage_timeline, { name = name, checked = false, note = nil })
             end
-
-            table.insert(Timeline.voyage_timeline[Constants.CYCLE_I], { name = name, checked = false, note = nil })
+        elseif Options.getCurrentCycle() == Constants.CYCLE_II then
+        elseif Options.getCurrentCycle() == Constants.CYCLE_III then
         end
     end
 
-    Timeline.choice_matrix = savedData.choice_matrix or nil
+    Timeline.choice_matrix = params.choice_matrix or nil
     if not Timeline.choice_matrix then
-        Timeline.choice_matrix = {
-            [Constants.CYCLE_I] = {
+        Timeline.choice_matrix = {}
 
-            }
-        }
-
-        for index = 1, 336 do
-            -- This will not keep the order so we'll have to rebuild it
-            Timeline.choice_matrix[Constants.CYCLE_I][Timeline.getChoiceName(index)] = false
+        if Options.getCurrentCycle() == Constants.CYCLE_I then
+            for index = 1, 336 do
+                -- This will not keep the order so we'll have to rebuild it
+                Timeline.choice_matrix[Timeline.getChoiceName(index)] = false
+            end
+        elseif Options.getCurrentCycle() == Constants.CYCLE_II then
+        elseif Options.getCurrentCycle() == Constants.CYCLE_III then
         end
     end
 
-    Timeline.map_notes = savedData.map_notes or {}
-    Timeline.notes = savedData.notes
+    Timeline.map_notes = params.map_notes or {}
+    Timeline.notes = params.notes
     if Timeline.notes == nil then
         Timeline.notes = {}
         for i = 1, 22 do
@@ -67,15 +108,13 @@ function Timeline.init(savedData)
         Log:error('Could not find timeline sheet with tag %s', Constants.TIMELINE_SHEET)
         broadcastToAll('Could not find timeline sheet. Create one with tag ' .. Constants.TIMELINE_SHEET 
                 .. ' then save and reload.', Color.Red)
-    end
-
-    if Cycle.getCurrentCycle() then
-        Timeline.createSheetUi(Cycle.getCurrentCycle())
+    else
+        Timeline.createSheetUi(true)
     end
 end
 
-function Timeline.createSheetUi(cycle)
-    if not cycle then return end
+function Timeline.createSheetUi(refresh)
+    if not Options.getCurrentCycle() then return end
     if not Timeline.timeline_sheet then return end
 
     Timeline.uiRoot = Ui.createRootOnObject('timeline-sheet-root', Timeline.timeline_sheet, 1.2)
@@ -84,14 +123,14 @@ function Timeline.createSheetUi(cycle)
 
     Timeline.timeline_sheet.UI.setCustomAssets(Constants.CUSTOM_ASSETS)
 
-    if cycle == Constants.CYCLE_I then
+    if Options.getCurrentCycle() == Constants.CYCLE_I then
         Timeline.ui.main_panel = Timeline.uiRoot:panel({ id = 'global-panel', width = 4000, height = 3000 })
 
         ------------------------
         -- Voyage timeline
         local xStart, yStart = -1262, 793
         local yOffset = -34.7
-        for index, day in ipairs(Timeline.voyage_timeline[Constants.CYCLE_I]) do
+        for index, day in ipairs(Timeline.voyage_timeline) do
             local jump = 0
             if index <= 47 then
                 if index >= 25 then -- Day 18
@@ -150,10 +189,10 @@ function Timeline.createSheetUi(cycle)
             Timeline.ui['choice_matrix_' .. index .. '_checkbox'] = Timeline.ui.main_panel:checkbox({ 
                 id = 'choice_matrix-' .. index .. '-checkbox', 
                 width = 65, height = 65, x = x, y = y,
-                checked = Timeline.choice_matrix[Constants.CYCLE_I][name], onClick = function(_, button)
-                    Timeline.choice_matrix[Constants.CYCLE_I][name] = not Timeline.choice_matrix[Constants.CYCLE_I][name]
-                    Timeline.ui['choice_matrix_' .. index .. '_checkbox']:setChecked(Timeline.choice_matrix[Constants.CYCLE_I][name])
-                    Log:debug('Choice matrix %s set to %s', name, tostring(Timeline.choice_matrix[Constants.CYCLE_I][index]))
+                checked = Timeline.choice_matrix[name], onClick = function(_, button)
+                    Timeline.choice_matrix[name] = not Timeline.choice_matrix[name]
+                    Timeline.ui['choice_matrix_' .. index .. '_checkbox']:setChecked(Timeline.choice_matrix[name])
+                    Log:debug('Choice matrix %s set to %s', name, tostring(Timeline.choice_matrix[index]))
                 end })
         end
 
@@ -206,6 +245,10 @@ function Timeline.createSheetUi(cycle)
             end })
         end
     end
+
+    if refresh then
+        Timeline.uiRoot:refresh()
+    end
 end
 
 -- Take an index in the matrix (left to right, top to bottom) and return the name of it
@@ -237,4 +280,5 @@ end
 return {
     init = Timeline.init,
     save = Timeline.save,
+    spawnSheet = Timeline.spawnSheet,
 }

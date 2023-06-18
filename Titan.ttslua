@@ -12,6 +12,8 @@ Titan.GAMECHANGER = 'Gamechanger'
 Titan.LOGICBREAKER = 'Logicbreaker'
 Titan.MAZERUNNER = 'Mazerunner'
 
+Titan.TITAN_SHEET_SCALE = {4.11, 1.00, 4.11}
+
 Titan.TITANS = {
     [Titan.DREAMWALKER] = {
         danger_steps = {
@@ -19,9 +21,55 @@ Titan.TITANS = {
         },
         rage_steps = {
             
-        }
+        },
+        url = {
+            ['Solon'] = 'http://cloud-3.steamusercontent.com/ugc/2064383278576785074/C505690FEA07BCCF2A191B408BB47EAC2283D7E6/',
+            ['Philoctera'] = 'http://cloud-3.steamusercontent.com/ugc/2064383278576784860/40601F28CAA0339C00585D9EAE5BDA25EC4B8907/',
+            ['Herodotus'] = 'http://cloud-3.steamusercontent.com/ugc/2064383278576784283/563D634C52B1AD8A00479B4C58CBE66266734E74/',
+            ['Ulyssea'] = 'http://cloud-3.steamusercontent.com/ugc/2064383278576784688/65D269636C8C5B268EF54F965E522F449C35BF98/',
+        },
+        url_back = {
+            ['Solon'] = 'http://cloud-3.steamusercontent.com/ugc/2064383278576784486/2A0EA672A5665A1E5A302A7AE891760DB769CFA4/',
+            ['Philoctera'] = 'http://cloud-3.steamusercontent.com/ugc/2064383278576784486/2A0EA672A5665A1E5A302A7AE891760DB769CFA4/',
+            ['Herodotus'] = 'http://cloud-3.steamusercontent.com/ugc/2064383278576784486/2A0EA672A5665A1E5A302A7AE891760DB769CFA4/',
+            ['Ulyssea'] = 'http://cloud-3.steamusercontent.com/ugc/2064383278576784486/2A0EA672A5665A1E5A302A7AE891760DB769CFA4/',
+        },
     }
 }
+
+function Titan.spawnSheet(position, type, urlType)
+    if not Titan.TITANS[type] then return end
+    if urlType and not Titan.TITANS[type].url[urlType] then return end
+
+    local titanSheet = spawnObject({
+        type = 'Custom_Tile',
+        sound = false,
+        position = position,
+        rotation = {0, 180, 0},
+        scale = Titan.TITAN_SHEET_SCALE,
+        callback_function = function(spawnedObject)
+            spawnedObject.addTag(Constants.TITAN_SHEET)
+        end
+    })
+    
+    local imageUrl, imageBottomUrl = '', ''
+    if urlType then
+        imageUrl = Titan.TITANS[type].url[urlType]
+        imageBottomUrl = Titan.TITANS[type].url_back[urlType]
+    else
+        imageUrl = Titan.TITANS[type].url
+        imageBottomUrl = Titan.TITANS[type].url_back
+    end
+
+    titanSheet.setCustomObject({
+        image = imageUrl,
+        image_bottom = imageBottomUrl,
+        type = 0,
+        thickness = 0.1,
+    })
+
+    return titanSheet
+end
 
 ------------------------------------------------------
 

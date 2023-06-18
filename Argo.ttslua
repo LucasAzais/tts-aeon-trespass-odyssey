@@ -4,10 +4,10 @@ Argo.__index = Argo
 -- Used for dynamic loading of the Battle class
 local Battle
 local Constants = require('Constants')
-local Cycle = require('Cycle')
 local EventManager = require('EventManager')
 local GlobalUi = require('GlobalUi')
 local Log = require('Log').ForModule('Argo')
+local Options = require('Options')
 local Ui = require('Ui')
 local Utils = require('Utils')
 
@@ -18,6 +18,15 @@ Argo.CUSTOM_ASSETS = {
         name = 'checked',
         url = 'http://cloud-3.steamusercontent.com/ugc/2057628267251746049/3647F426FC0701F65CD80005CF410D4C1B7C0BFF/',
     }
+}
+
+Argo.SHEET_POSITION = {-24.00, 15.27, 85.95}
+Argo.SHEET_ROTATION = {60.45, 180.00, 0.00}
+Argo.SHEET_SCALE = {16.46, 1.00, 16.46}
+Argo.SHEET_URL = {
+    [Constants.CYCLE_I] = 'http://cloud-3.steamusercontent.com/ugc/2064383278577606165/AFFB9737557EC154FAA960A8AC24101B05D39A1A/',
+    [Constants.CYCLE_II] = 'http://cloud-3.steamusercontent.com/ugc/2055377100655086003/8518F02014AC26C787188C1623EBC6B546250F1F/',
+    [Constants.CYCLE_III] = 'http://cloud-3.steamusercontent.com/ugc/2055377100655086102/082EF198E73D335AEAB39DE861C2D40DB75CDA36/',
 }
 
 Argo.EVOLUTION_INDEX_TO_LEVEL = {
@@ -38,22 +47,56 @@ Argo.EVOLUTION_INDEX_TO_LEVEL = {
 function Argo.init(savedData)
     Battle = Battle or require('Battle')
 
-    Argo.hull = savedData.hull or 0
-    Argo.hull_unlocked = savedData.hull_unlocked or false
-    Argo.crew = savedData.crew or 0
-    Argo.crew_unlocked = savedData.crew_unlocked or false
-    Argo.story_card = savedData.story_card or nil
-    Argo.doom_card = savedData.doom_card or ''
-    Argo.map_tile = savedData.map_tile or ''
-    Argo.humanity = savedData.humanity or 0
-    Argo.defectors = savedData.defectors or 0
-    Argo.argo_fate = savedData.argo_fate or 0
-    Argo.argo_knowledge = savedData.argo_knowledge or 0
-    Argo.strangers = savedData.strangers or 0
-    Argo.abilities_limit = savedData.abilities_limit or 0
-    Argo.current_titans = savedData.current_titans or 0
-    Argo.max_titans = savedData.max_titans or 0
-    Argo.titans_list1 = savedData.titans_list1
+    if Options.getCurrentCycle() then
+        Argo.reset(savedData)
+    end
+end
+
+function Argo.spawnSheet(position)
+    if not Options.getCurrentCycle() then return end
+
+    local argoSheet = spawnObject({
+        type = 'Custom_Tile',
+        sound = false,
+        position = Argo.SHEET_POSITION,
+        rotation = Argo.SHEET_ROTATION,
+        scale = Argo.SHEET_SCALE,
+        callback_function = function(spawnedObject)
+            spawnedObject.setLock(true)
+            spawnedObject.addTag(Constants.ARGO_SHEET)
+            Argo.reset()
+        end
+    })
+    
+    argoSheet.setCustomObject({
+        image = Argo.SHEET_URL[Options.getCurrentCycle()],
+        type = 0,
+        thickness = 0.1,
+    })
+
+    return argoSheet
+end
+
+function Argo.reset(params)
+    if not Options.getCurrentCycle() then return end
+    if not params then params = {} end 
+
+    Argo.hull = params.hull or 0
+    Argo.hull_unlocked = params.hull_unlocked or false
+    Argo.crew = params.crew or 0
+    Argo.crew_unlocked = params.crew_unlocked or false
+    Argo.story_card = params.story_card or nil
+    Argo.doom_card = params.doom_card or ''
+    Argo.map_tile = params.map_tile or ''
+    Argo.humanity = params.humanity or 0
+    Argo.defectors = params.defectors or 0
+    Argo.argo_fate = params.argo_fate or 0
+    Argo.argo_knowledge = params.argo_knowledge or 0
+    Argo.strangers = params.strangers or 0
+    Argo.abilities_limit = params.abilities_limit or 0
+    Argo.current_titans = params.current_titans or 0
+    Argo.max_titans = params.max_titans or 0
+    Argo.titans_list1 = params.titans_list1
     if Argo.titans_list1 == nil then
         Argo.titans_list1 = {}
         for i = 1, 10 do
@@ -61,7 +104,7 @@ function Argo.init(savedData)
         end
     end
 
-    Argo.titans_list2 = savedData.titans_list2
+    Argo.titans_list2 = params.titans_list2
     if Argo.titans_list2 == nil then
         Argo.titans_list2 = {}
         for i = 1, 10 do
@@ -69,125 +112,146 @@ function Argo.init(savedData)
         end
     end
 
-    Argo.adventure_tracks = savedData.adventure_tracks or {
-        [Constants.CYCLE_I] = {
-            [Constants.FATED_CONUNDRUM] = {false, 0, 0, 0, false},
-            [Constants.PLIGHT_OF_THE_PEOPLE] = {false, 0, 0, 0, false},
-            [Constants.HIDDEN_IN_PLAIN_SIGHT] = {false, 0, 0, 0, false},
-            [Constants.MAN_OF_PURPOSE] = {false, 0, 0, 0, false},
-            [Constants.UNEASY_RESTS_THE_HEAD] = {false, 0, 0, false},
-            [Constants.TEARS_OF_A_MINOTAUR] = {false, 0, 0, false},
-            [Constants.DREAMS_LAID_BARE] = {false, 0, 0, 0, false},
-            [Constants.TUTORIAL] = {false, 0, false},
-        },
-        [Constants.CYCLE_II] = {
-            [Constants.CONSIDER_THE_ANT] = {false, 0, 0, false},
-            [Constants.THE_OTHER_THERMOPYLAE] = {false, 0, 0, false},
-            [Constants.FROM_THE_ASHES] = {false, 0, 0, false},
-            [Constants.INTENDED_PURPOSE] = {false, 0, 0, false},
-            [Constants.MISERY_INDUSTRY] = {false, 0, 0, false},
-            [Constants.PARABLE_OF_THE_BUTTERFLY] = {false, 0, 0, false},
-            [Constants.TRUTH_TO_WEAKNESS] = {false, 0, 0, false},
-            [Constants.WHEN_THE_LAND_MEETS_THE_SEA] = {false, 0, 0, false},
-        },
-        [Constants.CYCLE_III] = {
-            [Constants.ROAD_LESS_TRAVELED] = {false, 0, 0, 0, false},
-            [Constants.CHILDREN_OF_THE_SUN] = {false, 0, 0, 0, false},
-            [Constants.WHAT_WE_LEFT_BEHIND] = {false, 0, 0, 0, false},
-            [Constants.OF_WAX_AND_PROMISES] = {false, 0, 0, false},
-            [Constants.CANT_GO_BACK] = {false, 0, 0, false},
-            [Constants.SIN_OF_THE_FATHERS] = {false, 0, 0, false},
-            [Constants.COMING_OF_AGE] = {false, 0, 0, 0, false},
-        },
-    }
+    Argo.adventure_tracks = params.adventure_tracks 
+    if not Argo.adventure_tracks then
+        if Options.getCurrentCycle() == Constants.CYCLE_I then
+            Argo.adventure_tracks = {
+                [Constants.FATED_CONUNDRUM] = {false, 0, 0, 0, false},
+                [Constants.PLIGHT_OF_THE_PEOPLE] = {false, 0, 0, 0, false},
+                [Constants.HIDDEN_IN_PLAIN_SIGHT] = {false, 0, 0, 0, false},
+                [Constants.MAN_OF_PURPOSE] = {false, 0, 0, 0, false},
+                [Constants.UNEASY_RESTS_THE_HEAD] = {false, 0, 0, false},
+                [Constants.TEARS_OF_A_MINOTAUR] = {false, 0, 0, false},
+                [Constants.DREAMS_LAID_BARE] = {false, 0, 0, 0, false},
+                [Constants.TUTORIAL] = {false, 0, false},
+            }
+        elseif Options.getCurrentCycle() == Constants.CYCLE_II then
+            Argo.adventure_tracks = {
+                [Constants.CONSIDER_THE_ANT] = {false, 0, 0, false},
+                [Constants.THE_OTHER_THERMOPYLAE] = {false, 0, 0, false},
+                [Constants.FROM_THE_ASHES] = {false, 0, 0, false},
+                [Constants.INTENDED_PURPOSE] = {false, 0, 0, false},
+                [Constants.MISERY_INDUSTRY] = {false, 0, 0, false},
+                [Constants.PARABLE_OF_THE_BUTTERFLY] = {false, 0, 0, false},
+                [Constants.TRUTH_TO_WEAKNESS] = {false, 0, 0, false},
+                [Constants.WHEN_THE_LAND_MEETS_THE_SEA] = {false, 0, 0, false},
+            }
+        elseif Options.getCurrentCycle() == Constants.CYCLE_III then
+            Argo.adventure_tracks = {
+                [Constants.ROAD_LESS_TRAVELED] = {false, 0, 0, 0, false},
+                [Constants.CHILDREN_OF_THE_SUN] = {false, 0, 0, 0, false},
+                [Constants.WHAT_WE_LEFT_BEHIND] = {false, 0, 0, 0, false},
+                [Constants.OF_WAX_AND_PROMISES] = {false, 0, 0, false},
+                [Constants.CANT_GO_BACK] = {false, 0, 0, false},
+                [Constants.SIN_OF_THE_FATHERS] = {false, 0, 0, false},
+                [Constants.COMING_OF_AGE] = {false, 0, 0, 0, false},
+            }
+        end
+    end
 
-    Argo.diplomacy_tracks = savedData.diplomacy_tracks or {
-        [Constants.CYCLE_I] = {
-            [Constants.MINOANS] = 0,
-            [Constants.LABYRINTHIANS] = 0,
-            [Constants.HORNSWORN] = 0,
-        },
-        [Constants.CYCLE_II] = {
-            [Constants.HELOTS] = 0,
-            [Constants.CYCLOPES] = 0,
-            [Constants.SYMMACHY] = 0,
-        },
-        [Constants.CYCLE_III] = {
-            [Constants.SUNHEIRS] = 0,
-            [Constants.DELPHIANS] = 0,
-            [Constants.TWILIGHT_WATCH] = 0,
-        },
-    }
+    Argo.diplomacy_tracks = params.diplomacy_tracks
+    if not Argo.diplomacy_tracks then
+        if Options.getCurrentCycle() == Constants.CYCLE_I then
+            Argo.diplomacy_tracks = {
+                [Constants.MINOANS] = 0,
+                [Constants.LABYRINTHIANS] = 0,
+                [Constants.HORNSWORN] = 0,
+            }
+        elseif Options.getCurrentCycle() == Constants.CYCLE_II then
+            Argo.diplomacy_tracks = {
+                [Constants.HELOTS] = 0,
+                [Constants.CYCLOPES] = 0,
+                [Constants.SYMMACHY] = 0,
+            }
+        elseif Options.getCurrentCycle() == Constants.CYCLE_III then
+            Argo.diplomacy_tracks = {
+                [Constants.SUNHEIRS] = 0,
+                [Constants.DELPHIANS] = 0,
+                [Constants.TWILIGHT_WATCH] = 0,
+            }
+        end
+    end
 
-    Argo.godforms = savedData.godforms or {}
-    Argo.summons = savedData.summons or {}
-    Argo.summons_limit = savedData.summons_limit or 0
+    Argo.godforms = params.godforms or {}
+    Argo.summons = params.summons or {}
+    Argo.summons_limit = params.summons_limit or 0
 
-    Argo.evolution_track = savedData.evolution_track or {
-        [1] = { [Constants.HEKATON] = false, },
-        [2] = { [Constants.HEKATON] = false, [Constants.LABYRINTHAUROS] = false },
-        [3] = { [Constants.MIXED] = false },
-        [4] = { [Constants.HEKATON] = false, [Constants.LABYRINTHAUROS] = false },
-        [5] = { [Constants.MIXED] = false },
-        [6] = { [Constants.MIXED] = false },
-        [7] = { [Constants.HEKATON] = false, [Constants.LABYRINTHAUROS] = false },
-        [8] = { [Constants.HEKATON] = false, [Constants.LABYRINTHAUROS] = false },
-        [9] = { [Constants.HEKATON] = false, [Constants.LABYRINTHAUROS] = false },
-        [10] = { [Constants.MIXED] = false },
-    }
+    Argo.evolution_track = params.evolution_track
+    if not Argo.evolution_track then
+        if Options.getCurrentCycle() == Constants.CYCLE_I then
+            Argo.evolution_track = {
+                [1] = { [Constants.HEKATON] = false, },
+                [2] = { [Constants.HEKATON] = false, [Constants.LABYRINTHAUROS] = false },
+                [3] = { [Constants.MIXED] = false },
+                [4] = { [Constants.HEKATON] = false, [Constants.LABYRINTHAUROS] = false },
+                [5] = { [Constants.MIXED] = false },
+                [6] = { [Constants.MIXED] = false },
+                [7] = { [Constants.HEKATON] = false, [Constants.LABYRINTHAUROS] = false },
+                [8] = { [Constants.HEKATON] = false, [Constants.LABYRINTHAUROS] = false },
+                [9] = { [Constants.HEKATON] = false, [Constants.LABYRINTHAUROS] = false },
+                [10] = { [Constants.MIXED] = false },
+            }
+        elseif Options.getCurrentCycle() == Constants.CYCLE_II then
+        elseif Options.getCurrentCycle() == Constants.CYCLE_III then
+        end
+    end
 
-    Argo.boss_track = savedData.boss_track or 0
-    Argo.adversary_track = savedData.adversary_track or 0
-    Argo.adversary_unlocked = savedData.adversary_unlocked or false
+    Argo.boss_track = params.boss_track or 0
+    Argo.adversary_track = params.adversary_track or 0
+    Argo.adversary_unlocked = params.adversary_unlocked or false
 
     -- Cycle I resources
-    Argo.trireme = savedData.trireme or 0
-    Argo.trireme_note = savedData.trireme_note or {'', ''}
-    Argo.monument = savedData.monument or 0
-    Argo.monument_note = savedData.monument_note or {'', ''}
-    Argo.armament = savedData.armament or 0
-    Argo.armament_note = savedData.armament_note or {'', ''}
+    if Options.getCurrentCycle() == Constants.CYCLE_I then
+        Argo.trireme = params.trireme or 0
+        Argo.trireme_note = params.trireme_note or {'', ''}
+        Argo.monument = params.monument or 0
+        Argo.monument_note = params.monument_note or {'', ''}
+        Argo.armament = params.armament or 0
+        Argo.armament_note = params.armament_note or {'', ''}
 
-    Argo.muscle_cluster = savedData.muscle_cluster or 0
-    Argo.muscle_cluster_note = savedData.muscle_cluster_note or {'', ''}
-    Argo.calcified_knucle_bone = savedData.calcified_knucle_bone or 0
-    Argo.calcified_knucle_bone_note = savedData.calcified_knucle_bone_note or {'', ''}
-    Argo.infused_mechanism = savedData.infused_mechanism or 0
-    Argo.infused_mechanism_note = savedData.infused_mechanism_note or {'', ''}
-    Argo.fleshy_mantle = savedData.fleshy_mantle or 0
-    Argo.fleshy_mantle_note = savedData.fleshy_mantle_note or {'', ''}
-    Argo.fear_essence = savedData.fear_essence or 0
-    Argo.fear_essence_note = savedData.fear_essence_note or {'', ''}
-    Argo.maze_fragment = savedData.maze_fragment or 0
-    Argo.maze_fragment_note = savedData.maze_fragment_note or {'', ''}
-    Argo.grotesque_beak = savedData.grotesque_beak or 0
-    Argo.grotesque_beak_note = savedData.grotesque_beak_note or {'', ''}
-    Argo.powdered_matter = savedData.powdered_matter or 0
-    Argo.powdered_matter_note = savedData.powdered_matter_note or {'', ''}
-    Argo.raw_ambrosia = savedData.raw_ambrosia or 0
-    Argo.raw_ambrosia_note = savedData.raw_ambrosia_note or {'', ''}
-    Argo.cores_note = savedData.cores_note or {'', ''}
+        Argo.muscle_cluster = params.muscle_cluster or 0
+        Argo.muscle_cluster_note = params.muscle_cluster_note or {'', ''}
+        Argo.calcified_knucle_bone = params.calcified_knucle_bone or 0
+        Argo.calcified_knucle_bone_note = params.calcified_knucle_bone_note or {'', ''}
+        Argo.infused_mechanism = params.infused_mechanism or 0
+        Argo.infused_mechanism_note = params.infused_mechanism_note or {'', ''}
+        Argo.fleshy_mantle = params.fleshy_mantle or 0
+        Argo.fleshy_mantle_note = params.fleshy_mantle_note or {'', ''}
+        Argo.fear_essence = params.fear_essence or 0
+        Argo.fear_essence_note = params.fear_essence_note or {'', ''}
+        Argo.maze_fragment = params.maze_fragment or 0
+        Argo.maze_fragment_note = params.maze_fragment_note or {'', ''}
+        Argo.grotesque_beak = params.grotesque_beak or 0
+        Argo.grotesque_beak_note = params.grotesque_beak_note or {'', ''}
+        Argo.powdered_matter = params.powdered_matter or 0
+        Argo.powdered_matter_note = params.powdered_matter_note or {'', ''}
+        Argo.raw_ambrosia = params.raw_ambrosia or 0
+        Argo.raw_ambrosia_note = params.raw_ambrosia_note or {'', ''}
+        Argo.cores_note = params.cores_note or {'', ''}
 
-    Argo.priests = savedData.priests or 0
-    Argo.priests_note = savedData.priests_note or {'', ''}
-    Argo.sisyphus_tears = savedData.sisyphus_tears or 0
-    Argo.sisyphus_tears_note = savedData.sisyphus_tears_note or {'', ''}
-    Argo.rare_resources_note = savedData.rare_resources_note or {'', ''}
+        Argo.priests = params.priests or 0
+        Argo.priests_note = params.priests_note or {'', ''}
+        Argo.sisyphus_tears = params.sisyphus_tears or 0
+        Argo.sisyphus_tears_note = params.sisyphus_tears_note or {'', ''}
+        Argo.rare_resources_note = params.rare_resources_note or {'', ''}
+    -- Cycle II resources
+    elseif Options.getCurrentCycle() == Constants.CYCLE_II then
+    -- Cycle III resources
+    elseif Options.getCurrentCycle() == Constants.CYCLE_III then
+    end
 
     Argo.argo_sheet = getObjectsWithTag(Constants.ARGO_SHEET)[1]
     if not Argo.argo_sheet then
         Log:error('Could not find argo sheet with tag %s', Constants.ARGO_SHEET)
         broadcastToAll('Could not find argo sheet. Create one with tag ' .. Constants.ARGO_SHEET 
                 .. ' then save and reload.', Color.Red)
-    end
-
-    if Cycle.getCurrentCycle() then
-        Argo.createSheetUi(Cycle.getCurrentCycle())
+    else
+        Argo.createSheetUi(true)
     end
 end
 
-function Argo.createSheetUi(cycle)
-    if not cycle then return end
+function Argo.createSheetUi(refresh)
+    if not Options.getCurrentCycle() then return end
     if not Argo.argo_sheet then return end
 
     Argo.uiRoot = Ui.createRootOnObject('argo-sheet-root', Argo.argo_sheet, 1.2)
@@ -196,7 +260,7 @@ function Argo.createSheetUi(cycle)
 
     Argo.argo_sheet.UI.setCustomAssets(Constants.CUSTOM_ASSETS)
 
-    if cycle == Constants.CYCLE_I then
+    if Options.getCurrentCycle() == Constants.CYCLE_I then
         Argo.ui.main_panel = Argo.uiRoot:panel({ id = 'global-panel', width = 4000, height = 3000 })
         -- panel.attributes.color = 'Green'
         
@@ -342,11 +406,12 @@ function Argo.createSheetUi(cycle)
         local xStart, yStart = -1075, -322
         local xStep = 50
         local xOffset, yOffset = 422, -123
+        -- Named array for ordering purposes
         for adventureIndex, adventureName in ipairs({Constants.FATED_CONUNDRUM, Constants.PLIGHT_OF_THE_PEOPLE, Constants.HIDDEN_IN_PLAIN_SIGHT,
                                                     Constants.MAN_OF_PURPOSE, Constants.UNEASY_RESTS_THE_HEAD, Constants.TEARS_OF_A_MINOTAUR,
                                                     Constants.DREAMS_LAID_BARE, Constants.TUTORIAL}) do
 
-            local adventure = Argo.adventure_tracks[Constants.CYCLE_I][adventureName]
+            local adventure = Argo.adventure_tracks[adventureName]
 
             for index, value in ipairs(adventure) do
                 -- Calculate it, in cycle 1 it's 3 columns and 3 rows
@@ -377,7 +442,7 @@ function Argo.createSheetUi(cycle)
 
         ------------------------
         -- Diplomacy tracks
-        local cycleTracks = Argo.diplomacy_tracks[Constants.CYCLE_I]
+        local cycleTracks = Argo.diplomacy_tracks
         for index, factionName in ipairs({ Constants.MINOANS, Constants.LABYRINTHIANS, Constants.HORNSWORN }) do
             Argo.ui[factionName .. '_checkbox_group'] = Argo.ui.main_panel:checkboxGroup({ id = factionName .. '-checkbox-group', onClick = function(checkbox)
                 checkbox:select()
@@ -782,8 +847,12 @@ function Argo.createSheetUi(cycle)
                         Argo[resource .. '_note'][jndex] = newValue
                         Log:debug('Note for resource %s set to %s', resource, Argo[resource .. '_note'][jndex])
                     end })
-                end
             end
+        end
+    end
+
+    if refresh then
+        Argo.uiRoot:refresh()
     end
 end
 
@@ -871,4 +940,5 @@ return {
     save = Argo.save,
     getEvolutionTracks = Argo.getEvolutionTracks,
     getLevelFromEvolutionIndex = Argo.getLevelFromEvolutionIndex,
+    spawnSheet = Argo.spawnSheet,
 }

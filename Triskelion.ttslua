@@ -29,6 +29,7 @@ function Triskelion.init(savedData)
         if triskelion.object then
             triskelion.name = 'triskelion-'..color
             local root = Ui.createRootOnObject(triskelion.name..'-root', triskelion.object, 0.7)
+            root:wipe()
 
             local panel = root:panel({ id = triskelion.name .. '-panel', width = 2300, height = 2300 })
 

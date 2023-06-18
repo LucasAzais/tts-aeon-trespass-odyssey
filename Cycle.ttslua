@@ -1,8 +1,16 @@
 local Cycle = {}
 Cycle.__index = Cycle
 
+local Argo = require('Argo')
+local Argonaut = require('Argonaut')
+local Battle = require('Battle')
 local Constants = require('Constants')
 local Log = require('Log').ForModule('Cycle')
+local Map = require('Map')
+local Options = require('Options')
+local Timeline = require('Timeline')
+local Titan = require('Titan')
+local Triskelion = require('Triskelion')
 local Ui = require('Ui')
 local Utils = require('Utils')
 
@@ -10,61 +18,446 @@ local Utils = require('Utils')
 
 Cycle.CYCLES = {
     [Constants.CYCLE_I] = {
-        argoSheet = 'http://cloud-3.steamusercontent.com/ugc/2064383278577606165/AFFB9737557EC154FAA960A8AC24101B05D39A1A/',
-        timelineSheet = 'http://cloud-3.steamusercontent.com/ugc/2064383278577606310/BC5581142434D1EE85307B3769808936B81E659C/',
-        createUi = Cycle.createIUI,
+        archiveGUID = '7b2c8d',
     },
     [Constants.CYCLE_II] = {
-        argoSheet = 'http://cloud-3.steamusercontent.com/ugc/2055377100655086003/8518F02014AC26C787188C1623EBC6B546250F1F/',
-        timelineSheet = 'http://cloud-3.steamusercontent.com/ugc/2055377100655086204/93A47A6CA2CE9925253297EECD65CE19C1D06321/',
-        createUi = Cycle.createIIUI,
+        archiveGUID = '',
     },
     [Constants.CYCLE_III] = {
-        argoSheet = 'http://cloud-3.steamusercontent.com/ugc/2055377100655086102/082EF198E73D335AEAB39DE861C2D40DB75CDA36/',
-        timelineSheet = 'http://cloud-3.steamusercontent.com/ugc/2055377100655086309/124B8FC2229CBFABFD529CA2909A298CC01209C9/',
-        createUi = Cycle.createIIIUI,
+        archiveGUID = '',
     },
     [Constants.ONWARDS_ODYSSEY] = {
-        argoSheet = 'http://cloud-3.steamusercontent.com/ugc/2055377100655085870/CAB9F817561ED63B0F7CE4E74208E42387DC5CF0/',
-        createUi = Cycle.createOnwardsOdysseyUI,
+        archiveGUID = '',
     }
 }
 
 function Cycle.init(savedData)
-    -- Cycle.current_cycle = savedData.current_cycle or nil
-    Cycle.current_cycle = Constants.CYCLE_I
+    
+end
 
-    Cycle.timeline_sheet = getObjectsWithTag(Constants.TIMELINE_SHEET)[1]
-    if not Cycle.timeline_sheet then
-        Log:error('Could not find timeline sheet with tag %s', Constants.TIMELINE_SHEET)
-        broadcastToAll('Could not find timeline sheet. Create one with tag ' .. Constants.TIMELINE_SHEET
-                .. ' then save and reload.', Color.Red)
+function Cycle.setupCycleI(params)
+    -- Cleanup the old cycle content
+    Cycle.reset()
+
+    -- Identify as cycle I
+    Options.current_cycle = Constants.CYCLE_I
+    Options.use_tutorial = params.useTutorial or false
+    -- If new cycle
+    if not Options.cycle_count or params.brandNew == true then
+        Options.cycle_count = 1
+    else
+        Options.cycle_count = Options.cycle_count + 1
     end
+
+    -- Reset the tech cards
+    local lastTomeTech = getObjectFromGUID('ac82bc')
+    if not lastTomeTech then Cycle.missingContent() end
+    lastTomeTech.setPosition({37.85, 1.01, 71.21})
+    lastTomeTech.setRotation({0, 180, 0})
+    local titanogenesisTech = getObjectFromGUID('e9aca4')
+    if not titanogenesisTech then Cycle.missingContent() end
+    titanogenesisTech.setPosition({46.32, 1.01, 71.21})
+    titanogenesisTech.setRotation({0, 180, 0})
+    local argoWorksTech = getObjectFromGUID('d0a69e')
+    if not argoWorksTech then Cycle.missingContent() end
+    argoWorksTech.setPosition({54.78, 1.01, 71.21})
+    argoWorksTech.setRotation({0, 180, 0})
+    local antikratosProjectTech = getObjectFromGUID('33d9a4')
+    if not antikratosProjectTech then Cycle.missingContent() end
+    antikratosProjectTech.setPosition({63.24, 1.01, 71.21})
+    antikratosProjectTech.setRotation({0, 180, 0})
+    local primordialDawnTech = getObjectFromGUID('bc7de7')
+    if not primordialDawnTech then Cycle.missingContent() end
+    primordialDawnTech.setPosition({71.70, 1.01, 71.21})
+    primordialDawnTech.setRotation({0, 180, 0})
+
+    -- Pull out the cycle archive
+    local cycle1Bag = getObjectFromGUID(Cycle.CYCLES[Constants.CYCLE_I].archiveGUID).takeObject({
+        smooth = false,
+        callback_function = function(spawnedObject)
+            spawnedObject.setLock(true)
+        end
+    })
+
+    -- Spawn new decks (top ones + stories + doom + moiros + trauma + kratos + etc) from the archives
+    -- Spawn new tiles bag
+    local obolCounter, fistsCounter = 1, 1
+    local tutorialMapTile, startMapTile = nil, nil
+    for _, object in ipairs(cycle1Bag.getObjects()) do
+        -- Spawn new clean cycle book if necessary
+        if object.gm_notes == 'CycleBook' and Options.cycle_count == 1 then
+            -- Remove the previous books then spawn another
+            local oldCycleBooks = getObjectsWithTag(Constants.CYCLE_BOOK)
+            for i = 1, (#oldCycleBooks or 0) do
+                oldCycleBooks[i].destruct()
+            end
+
+            cycle1Bag.takeObject({
+                guid = object.guid,
+                position = {-59.79, 0.98, 15.94},
+                rotation = {0.00, 180.00, 0.00},
+                smooth = false,
+                callback_function = function(spawnedObject)
+                    spawnedObject.setLock(true)
+                end
+            })
+        elseif object.gm_notes == 'TutorialBook' and Options.use_tutorial then
+            -- Remove the previous books then spawn another
+            local oldTutorialBooks = getObjectsWithTag(Constants.TUTORIAL_BOOK)
+            for i = 1, (#oldTutorialBooks or 0) do
+                oldTutorialBooks[i].destruct()
+            end
+
+            cycle1Bag.takeObject({
+                guid = object.guid,
+                position = {-81.77, 0.98, 15.94},
+                rotation = {0.00, 180.00, 0.00},
+                smooth = false,
+                callback_function = function(spawnedObject)
+                    spawnedObject.setLock(true)
+                end
+            })
+        elseif object.gm_notes == 'ObolCard' then
+            cycle1Bag.takeObject({
+                guid = object.guid,
+                position = {-18.00 - 2.57 * (obolCounter-1), 1.00, 67.55},
+                rotation = {0.00, 180.00, 0.00},
+                smooth = false,
+                callback_function = function(spawnedObject)
+                end
+            })
+            obolCounter = obolCounter + 1
+        elseif object.gm_notes == 'MapTile' then
+            local position = nil
+            if object.name == 'T00' then
+                position = {-77.15, 0.98, 69.96}
+                tutorialMapTile = object.guid
+            else
+                position = {-73.39, 0.98, 37.24}
+                startMapTile = object.guid
+            end
+
+            cycle1Bag.takeObject({
+                guid = object.guid,
+                position = position,
+                rotation = {0.00, 180.00, 0.00},
+                smooth = false,
+                callback_function = function(spawnedObject)
+                    spawnedObject.setLock(true)
+                end
+            })
+        elseif object.gm_notes == 'SecretsBag' then
+            cycle1Bag.takeObject({
+                guid = object.guid,
+                position = {-14.10, 0.80, 65.64},
+                rotation = {0.00, 180.00, 0.00},
+                smooth = false,
+                callback_function = function(spawnedObject)
+                    spawnedObject.setLock(true)
+                end
+            })
+        elseif object.gm_notes == 'Gear' then
+            if object.name == 'Fists' then
+                local positions = {{-58.89, 1.00, -50.89}, {-18.26, 1.49, -50.89}, {21.43, 1.49, -50.89}, {61.99, 1.49, -50.89}}
+                cycle1Bag.takeObject({
+                    guid = object.guid,
+                    position = positions[fistsCounter],
+                    rotation = {0.00, 180.00, 0.00},
+                    smooth = false,
+                    callback_function = function(spawnedObject)
+                    end
+                })
+            end
+        elseif object.gm_notes == 'TraumaPatterns' then
+            cycle1Bag.takeObject({
+                guid = object.guid,
+                position = {9.13, 1.03, 60.60},
+                rotation = {0.00, 180.00, 180.00},
+                smooth = false,
+                callback_function = function(spawnedObject)
+                end
+            })
+        elseif object.gm_notes == 'KratosPatterns' then
+            cycle1Bag.takeObject({
+                guid = object.guid,
+                position = {6.00, 1.05, 60.60},
+                rotation = {0.00, 180.00, 180.00},
+                smooth = false,
+                callback_function = function(spawnedObject)
+                end
+            })
+        elseif object.gm_notes == 'Argonauts' then
+            cycle1Bag.takeObject({
+                guid = object.guid,
+                position = {-0.13, 1.01, 60.62},
+                rotation = {0.00, 180.00, 0.00},
+                smooth = false,
+                callback_function = function(spawnedObject)
+                end
+            })
+        elseif object.gm_notes == 'GenericArgonauts' then
+            cycle1Bag.takeObject({
+                guid = object.guid,
+                position = {3.04, 1.02, 60.60},
+                rotation = {0.00, 180.00, 0.00},
+                smooth = false,
+                callback_function = function(spawnedObject)
+                end
+            })
+        elseif object.gm_notes == 'Traits' then
+            cycle1Bag.takeObject({
+                guid = object.guid,
+                position = {-3.60, 1.01, 60.62},
+                rotation = {0.00, 180.00, 180.00},
+                smooth = false,
+                callback_function = function(spawnedObject)
+                end
+            })
+        elseif object.gm_notes == 'Mnemos' then
+            cycle1Bag.takeObject({
+                guid = object.guid,
+                position = {-7.55, 1.07, 60.62},
+                rotation = {0.00, 180.00, 180.00},
+                smooth = false,
+                callback_function = function(spawnedObject)
+                end
+            })
+        elseif object.gm_notes == 'FatedMnemos' then
+            cycle1Bag.takeObject({
+                guid = object.guid,
+                position = {-11.52, 1.05, 60.62},
+                rotation = {0.00, 180.00, 180.00},
+                smooth = false,
+                callback_function = function(spawnedObject)
+                end
+            })
+        elseif object.gm_notes == 'MinorTraumas' then
+            cycle1Bag.takeObject({
+                guid = object.guid,
+                position = {-9.41, 1.07, 11.57},
+                rotation = {0.00, 180.00, 180.00},
+                smooth = false,
+                callback_function = function(spawnedObject)
+                end
+            })
+        elseif object.gm_notes == 'MajorTraumas' then
+            cycle1Bag.takeObject({
+                guid = object.guid,
+                position = {-12.15, 1.07, 11.57},
+                rotation = {0.00, 180.00, 180.00},
+                smooth = false,
+                callback_function = function(spawnedObject)
+                end
+            })
+        elseif object.gm_notes == 'GraveTraumas' then
+            cycle1Bag.takeObject({
+                guid = object.guid,
+                position = {-15.03, 1.07, 11.57},
+                rotation = {0.00, 180.00, 180.00},
+                smooth = false,
+                callback_function = function(spawnedObject)
+                end
+            })
+        elseif object.gm_notes == 'Obols' then
+            cycle1Bag.takeObject({
+                guid = object.guid,
+                position = {-17.80, 1.01, 11.57},
+                rotation = {0.00, 180.00, 180.00},
+                smooth = false,
+                callback_function = function(spawnedObject)
+                end
+            })
+        elseif object.gm_notes == 'Conditions' then
+            cycle1Bag.takeObject({
+                guid = object.guid,
+                position = {-21.16, 1.04, 11.57},
+                rotation = {0.00, 180.00, 180.00},
+                smooth = false,
+                callback_function = function(spawnedObject)
+                end
+            })
+        elseif object.gm_notes == 'MapTilesBag' then
+            cycle1Bag.takeObject({
+                guid = object.guid,
+                position = {-81.35, 0.80, 51.07},
+                rotation = {0.00, 180.00, 0.00},
+                smooth = false,
+                callback_function = function(spawnedObject)
+                    spawnedObject.setLock(true)
+                end
+            })
+        elseif object.gm_notes == 'AlternateMapTilesBag' then
+            cycle1Bag.takeObject({
+                guid = object.guid,
+                position = {-14.10, 0.80, 69.51},
+                rotation = {0.00, 180.00, 0.00},
+                smooth = false,
+                callback_function = function(spawnedObject)
+                    spawnedObject.setLock(true)
+                end
+            })
+        elseif object.gm_notes == 'ExplorationStart' then
+            cycle1Bag.takeObject({
+                guid = object.guid,
+                position = {-43.40, 1.08, 23.50},
+                rotation = {0.00, 180.00, 180.00},
+                smooth = false,
+                callback_function = function(spawnedObject)
+                end
+            })
+        elseif object.gm_notes == 'Exploration' then
+            cycle1Bag.takeObject({
+                guid = object.guid,
+                position = {-15.17, 1.12, 60.33},
+                rotation = {0.00, 180.00, 180.00},
+                smooth = false,
+                callback_function = function(spawnedObject)
+                end
+            })
+        elseif object.gm_notes == 'StoryCards' then
+            cycle1Bag.takeObject({
+                guid = object.guid,
+                position = {-5.64, 1.03, 68.12},
+                rotation = {0.00, 180.00, 0.00},
+                smooth = false,
+                callback_function = function(spawnedObject)
+                end
+            })
+        elseif object.gm_notes == 'DoomCards' then
+            cycle1Bag.takeObject({
+                guid = object.guid,
+                position = {5.54, 1.02, 68.12},
+                rotation = {0.00, 180.00, 0.00},
+                smooth = false,
+                callback_function = function(spawnedObject)
+                end
+            })
+        elseif object.gm_notes == 'Clues' then
+            cycle1Bag.takeObject({
+                guid = object.guid,
+                position = {15.55, 1.11, 60.54},
+                rotation = {0.00, 180.00, 180.00},
+                smooth = false,
+                callback_function = function(spawnedObject)
+                end
+            })
+        elseif object.gm_notes == 'Technologies' then
+            cycle1Bag.takeObject({
+                guid = object.guid,
+                position = {17.39, 1.21, 68.12},
+                rotation = {0.00, 180.00, 0.00},
+                smooth = false,
+                callback_function = function(spawnedObject)
+                end
+            })
+        elseif object.gm_notes == 'KratosDeck' then
+            cycle1Bag.takeObject({
+                guid = object.guid,
+                position = {-5.47, 1.03, 12.19},
+                rotation = {0.00, 180.00, 180.00},
+                smooth = false,
+                callback_function = function(spawnedObject)
+                end
+            })
+        elseif object.gm_notes == 'MoirosDeck' then
+            cycle1Bag.takeObject({
+                guid = object.guid,
+                position = {-0.98, 1.04, 12.19},
+                rotation = {0.00, 180.00, 180.00},
+                smooth = false,
+                callback_function = function(spawnedObject)
+                end
+            })
+        elseif object.gm_notes == 'Pursuer' then
+            cycle1Bag.takeObject({
+                guid = object.guid,
+                position = {-83.50, 0.98, 56.37},
+                rotation = {0.00, 180.00, 0.00},
+                smooth = false,
+                callback_function = function(spawnedObject)
+                end
+            })
+        elseif object.gm_notes == 'GearDeck' then
+            cycle1Bag.takeObject({
+                guid = object.guid,
+                position = {12.29, 1.53, 60.54},
+                rotation = {0.00, 180.00, 180.00},
+                smooth = false,
+                callback_function = function(spawnedObject)
+                end
+            })
+        end
+    end
+
+    -- New Argo/Timeline sheets (takes the current cycle into account)
+    Argo.spawnSheet({})
+    Timeline.spawnSheet({})
+    Map.reset({ discovered_map = { ['T00'] = tutorialMapTile, ['027'] = startMapTile, }})
+    
+    -- Spawn new titan sheet + reset triskelion + new argonaut sheets
+    Triskelion.resetAll()
+    Argonaut.spawnSheet({-54.43, 1.98, -64.82})
+    Argonaut.spawnSheet({-14.29, 1.98, -64.82})
+    Argonaut.spawnSheet({26.00, 1.98, -64.82})
+    Argonaut.spawnSheet({65.88, 1.98, -64.82})
+    Titan.spawnSheet({-67.60, 0.98, -53.02}, Titan.DREAMWALKER, 'Solon')
+    Titan.spawnSheet({-27.14, 0.98, -53.02}, Titan.DREAMWALKER, 'Philoctera')
+    Titan.spawnSheet({12.81, 0.98, -53.02}, Titan.DREAMWALKER, 'Herodotus')
+    Titan.spawnSheet({53.00, 0.98, -53.02}, Titan.DREAMWALKER, 'Ulyssea')
+
+    -- Move figurines
+    for _, object in ipairs(getObjectsWithTag(Constants.TITAN)) do
+        if object.getGMNotes() == 'Titan1' then
+            object.setPosition({-70.66, 0.97, -46.04})
+        elseif object.getGMNotes() == 'Titan2' then
+            object.setPosition({-30.22, 0.97, -46.04})
+        elseif object.getGMNotes() == 'Titan3' then
+            object.setPosition({9.68, 0.97, -46.04})
+        elseif object.getGMNotes() == 'Titan4' then
+            object.setPosition({49.72, 0.97, -46.04})
+        end
+    end
+
+    -- Move argo to T00 or 027
+    local argoMini = getObjectFromGUID(Constants.ARGO_MINI_GUID)
+    local argoPosition = {-73.37, 1.08, 37.16}
+    if Options.use_tutorial then
+        argoPosition = {-77.12, 1.08, 70.04}
+    end
+    if argoMini then argoMini.setPosition(argoPosition) end
+
+    -- Move last city token back
+    local lastCityToken = getObjectFromGUID(Constants.LAST_CITY_TOKEN_GUID)
+    if lastCityToken then lastCityToken.setPosition({-81.35, 0.98, 46.46}) end
+
+    -- Move priority target token
+    local priorityToken = getObjectFromGUID(Constants.PRIORITY_TARGET_TOKEN_GUID)
+    if priorityToken then priorityToken.setPosition({-25.33, 1.03, 7.77}) end
+
+    -- Setup gear if skipping the tutorial? + cleanup battle and terrain and all
+
+    -- Cleanup cycle bag
+    cycle1Bag.destruct()
 end
 
-function Cycle.createIUI()
+function Cycle.reset()
+    -- Destroy everything that is not persistent
+    for _, object in ipairs(getObjects()) do
+        if not object.hasTag(Constants.PERSISTENT) then
+            object.destruct()
+        end
+    end
 
+    Battle.cleanupCurrentBattle()
 end
 
-function Cycle.createIIUI()
-
-end
-
-function Cycle.createIIIUI()
-
-end
-
-function Cycle.createOnwardsOdysseyUI()
-
-end
-
-function Cycle.getCurrentCycle()
-    return Cycle.current_cycle
+function Cycle.missingContent()
+    broadcastToAll('Some of the content is missing or has been deleted. Please load a new blank save.', Color.Red)
 end
 
 function Cycle.save()
     local flatData = {
-        current_cycle = Cycle.current_cycle,
+        
     }
 
     return flatData

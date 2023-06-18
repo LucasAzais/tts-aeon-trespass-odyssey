@@ -443,6 +443,7 @@ function Ui:text(params)
     -- text.rotation = '0 0 0'
     -- text.scale = self.scale
     text.attributes.text = params.text
+    text.attributes.color = params.color or '#323232'
 
     if params.fontSize ~= nil then
         text.attributes.fontSize = params.fontSize
@@ -643,9 +644,9 @@ function Ui:setWidth(value) self:setAttribute('width', 'number', value ~= nil an
 function Ui:setHeight(value) self:setAttribute('height', 'number', value ~= nil and value or '100%') end
 function Ui:setText(value) 
     self:setAttribute('text', 'string', value ~= nil and tostring(value) or '') 
-    self:setColor(self.attributes.color) 
-    self:setColors(self.attributes.colors) 
-    self:setTextColor(self.attributes.textColor) 
+    self:setColor(self.attributes.color)
+    self:setColors(self.attributes.colors)
+    self:setTextColor(self.attributes.textColor)
 end
 function Ui:setTextColor(value) self:setAttribute('textColor', 'string', value ~= nil and tostring(value) or nil, true) end
 function Ui:setColor(value) self:setAttribute('color', 'string', value ~= nil and tostring(value) or nil, true) end

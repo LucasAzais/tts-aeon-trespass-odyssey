@@ -36,9 +36,7 @@ function Argonaut.init(savedData)
 
     EventManager.addHandler('onObjectSpawn', function(object)
         if object.hasTag(Constants.ARGONAUT_SHEET) then
-            local newId = Argonaut.getNextId()
-            Argonaut.ARGONAUTS[newId] = ArgonautClass.create({ id = newId })
-            Argonaut.ARGONAUT_SHEETS[newId] = ArgonautSheetClass.create(Argonaut.ARGONAUTS[newId], object)
+            Argonaut.register(object)
         end
     end)
 end
@@ -53,6 +51,35 @@ function Argonaut.getNextId()
     end
 
     return maxId
+end
+
+-- Register a new object as an argonaut, and create the necessary instances and UI
+function Argonaut.register(object)
+    local newId = Argonaut.getNextId()
+    Argonaut.ARGONAUTS[newId] = ArgonautClass.create({ id = newId })
+    Argonaut.ARGONAUT_SHEETS[newId] = ArgonautSheetClass.create(Argonaut.ARGONAUTS[newId], object)
+end
+
+function Argonaut.spawnSheet(position)
+    local argonautSheet = spawnObject({
+        type = 'Custom_Tile',
+        sound = false,
+        position = position,
+        rotation = {0, 180, 0},
+        scale = Argonaut.SHEET_SCALE,
+        callback_function = function(spawnedObject)
+            spawnedObject.addTag(Constants.ARGONAUT_SHEET)
+            Argonaut.register(spawnedObject)
+        end
+    })
+    
+    argonautSheet.setCustomObject({
+        image = Argonaut.SHEET_URL,
+        type = 0,
+        thickness = 0.1,
+    })
+
+    return argonautSheet
 end
 
 function Argonaut.save()
@@ -140,6 +167,7 @@ function ArgonautSheetClass.create(argonaut, object)
 
     local name = 'argonaut-sheet-'..sheet.argonaut.id
     sheet.root = Ui.createRootOnObject(name .. '-root', object, 1.2)
+    sheet.root:wipe()
 
     -- Name/Player
     local panel = sheet.root:panel({ id = name .. '-name-panel', x = -2, y = -75.8, width = 450, height = 100, })
@@ -369,4 +397,5 @@ end
 return {
     init = Argonaut.init,
     save = Argonaut.save,
+    spawnSheet = Argonaut.spawnSheet,
 }

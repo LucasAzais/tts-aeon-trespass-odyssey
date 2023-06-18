@@ -438,6 +438,10 @@ function Battle:shuffleDecks()
     if deck ~= nil then deck.shuffle() end
 end
 
+function endTutorialSetup()
+    broadcastToAll('Don\'t forget to remove the Trauma cards excluded in the tutorial.', Constants.WARNING_COLOR)
+end
+
 function Battle.endLabyrinthaurosSetup()
     -- This is using absolute positions, otherwise we have to use "wait.time"
     -- to wait for the primordial sheet to be in position...

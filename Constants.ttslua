@@ -42,6 +42,10 @@ Constants.ARGO_SHEET = 'ArgoSheet'
 Constants.TIMELINE_SHEET = 'TimelineSheet'
 Constants.MAP_TILE = 'MapTile'
 Constants.SEARCHABLE = 'Searchable'
+Constants.CYCLE_BOOK = 'CycleBook'
+Constants.TUTORIAL_BOOK = 'TutorialBook'
+Constants.PERSISTENT = 'Persistent'
+Constants.MAP_TILES_BAG = 'MapTilesBag'
 
 -- Battle types
 Constants.MNESTIS_THEATRE = 'Mnestis Theatre'
@@ -117,6 +121,11 @@ Constants.ROTATION_NORTH = {0, 0, 0}
 Constants.ROTATION_EAST = {0, 90, 0}
 Constants.ROTATION_SOUTH = {0, 180, 0}
 Constants.ROTATION_WEST = {0, 270, 0}
+
+-- GUIDs
+Constants.ARGO_MINI_GUID = '33682e'
+Constants.LAST_CITY_TOKEN_GUID = '6f820e'
+Constants.PRIORITY_TARGET_TOKEN_GUID = '8f05ad'
 
 ------------------------------------------------------
 

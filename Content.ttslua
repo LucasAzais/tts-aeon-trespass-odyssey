@@ -8,6 +8,7 @@ local Constants = require('Constants')
 Content.battles = {
     ['Tutorial Battle'] = {
         {
+            end_setup = 'endTutorialSetup',
             levels = { Constants.LEVEL_0, },
             primordials = { Constants.HEKATON, },
             primordial_start_position_rotation = { 
