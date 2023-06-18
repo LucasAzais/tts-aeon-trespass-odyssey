@@ -69,6 +69,7 @@ function Argonaut.spawnSheet(position)
         scale = Argonaut.SHEET_SCALE,
         callback_function = function(spawnedObject)
             spawnedObject.addTag(Constants.ARGONAUT_SHEET)
+            spawnedObject.setColorTint({128/255, 128/255, 128/255})
             Argonaut.register(spawnedObject)
         end
     })

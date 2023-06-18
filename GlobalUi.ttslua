@@ -3,77 +3,47 @@ GlobalUi.__index = GlobalUi
 
 local Battle = require('Battle')
 local Constants = require('Constants')
+local Cycle = require('Cycle')
 local Options = require('Options')
 local Ui = require('Ui')
 
 ------------------------------------------------------
 
 function GlobalUi.init()
-    ------------------------------------------------
-    -- Generic UI for a choice/confirmation panel --
-    ------------------------------------------------
-    GlobalUi.confirmation_panel = Ui.getRoot():panel({
-        id = 'confirmation-panel', height = 250, width = 400, active = false, rectAlignment = 'MiddleCenter'
-    })
-    GlobalUi.confirmation_panel.attributes.color = '#e3e0da'
+    GlobalUi.ui = {}
 
-    GlobalUi.confirmation_text = GlobalUi.confirmation_panel:text({ id = 'confirmation-text', text = '', 
-                    width = 390, height = 200, textAlignment = 'UpperCenter', rectAlignment = 'UpperCenter', 
-    })
-    GlobalUi.confirmation_text.attributes.resizeTextForBestFit = true
-    GlobalUi.confirmation_text.attributes.resizeTextMaxSize = 35
-
-    GlobalUi.confirmation_close_button = GlobalUi.confirmation_panel:button({ 
-            id = 'confirmation-close-button', text = 'X', width = 30, height = 30, 
-            x = -5, y = -5, fontSize = 25,
-            textAlignment = 'MiddleCenter', rectAlignment = 'UpperRight', onClick = function(_, button) GlobalUi.confirmation_panel:hide() end
-    })
-
-    GlobalUi.confirmation_hlayout = GlobalUi.confirmation_panel:horizontalLayout({ id = 'confirmation-hl', 
-            rectAlignment = 'LowerCenter', width = 390, height = 50, spacing = 30, padding = '30 30 0 0', y = 10 })
-
-    GlobalUi.confirmation_yes_button = GlobalUi.confirmation_hlayout:button({ 
-            id = 'confirmation-yes-button', text = '',
-            textAlignment = 'MiddleCenter', onClick = function(_, button) end
-    })
-    GlobalUi.confirmation_yes_button.attributes.resizeTextForBestFit = true
-    GlobalUi.confirmation_yes_button.attributes.resizeTextMaxSize = 25
-    GlobalUi.confirmation_no_button = GlobalUi.confirmation_hlayout:button({ 
-            id = 'confirmation-no-button', text = '',
-            textAlignment = 'MiddleCenter', onClick = function(_, button) end
-    })
-    GlobalUi.confirmation_no_button.attributes.resizeTextForBestFit = true
-    GlobalUi.confirmation_no_button.attributes.resizeTextMaxSize = 25
-
-   -----------------------------------
-    -- Collapsible Battle Selection --
-    ----------------------------------
-   local globalWidth = 380
-   GlobalUi.battle_menu_panel = Ui.getRoot():verticalLayout({
-        id = 'options-panel', height = 400, width = globalWidth, rectAlignment = 'UpperLeft', x = 120, y = -10, padding = '5 5 5 5', active = false
-    })
-    GlobalUi.battle_menu_panel.attributes.color = '#05050559'
-    GlobalUi.battle_menu_panel.attributes.allowDragging = true
-    GlobalUi.battle_menu_panel.attributes.returnToOriginalPositionWhenReleased = false
-    GlobalUi.battle_menu_panel.attributes.childForceExpandWidth = false
-
-    GlobalUi.toggle_button = Ui.getRoot():button({
+    ----------------------
+    -- Collapsible Menu --
+    ----------------------
+    GlobalUi.ui.toggle_button = Ui.getRoot():button({
         id = 'options-menu-toggle', height = 40, width = 40, rectAlignment = 'UpperLeft', x = 70, y = -10, onClick = function() GlobalUi.expandMenu() end
     })
-    GlobalUi.toggle_button.attributes.fontSize = 35
-    GlobalUi.toggle_button.attributes.text = '\u{25BC}'
-    GlobalUi.toggle_button.attributes.verticalOverflow = 'Overflow'
-    GlobalUi.toggle_button.attributes.horizontalOverflow = 'Overflow'
-    GlobalUi.toggle_button.attributes.allowDragging = true
-    GlobalUi.toggle_button.attributes.returnToOriginalPositionWhenReleased = false
+    GlobalUi.ui.toggle_button.attributes.fontSize = 35
+    GlobalUi.ui.toggle_button.attributes.text = '\u{25BC}'
+    GlobalUi.ui.toggle_button.attributes.verticalOverflow = 'Overflow'
+    GlobalUi.ui.toggle_button.attributes.horizontalOverflow = 'Overflow'
+    GlobalUi.ui.toggle_button.attributes.allowDragging = true
+    GlobalUi.ui.toggle_button.attributes.returnToOriginalPositionWhenReleased = false
+
+    ----------------------
+    -- Battle selection --
+    ----------------------
+    local battleSelectionWidth = 380
+    GlobalUi.ui.battle_menu_panel = Ui.getRoot():verticalLayout({
+        id = 'battle-menu-panel', height = 400, width = battleSelectionWidth, rectAlignment = 'UpperLeft', x = 120, y = -110, padding = '5 5 5 5', active = false
+    })
+    GlobalUi.ui.battle_menu_panel.attributes.color = '#05050559'
+    GlobalUi.ui.battle_menu_panel.attributes.allowDragging = true
+    GlobalUi.ui.battle_menu_panel.attributes.returnToOriginalPositionWhenReleased = false
+    GlobalUi.ui.battle_menu_panel.attributes.childForceExpandWidth = false
 
     local fontSize = 25
-    GlobalUi.battle_menu_panel:button({ id = 'cleanup-button', text = 'Cleanup', fontSize = fontSize, width = globalWidth - 10, height = 40,
+    GlobalUi.ui.battle_menu_panel:button({ id = 'cleanup-button', text = 'Cleanup', fontSize = fontSize, width = battleSelectionWidth - 10, height = 40,
                                     colors = '#d64e45|#eb3e31|#cf817c|rgba(0.78,0.78,0.78,0.5)', onClick = function()
         Battle.cleanupCurrentBattle()
     end })
 
-    local hekatonLayout = GlobalUi.battle_menu_panel:horizontalLayout({ id = 'hekaton-layout-button', width = globalWidth - 10, height = 40, })
+    local hekatonLayout = GlobalUi.ui.battle_menu_panel:horizontalLayout({ id = 'hekaton-layout-button', width = battleSelectionWidth - 10, height = 40, })
     hekatonLayout:text({ id = 'hekaton-label', text = Constants.HEKATON, fontSize = fontSize, width = 100, color = 'White' })
     for _, level in ipairs({ Constants.LEVEL_0, Constants.LEVEL_1, Constants.LEVEL_2, Constants.LEVEL_3, Constants.LEVEL_4, }) do
         hekatonLayout:button({ id = 'hekaton-' .. level .. '-button', fontSize = fontSize, text = tostring(level), onClick = function()
@@ -85,7 +55,7 @@ function GlobalUi.init()
         end })
     end
 
-    local labyrinthaurosLayout = GlobalUi.battle_menu_panel:horizontalLayout({ id = 'labyrinthauros-layout-button', width = globalWidth - 10, height = 40, })
+    local labyrinthaurosLayout = GlobalUi.ui.battle_menu_panel:horizontalLayout({ id = 'labyrinthauros-layout-button', width = battleSelectionWidth - 10, height = 40, })
     labyrinthaurosLayout:text({ id = 'labyrinthauros-label', text = Constants.LABYRINTHAUROS, fontSize = fontSize, width = 145, color = 'White' })
     for _, level in ipairs({ Constants.LEVEL_1, Constants.LEVEL_2, Constants.LEVEL_3, Constants.LEVEL_4, }) do
         labyrinthaurosLayout:button({ id = 'labyrinthauros-' .. level .. '-button', fontSize = fontSize, text = tostring(level), onClick = function()
@@ -93,7 +63,7 @@ function GlobalUi.init()
         end })
     end
 
-    local pursuerLayout = GlobalUi.battle_menu_panel:horizontalLayout({ id = 'pursuer-layout-button', width = globalWidth - 10, height = 40, })
+    local pursuerLayout = GlobalUi.ui.battle_menu_panel:horizontalLayout({ id = 'pursuer-layout-button', width = battleSelectionWidth - 10, height = 40, })
     pursuerLayout:text({ id = 'pursuer-label', text = Constants.HERMESIAN_PURSUER, fontSize = fontSize, width = 100, color = 'White' })
     for _, level in ipairs({ Constants.LEVEL_1, }) do
         pursuerLayout:button({ id = 'pursuer-' .. level .. '-button', fontSize = fontSize, text = tostring(level), onClick = function()
@@ -101,7 +71,7 @@ function GlobalUi.init()
         end })
     end
 
-    local temenosLayout = GlobalUi.battle_menu_panel:horizontalLayout({ id = 'temenos-layout-button', width = globalWidth - 10, height = 40, })
+    local temenosLayout = GlobalUi.ui.battle_menu_panel:horizontalLayout({ id = 'temenos-layout-button', width = battleSelectionWidth - 10, height = 40, })
     temenosLayout:text({ id = 'temenos-label', text = Constants.ALPHA_TEMENOS, fontSize = fontSize, width = 100, color = 'White' })
     for _, level in ipairs({ Constants.LEVEL_1,  }) do
         temenosLayout:button({ id = 'temenos-' .. level .. '-button', fontSize = fontSize, text = tostring(level), onClick = function()
@@ -109,63 +79,211 @@ function GlobalUi.init()
         end })
     end
 
-    GlobalUi.battle_menu_panel:button({ id = 'ambush-button', text = 'Ambush Battle', fontSize = fontSize, width = globalWidth - 10, height = 40, onClick = function()
+    GlobalUi.ui.battle_menu_panel:button({ id = 'ambush-button', text = 'Ambush Battle', fontSize = fontSize, width = battleSelectionWidth - 10, height = 40, onClick = function()
         Battle.setupBattle('Ambush Battle', nil)
     end })
 
-    GlobalUi.battle_menu_panel:button({ id = 'no-maze-button', text = 'There is No Maze Battle', fontSize = fontSize, width = globalWidth - 10, height = 40, onClick = function()
+    GlobalUi.ui.battle_menu_panel:button({ id = 'no-maze-button', text = 'There is No Maze Battle', fontSize = fontSize, width = battleSelectionWidth - 10, height = 40, onClick = function()
         Battle.setupBattle('There is No Maze Battle', Constants.LEVEL_1)
     end })
 
-    GlobalUi.battle_menu_panel:button({ id = 'pursuit-end-button', text = 'Pursuit\'s End Battle', fontSize = fontSize, width = globalWidth - 10, height = 40, onClick = function()
+    GlobalUi.ui.battle_menu_panel:button({ id = 'pursuit-end-button', text = 'Pursuit\'s End Battle', fontSize = fontSize, width = battleSelectionWidth - 10, height = 40, onClick = function()
         Battle.setupBattle('Pursuit\'s End Battle', Constants.LEVEL_1)
     end })
 
     -----------------
+    -- Cycle setup --
+    -----------------
+
+    GlobalUi.ui.cycle_menu_panel = Ui.getRoot():verticalLayout({
+        id = 'cycle-menu-panel', height = 100, width = 380, rectAlignment = 'UpperLeft', x = 120, y = -10, padding = '5 5 5 5', active = false
+    })
+    GlobalUi.ui.cycle_menu_panel.attributes.color = '#05050559'
+    GlobalUi.ui.cycle_menu_panel.attributes.allowDragging = true
+    GlobalUi.ui.cycle_menu_panel.attributes.returnToOriginalPositionWhenReleased = false
+    GlobalUi.ui.cycle_menu_panel.attributes.childForceExpandWidth = false
+
+    GlobalUi.ui.cycle_menu_button = GlobalUi.ui.cycle_menu_panel:button({
+        id = 'cycle-menu-button', width = 370, height = 40, fontSize = fontSize, text = 'Setup cycle',
+        onClick = function() 
+            if GlobalUi.ui.campaign_setup_panel.attributes.active then
+                GlobalUi.ui.campaign_setup_panel:hide()
+            else
+                GlobalUi.ui.campaign_setup_panel:show()
+            end
+        end,
+    })
+
+    -----------------
     -- Campaign UI --
     -----------------
-    GlobalUi.campaign_setup_panel = Ui.getRoot():panel({ id = '', width = 1000, height = 800, rectAlignment = 'MiddleCenter', active = not Options.getCurrentCycle() })
+    GlobalUi.ui.campaign_setup_panel = Ui.getRoot():panel({ id = '', width = 900, height = 600, rectAlignment = 'MiddleCenter', active = not Options.getCurrentCycle() })
+    GlobalUi.ui.campaign_setup_panel.attributes.allowDragging = true
+    GlobalUi.ui.campaign_setup_panel.attributes.returnToOriginalPositionWhenReleased = false
+    GlobalUi.ui.campaign_setup_panel.attributes.color = '#d1cbcb'
 
+    -- 1 toggle button per cycle at the top
+    GlobalUi.ui.cycle_toggle_group = GlobalUi.ui.campaign_setup_panel:toggleGroup({ id = 'cycle-toggle-group', })
+    GlobalUi.ui.cycle_first_line_hl = GlobalUi.ui.cycle_toggle_group:horizontalLayout({ 
+        id = 'cycle-hl-1', spacing = 30, height = 70, width = 700, y = -50, rectAlignment = 'UpperCenter'
+    })
+    GlobalUi.ui.cycle_second_line_hl = GlobalUi.ui.cycle_toggle_group:horizontalLayout({ 
+        id = 'cycle-hl-2', spacing = 30, height = 70, width = 700, y = -150, rectAlignment = 'UpperCenter'
+    })
+
+    GlobalUi.selected_cycle = Constants.CYCLE_I
+    for cycleIndex, cycle in pairs(Cycle.CYCLES) do
+        local hlToUse = nil
+
+        if cycleIndex == Constants.CYCLE_I or cycleIndex == Constants.CYCLE_II or cycleIndex == Constants.CYCLE_III then
+            hlToUse = GlobalUi.ui.cycle_first_line_hl
+        else
+            hlToUse = GlobalUi.ui.cycle_second_line_hl
+        end
+
+        GlobalUi.ui['cycle_'..cycleIndex..'_button'] = hlToUse:toggleButton({ 
+            id = 'cycle-' .. cycleIndex .. '-button', width = 220, fontSize = 20,
+            text = ((cycleIndex == Constants.ONWARDS_ODYSSEY and '') or 'Cycle ' .. cycleIndex .. '\n') .. cycle.name,
+            onValueChanged = function(_, isOn) 
+                if GlobalUi.selected_cycle ~= cycleIndex then
+                    GlobalUi.selected_cycle = cycleIndex
+                    if GlobalUi.selected_cycle ~= Constants.CYCLE_I then
+                        GlobalUi.ui.additional_options_grid:hide()
+                    else
+                        GlobalUi.ui.additional_options_grid:show()
+                    end
+                end
+            end
+        })
+        GlobalUi.ui['cycle_'..cycleIndex..'_button'].cycle = cycleIndex
+        GlobalUi.ui['cycle_'..cycleIndex..'_button'].attributes.isOn = (cycleIndex == Constants.CYCLE_I)
+        GlobalUi.ui['cycle_'..cycleIndex..'_button'].attributes.interactable = not cycle.disabled
+    end
+
+    -- Additional options appear at the bottom
+    GlobalUi.selected_params = {
+        useTutorial = true,
+        resetFatedBoxes = false,
+    }
+
+    GlobalUi.ui.additional_options_grid = GlobalUi.ui.campaign_setup_panel:gridLayout({
+        id = 'additional-options-grid', spacing = 10, constraint = 'FixedColumnCount', constraintCount = 3, 
+        width = 700, height = 200, y = 150, rectAlignment = 'LowerCenter', cellSize = '200 100',
+        active = (GlobalUi.ui['cycle_I_button'].attributes.isOn == true),
+    })
+    GlobalUi.ui.additional_options_grid.attributes.childAlignment = 'MiddleCenter'
+    
+    GlobalUi.ui.use_tutorial_button = GlobalUi.ui.additional_options_grid:toggle({ 
+        id = 'use-tutorial-button', text = 'Use tutorial', fontSize = 20, onValueChanged = function(_, isOn)
+            GlobalUi.selected_params.useTutorial = (isOn == 'True')
+        end })
+    GlobalUi.ui.use_tutorial_button.attributes.isOn = GlobalUi.selected_params.useTutorial == true
+    GlobalUi.ui.use_tutorial_button.attributes.verticalOverflow = 'Overflow'
+    GlobalUi.ui.reset_fated_boxes_button = GlobalUi.ui.additional_options_grid:toggle({ 
+        id = 'reset-fated-boxes-button', text = 'Reset fated boxes', fontSize = 20, onValueChanged = function(_, isOn)
+            GlobalUi.selected_params.resetFatedBoxes = (isOn == 'True')
+        end})
+    GlobalUi.ui.reset_fated_boxes_button.attributes.isOn = GlobalUi.selected_params.resetFatedBoxes == true
+    GlobalUi.ui.reset_fated_boxes_button.attributes.verticalOverflow = 'Overflow'
+
+    -- Confirmation button
+    GlobalUi.ui.cycle_start_button = GlobalUi.ui.campaign_setup_panel:button({
+        id = 'cycle-start-button', width = 220, height = 70, y = 50, rectAlignment = 'LowerCenter', text = 'Start new Cycle',
+        fontSize = 25,
+        onClick = function() GlobalUi.showConfirmationDialog('Starting a new cycle cannot be undone', 'Confirm', 
+            function()
+                if GlobalUi.selected_cycle then
+                    GlobalUi.ui.campaign_setup_panel:hide()
+                    Cycle.setupCycle(GlobalUi.selected_cycle, GlobalUi.selected_params)
+                else
+                    broadcastToAll('Please select a cycle to setup first.', Constants.WARNING_COLOR)
+                end
+            end) end,
+    })
+
+
+
+
+
+    -- LEAVE THIS AT THE BOTTOM, IT NEEDS TO BE ABOVE EVERYTHING ELSE (z should work but just in case)
+    ------------------------------------------------
+    -- Generic UI for a choice/confirmation panel --
+    ------------------------------------------------
+    GlobalUi.ui.confirmation_panel = Ui.getRoot():panel({
+        id = 'confirmation-panel', height = 250, width = 400, active = false, rectAlignment = 'MiddleCenter'
+    })
+    GlobalUi.ui.confirmation_panel.z = 10000
+    GlobalUi.ui.confirmation_panel.attributes.color = '#e3e0da'
+
+    GlobalUi.ui.confirmation_text = GlobalUi.ui.confirmation_panel:text({ id = 'confirmation-text', text = '', 
+                    width = 390, height = 200, textAlignment = 'UpperCenter', rectAlignment = 'UpperCenter', 
+    })
+    GlobalUi.ui.confirmation_text.attributes.resizeTextForBestFit = true
+    GlobalUi.ui.confirmation_text.attributes.resizeTextMaxSize = 35
+
+    GlobalUi.ui.confirmation_close_button = GlobalUi.ui.confirmation_panel:button({ 
+            id = 'confirmation-close-button', text = 'X', width = 30, height = 30, 
+            x = -5, y = -5, fontSize = 25,
+            textAlignment = 'MiddleCenter', rectAlignment = 'UpperRight', onClick = function(_, button) GlobalUi.ui.confirmation_panel:hide() end
+    })
+
+    GlobalUi.ui.confirmation_hlayout = GlobalUi.ui.confirmation_panel:horizontalLayout({ id = 'confirmation-hl', 
+            rectAlignment = 'LowerCenter', width = 390, height = 50, spacing = 30, padding = '30 30 0 0', y = 10 })
+
+    GlobalUi.ui.confirmation_yes_button = GlobalUi.ui.confirmation_hlayout:button({ 
+            id = 'confirmation-yes-button', text = '',
+            textAlignment = 'MiddleCenter', onClick = function(_, button) end
+    })
+    GlobalUi.ui.confirmation_yes_button.attributes.resizeTextForBestFit = true
+    GlobalUi.ui.confirmation_yes_button.attributes.resizeTextMaxSize = 25
+    GlobalUi.ui.confirmation_no_button = GlobalUi.ui.confirmation_hlayout:button({ 
+            id = 'confirmation-no-button', text = '',
+            textAlignment = 'MiddleCenter', onClick = function(_, button) end
+    })
+    GlobalUi.ui.confirmation_no_button.attributes.resizeTextForBestFit = true
+    GlobalUi.ui.confirmation_no_button.attributes.resizeTextMaxSize = 25
 end
 
 function GlobalUi.expandMenu()
-    GlobalUi.toggle_button:setText('\u{25B2}')
-    GlobalUi.toggle_button:setOnClick(function() GlobalUi.collapseMenu() end)
+    GlobalUi.ui.toggle_button:setText('\u{25B2}')
+    GlobalUi.ui.toggle_button:setOnClick(function() GlobalUi.collapseMenu() end)
 
     -- Display vertical menu
-    GlobalUi.battle_menu_panel:show()
+    GlobalUi.ui.cycle_menu_panel:show()
+    GlobalUi.ui.battle_menu_panel:show()
 end
 
 function GlobalUi.collapseMenu()
-    GlobalUi.toggle_button:setText('\u{25BC}')
-    GlobalUi.toggle_button:setOnClick(function() GlobalUi.expandMenu() end)
+    GlobalUi.ui.toggle_button:setText('\u{25BC}')
+    GlobalUi.ui.toggle_button:setOnClick(function() GlobalUi.expandMenu() end)
 
     -- Hide vertical menu
-    GlobalUi.battle_menu_panel:hide()
+    GlobalUi.ui.cycle_menu_panel:hide()
+    GlobalUi.ui.battle_menu_panel:hide()
 end
 
 -- Message is a string
 -- ... has one table for each button { text = '', callback = F }
 function GlobalUi.showConfirmationDialog(message, yesText, yesCallback, noText, noCallback)
-    GlobalUi.confirmation_text:setText(message)
+    GlobalUi.ui.confirmation_text:setText(message)
 
     if yesText ~= false then
-        GlobalUi.confirmation_yes_button:setActive(true)
-        GlobalUi.confirmation_yes_button:setText(yesText or 'Cancel')
-        GlobalUi.confirmation_yes_button:setOnClick(function(color, button, id) GlobalUi.confirmation_panel:hide() if yesCallback ~= nil then yesCallback(color, button, id) end end)
+        GlobalUi.ui.confirmation_yes_button:setActive(true)
+        GlobalUi.ui.confirmation_yes_button:setText(yesText or 'Cancel')
+        GlobalUi.ui.confirmation_yes_button:setOnClick(function(color, button, id) GlobalUi.ui.confirmation_panel:hide() if yesCallback ~= nil then yesCallback(color, button, id) end end)
     else
-        GlobalUi.confirmation_yes_button:setActive(false)
+        GlobalUi.ui.confirmation_yes_button:setActive(false)
     end
 
     if noText ~= false then
-        GlobalUi.confirmation_no_button:setActive(true)
-        GlobalUi.confirmation_no_button:setText(noText or 'Cancel')
-        GlobalUi.confirmation_no_button:setOnClick(function(color, button, id) GlobalUi.confirmation_panel:hide() if noCallback ~= nil then noCallback(color, button, id) end end)
+        GlobalUi.ui.confirmation_no_button:setActive(true)
+        GlobalUi.ui.confirmation_no_button:setText(noText or 'Cancel')
+        GlobalUi.ui.confirmation_no_button:setOnClick(function(color, button, id) GlobalUi.ui.confirmation_panel:hide() if noCallback ~= nil then noCallback(color, button, id) end end)
     else
-        GlobalUi.confirmation_no_button:setActive(false)
+        GlobalUi.ui.confirmation_no_button:setActive(false)
     end
 
-    GlobalUi.confirmation_panel:show()
+    GlobalUi.ui.confirmation_panel:show()
 end
 
 function GlobalUi.save()

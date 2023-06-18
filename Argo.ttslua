@@ -52,7 +52,7 @@ function Argo.init(savedData)
     end
 end
 
-function Argo.spawnSheet(position)
+function Argo.spawnSheet()
     if not Options.getCurrentCycle() then return end
 
     local argoSheet = spawnObject({
@@ -67,7 +67,7 @@ function Argo.spawnSheet(position)
             Argo.reset()
         end
     })
-    
+
     argoSheet.setCustomObject({
         image = Argo.SHEET_URL[Options.getCurrentCycle()],
         type = 0,

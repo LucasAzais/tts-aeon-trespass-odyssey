@@ -55,6 +55,8 @@ Constants.ONWARDS_ODYSSEY = 'Onwards Odyssey'
 Constants.CYCLE_I = 'I'
 Constants.CYCLE_II = 'II'
 Constants.CYCLE_III = 'III'
+Constants.CYCLE_IV = 'IV'
+Constants.CYCLE_V = 'V'
 
 -- Evolution Track
 Constants.MIXED = 'Mixed'

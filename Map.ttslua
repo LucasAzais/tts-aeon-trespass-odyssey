@@ -129,12 +129,6 @@ Map.TILES_LIST = {
 }
 
 function Map.init(savedData)
-    -- Find the tiles bag
-    Map.map_tiles_bag = getObjectsWithTag(Constants.MAP_TILES_BAG)[1]
-    if not Map.map_tiles_bag then
-        broadcastToAll('Missing map tiles bag with tag ' .. Constants.MAP_TILES_BAG, Color.Red)
-    end
-
     if Options.getCurrentCycle() then
         Map.reset(savedData)
     end
@@ -150,6 +144,12 @@ end
 
 function Map.reset(params)
     if not Options.getCurrentCycle() then return end
+
+    -- Find the tiles bag
+    Map.map_tiles_bag = getObjectsWithTag(Constants.MAP_TILES_BAG)[1]
+    if not Map.map_tiles_bag then
+        broadcastToAll('Missing map tiles bag with tag ' .. Constants.MAP_TILES_BAG, Color.Red)
+    end
 
     Map.discovered_map = params.discovered_map or {
         -- ['T00'] = 'dee6ee',
@@ -324,7 +324,7 @@ function MapTile:pullNext(direction)
                 rotation = {0, 180, 0},
                 callback_function = function(tile)
                     -- Set the tile in position then register the tile object against the MapTile
-                    tile.setPositionSmooth(Vector(tile.getPosition().x, tileHeight, tile.getPosition().z), false, false)
+                    tile.setPositionSmooth(Vector(tile.getPosition().x, tileHeight, tile.getPosition().z), false, true)
                     Map.map[tileName]:registerObject(tile)
                     Log:debug('Pulled %s', Map.map[tileName])
                 end

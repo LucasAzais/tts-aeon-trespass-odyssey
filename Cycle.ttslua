@@ -1,7 +1,7 @@
 local Cycle = {}
 Cycle.__index = Cycle
 
-local Argo = require('Argo')
+local Argo
 local Argonaut = require('Argonaut')
 local Battle = require('Battle')
 local Constants = require('Constants')
@@ -18,21 +18,52 @@ local Utils = require('Utils')
 
 Cycle.CYCLES = {
     [Constants.CYCLE_I] = {
+        name = 'Truth of the Labyrinth',
         archiveGUID = '7b2c8d',
     },
     [Constants.CYCLE_II] = {
+        name = 'Abysswatchers',
         archiveGUID = '',
+        disabled = true,
     },
     [Constants.CYCLE_III] = {
+        name = 'Pitiless of the Sun',
         archiveGUID = '',
+        disabled = true,
+    },
+    [Constants.CYCLE_IV] = {
+        name = 'Gardens of Infinite Growth',
+        archiveGUID = '',
+        disabled = true,
+    },
+    [Constants.CYCLE_V] = {
+        name = 'Truthsayer',
+        archiveGUID = '',
+        disabled = true,
     },
     [Constants.ONWARDS_ODYSSEY] = {
+        name = 'Onwards Odyssey',
         archiveGUID = '',
+        disabled = true,
     }
 }
 
-function Cycle.init(savedData)
-    
+function Cycle.init()
+    -- Not sure why this is needed tbh... There isn't any cross-loading as far as I can tell
+    Argo = require('Argo')
+end
+
+function Cycle.setupCycle(cycle, params)
+    if not Cycle.CYCLES[cycle] then return end
+
+    broadcastToAll('Setting up cycle, please wait.', Constants.WARNING_COLOR)
+    Cycle['setupCycle' .. cycle](params)
+
+    Wait.condition(function()
+        broadcastToAll('Setup complete.', Color.Green)
+    end, function()
+        return not Ui.isUiLoading()
+    end, 100)
 end
 
 function Cycle.setupCycleI(params)
@@ -41,9 +72,10 @@ function Cycle.setupCycleI(params)
 
     -- Identify as cycle I
     Options.current_cycle = Constants.CYCLE_I
-    Options.use_tutorial = params.useTutorial or false
-    -- If new cycle
-    if not Options.cycle_count or params.brandNew == true then
+    local useTutorial = params.useTutorial or false
+
+    -- If new cycle (first time or forced reset)
+    if not Options.cycle_count or params.resetFatedBoxes == true then -- or Options.cycle_count >= 5 (6th attempt reset?)
         Options.cycle_count = 1
     else
         Options.cycle_count = Options.cycle_count + 1
@@ -101,7 +133,7 @@ function Cycle.setupCycleI(params)
                     spawnedObject.setLock(true)
                 end
             })
-        elseif object.gm_notes == 'TutorialBook' and Options.use_tutorial then
+        elseif object.gm_notes == 'TutorialBook' and useTutorial then
             -- Remove the previous books then spawn another
             local oldTutorialBooks = getObjectsWithTag(Constants.TUTORIAL_BOOK)
             for i = 1, (#oldTutorialBooks or 0) do
@@ -137,15 +169,17 @@ function Cycle.setupCycleI(params)
                 startMapTile = object.guid
             end
 
-            cycle1Bag.takeObject({
-                guid = object.guid,
-                position = position,
-                rotation = {0.00, 180.00, 0.00},
-                smooth = false,
-                callback_function = function(spawnedObject)
-                    spawnedObject.setLock(true)
-                end
-            })
+            if object.name ~= 'T00' or useTutorial then
+                cycle1Bag.takeObject({
+                    guid = object.guid,
+                    position = position,
+                    rotation = {0.00, 180.00, 0.00},
+                    smooth = false,
+                    callback_function = function(spawnedObject)
+                        spawnedObject.setLock(true)
+                    end
+                })
+            end
         elseif object.gm_notes == 'SecretsBag' then
             cycle1Bag.takeObject({
                 guid = object.guid,
@@ -390,9 +424,13 @@ function Cycle.setupCycleI(params)
     end
 
     -- New Argo/Timeline sheets (takes the current cycle into account)
-    Argo.spawnSheet({})
-    Timeline.spawnSheet({})
-    Map.reset({ discovered_map = { ['T00'] = tutorialMapTile, ['027'] = startMapTile, }})
+    Argo.spawnSheet()
+    Timeline.spawnSheet()
+    if useTutorial then
+        Map.reset({ discovered_map = { ['T00'] = tutorialMapTile, }})
+    else
+        Map.reset({ discovered_map = { ['027'] = startMapTile, }})
+    end
     
     -- Spawn new titan sheet + reset triskelion + new argonaut sheets
     Triskelion.resetAll()
@@ -421,7 +459,7 @@ function Cycle.setupCycleI(params)
     -- Move argo to T00 or 027
     local argoMini = getObjectFromGUID(Constants.ARGO_MINI_GUID)
     local argoPosition = {-73.37, 1.08, 37.16}
-    if Options.use_tutorial then
+    if useTutorial then
         argoPosition = {-77.12, 1.08, 70.04}
     end
     if argoMini then argoMini.setPosition(argoPosition) end
@@ -438,6 +476,18 @@ function Cycle.setupCycleI(params)
 
     -- Cleanup cycle bag
     cycle1Bag.destruct()
+
+    -- Setup Hekaton level 0 battle
+    if useTutorial then
+        Wait.condition(function()
+            Battle.setupBattle('Tutorial Battle', Constants.LEVEL_0)
+        end, function()
+            return not Ui.isUiLoading()
+        end)
+    elseif Options.cycle_count > 1 then
+        local cycleBook = getObjectsWithTag(Constants.CYCLE_BOOK)[1]
+        if cycleBook then cycleBook.Book.setPage(42, true) end
+    end
 end
 
 function Cycle.reset()
@@ -465,4 +515,10 @@ end
 
 ------------------------------------------------------
 
-return Cycle
+return {
+    init = Cycle.init,
+    save = Cycle.save,
+    setupCycle = Cycle.setupCycle,
+
+    CYCLES = Cycle.CYCLES,
+}

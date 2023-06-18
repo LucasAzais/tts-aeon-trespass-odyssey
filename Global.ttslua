@@ -57,9 +57,7 @@ function onLoad(script_state)
     Battle.init(savedData.battle or {})
     SearchStation.init()
 
-    Ui.globalRefresh(true)
-
-    GlobalUi.showConfirmationDialog('Would you like to setup Cycle I, with the tutorial?', 'Yes', function() Cycle.setupCycleI({ useTutorial = true }) end)
+    Ui.globalRefresh()
 
     -- if Setup.isSetupComplete() then
     --     broadcastToAll('Game loaded', Color.Green)
@@ -72,7 +70,7 @@ end
 function onSave()
     local dataToSave = {}
 
-    if Options.hasCampaignStarted() then
+    if Options.getCurrentCycle() then
         dataToSave.triskelions = Triskelion.save()
         dataToSave.argonauts = Argonaut.save()
         dataToSave.cycle = Cycle.save()

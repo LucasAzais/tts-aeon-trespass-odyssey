@@ -235,6 +235,10 @@ function Ui:gridLayout(params)
         layout.attributes.constraintCount = params.constraintCount
     end
 
+    if params.cellSize ~= nil then
+        layout.attributes.cellSize = params.cellSize
+    end
+
     setmetatable(layout, Ui)
 
     return layout
@@ -742,6 +746,20 @@ function Ui:fullWipe()
     end
 end
 
+function Ui.isUiLoading()
+    if Ui.getRoot().object.UI.loading then
+        return true
+    else
+        for _, root in pairs(Ui.rootPerObject) do
+            if root.object.UI.loading then
+                return true
+            end
+        end
+    end
+
+    return false
+end
+
 ------------------------------------------------------
 
 return {
@@ -750,6 +768,7 @@ return {
     getRoot = Ui.getRoot,
     getRootPerObject = Ui.getRootPerObject,
     createRootOnObject = Ui.createRootOnObject,
+    isUiLoading = Ui.isUiLoading,
 
     TRANSPARENT_INPUT_COLORS = Ui.TRANSPARENT_INPUT_COLORS,
 }

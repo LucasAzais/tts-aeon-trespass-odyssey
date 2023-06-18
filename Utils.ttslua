@@ -207,7 +207,7 @@ function Utils.castAndTagFilter(startPosition, direction, tag, distance)
         direction    = Vector(direction):normalize(),
         max_distance = distance or 100,
         type         = 1,
-        debug        = true,
+        debug        = false,
     })
 
     if results and #results > 0 then

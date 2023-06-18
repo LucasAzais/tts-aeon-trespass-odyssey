@@ -29,7 +29,7 @@ function Timeline.init(savedData)
     end
 end
 
-function Timeline.spawnSheet(position)
+function Timeline.spawnSheet()
     if not Options.getCurrentCycle() then return end
 
     local timelineSheet = spawnObject({

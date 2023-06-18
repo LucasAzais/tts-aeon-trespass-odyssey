@@ -14,7 +14,7 @@ local Utils = require('Utils')
 ------------------------------------------------------
 
 -- Change all this, need to be detected live?
-Battle.TEMP_PRIMORDIAL_BAG_GUID = 'de1845'
+Battle.PRIMORDIAL_BAG_GUID = '298b29'
 Battle.TERRAIN_BAG = 'c1095a'
 Battle.TERRAIN_CARDS_BAG = 'dbf84f'
 Battle.TITAN_START_URL = 'http://cloud-3.steamusercontent.com/ugc/2055377100667437499/43D1B7D4B60C4D4F9DB15D8702FC59C209A28EFD/'
@@ -99,7 +99,7 @@ function Battle:setup()
     self.setupInProgress = true
 
     -- Pull out the corresponding battle bag and copy it
-    local primordialsBag = getObjectFromGUID(Battle.TEMP_PRIMORDIAL_BAG_GUID)
+    local primordialsBag = getObjectFromGUID(Battle.PRIMORDIAL_BAG_GUID)
     self.primordialBag = nil
 
     local existingObject = Utils.castAndTagFilter(Battle.PRIMORDIAL_BAG_POSITION, Vector(0, 1, 0), nil)
@@ -438,7 +438,7 @@ function Battle:shuffleDecks()
     if deck ~= nil then deck.shuffle() end
 end
 
-function endTutorialSetup()
+function Battle.endTutorialSetup()
     broadcastToAll('Don\'t forget to remove the Trauma cards excluded in the tutorial.', Constants.WARNING_COLOR)
 end
 
