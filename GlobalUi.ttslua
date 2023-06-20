@@ -122,6 +122,12 @@ function GlobalUi.init()
     GlobalUi.ui.campaign_setup_panel.attributes.returnToOriginalPositionWhenReleased = false
     GlobalUi.ui.campaign_setup_panel.attributes.color = '#d1cbcb'
 
+    GlobalUi.ui.campaign_close_button = GlobalUi.ui.campaign_setup_panel:button({ 
+        id = 'campaign-close-button', text = 'X', width = 30, height = 30, 
+        x = -5, y = -5, fontSize = 25,
+        textAlignment = 'MiddleCenter', rectAlignment = 'UpperRight', onClick = function(_, button) GlobalUi.ui.campaign_setup_panel:hide() end
+})
+
     -- 1 toggle button per cycle at the top
     GlobalUi.ui.cycle_toggle_group = GlobalUi.ui.campaign_setup_panel:toggleGroup({ id = 'cycle-toggle-group', })
     GlobalUi.ui.cycle_first_line_hl = GlobalUi.ui.cycle_toggle_group:horizontalLayout({ 

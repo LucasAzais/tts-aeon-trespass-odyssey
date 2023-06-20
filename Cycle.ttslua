@@ -81,28 +81,6 @@ function Cycle.setupCycleI(params)
         Options.cycle_count = Options.cycle_count + 1
     end
 
-    -- Reset the tech cards
-    local lastTomeTech = getObjectFromGUID('ac82bc')
-    if not lastTomeTech then Cycle.missingContent() end
-    lastTomeTech.setPosition({37.85, 1.01, 71.21})
-    lastTomeTech.setRotation({0, 180, 0})
-    local titanogenesisTech = getObjectFromGUID('e9aca4')
-    if not titanogenesisTech then Cycle.missingContent() end
-    titanogenesisTech.setPosition({46.32, 1.01, 71.21})
-    titanogenesisTech.setRotation({0, 180, 0})
-    local argoWorksTech = getObjectFromGUID('d0a69e')
-    if not argoWorksTech then Cycle.missingContent() end
-    argoWorksTech.setPosition({54.78, 1.01, 71.21})
-    argoWorksTech.setRotation({0, 180, 0})
-    local antikratosProjectTech = getObjectFromGUID('33d9a4')
-    if not antikratosProjectTech then Cycle.missingContent() end
-    antikratosProjectTech.setPosition({63.24, 1.01, 71.21})
-    antikratosProjectTech.setRotation({0, 180, 0})
-    local primordialDawnTech = getObjectFromGUID('bc7de7')
-    if not primordialDawnTech then Cycle.missingContent() end
-    primordialDawnTech.setPosition({71.70, 1.01, 71.21})
-    primordialDawnTech.setRotation({0, 180, 0})
-
     -- Pull out the cycle archive
     local cycle1Bag = getObjectFromGUID(Cycle.CYCLES[Constants.CYCLE_I].archiveGUID).takeObject({
         smooth = false,
@@ -472,22 +450,223 @@ function Cycle.setupCycleI(params)
     local priorityToken = getObjectFromGUID(Constants.PRIORITY_TARGET_TOKEN_GUID)
     if priorityToken then priorityToken.setPosition({-25.33, 1.03, 7.77}) end
 
-    -- Setup gear if skipping the tutorial? + cleanup battle and terrain and all
-
     -- Cleanup cycle bag
     cycle1Bag.destruct()
 
-    -- Setup Hekaton level 0 battle
-    if useTutorial then
-        Wait.condition(function()
-            Battle.setupBattle('Tutorial Battle', Constants.LEVEL_0)
-        end, function()
-            return not Ui.isUiLoading()
-        end)
-    elseif Options.cycle_count > 1 then
-        local cycleBook = getObjectsWithTag(Constants.CYCLE_BOOK)[1]
-        if cycleBook then cycleBook.Book.setPage(42, true) end
-    end
+    -- Reset the tech cards
+    local lastTomeTech = getObjectFromGUID('ac82bc')
+    if not lastTomeTech then Cycle.missingContent() end
+    lastTomeTech.setPosition({37.85, 1.10, 71.21})
+    lastTomeTech.setRotation({0, 180, useTutorial and 180 or 0})
+    local titanogenesisTech = getObjectFromGUID('e9aca4')
+    if not titanogenesisTech then Cycle.missingContent() end
+    titanogenesisTech.setPosition({46.32, 1.10, 71.21})
+    titanogenesisTech.setRotation({0, 180, useTutorial and 180 or 0})
+    local argoWorksTech = getObjectFromGUID('d0a69e')
+    if not argoWorksTech then Cycle.missingContent() end
+    argoWorksTech.setPosition({54.78, 1.10, 71.21})
+    argoWorksTech.setRotation({0, 180, useTutorial and 180 or 0})
+    local antikratosProjectTech = getObjectFromGUID('33d9a4')
+    if not antikratosProjectTech then Cycle.missingContent() end
+    antikratosProjectTech.setPosition({63.24, 1.10, 71.21})
+    antikratosProjectTech.setRotation({0, 180, useTutorial and 180 or 0})
+    local primordialDawnTech = getObjectFromGUID('bc7de7')
+    if not primordialDawnTech then Cycle.missingContent() end
+    primordialDawnTech.setPosition({71.70, 1.10, 71.21})
+    primordialDawnTech.setRotation({0, 180, useTutorial and 180 or 0})
+
+    -- Setup gear if skipping the tutorial? + cleanup battle and terrain and all
+    -- Setup argo sheet values and timeline skip after tutorial
+    Wait.condition(function()
+        Wait.time(function()
+            Argo.setHull(4)
+            Argo.setCrew(5)
+            
+            if useTutorial then
+                Argo.setEvolutionTrack(1, Constants.HEKATON, true)
+                Battle.setupBattle('Tutorial Battle', Constants.LEVEL_0)
+            else
+                -- Open Unfathomable Aeons/Tutorial skip page
+                local cycleBook = getObjectsWithTag(Constants.CYCLE_BOOK)[1]
+                if cycleBook then cycleBook.Book.setPage(42, true) end
+
+                Argo.setAdventureTrack(Constants.TUTORIAL, 1, true)
+                Argo.setAdventureTrack(Constants.TUTORIAL, 2, 1)
+                Argo.setAdventureTrack(Constants.TUTORIAL, 3, true)
+                
+                Timeline.setTimelineDay('T0', true)
+                Timeline.setTimelineDay('T1', true)
+                Timeline.setTimelineDay('T2', true)
+                Timeline.setTimelineDay('T3', true)
+                Timeline.setTimelineDay('T4', true)
+                Timeline.setTimelineDay('T5', true)
+                Timeline.setTimelineDay('T6', true)
+                
+                -- Mark A7 or A8
+                if math.random(1, 2) == 1 then
+                    Timeline.setChoice('A7', true)
+                else
+                    Timeline.setChoice('A8', true)
+                end
+
+                -- Gain resources
+                Argo.setResource('raw_ambrosia', 4)
+                Argo.setResource('calcified_knuckle_bone', 1)
+                Argo.setResource('muscle_cluster', 1)
+                Argo.setResource('sisyphus_tears', 1)
+
+                -- -- Set doom card on the argo sheet (tbh it's useless considering TTS saves everything)
+                -- Argo.setDoomCard('1A')
+                -- Argo.setMapTile('27')
+
+                -- Set AA and titan limit
+                Argo.setAbilitiesLimit(2)
+                Argo.setTitansLimit(10)
+                Argo.setCurrentTitans(8)
+                Argo.setTitansList1(1, 'Dreamwalker x8')
+
+                Argo.setEvolutionTrack(1, Constants.HEKATON, true)
+
+                -- Go through all the decks and pull out specific cards
+                for _, container in ipairs(getObjects()) do
+                    if container.getGMNotes() == 'Mnemos' then
+                        for _, card in ipairs(container.getObjects()) do
+                            if card.name == 'Imprisonment' then
+                                container.takeObject({
+                                    guid = card.guid,
+                                    position = {43.98, 1.10, 1.77},
+                                    rotation = {0.00, 180.00, 0.00},
+                                })
+                            elseif card.name == 'Siren Survivor' then
+                                container.takeObject({
+                                    guid = card.guid,
+                                    position = {40.27, 1.10, 1.79},
+                                    rotation = {0.00, 180.00, 0.00},
+                                })
+                            end
+                        end
+                    elseif container.getGMNotes() == 'Technologies' then
+                        for _, card in ipairs(container.getObjects()) do
+                            if card.name == 'Trireme Weapons' then
+                                container.takeObject({
+                                    guid = card.guid,
+                                    position = {35.45, 1.10, 64.73},
+                                    rotation = {0.00, 180.00, 180.00},
+                                })
+                            elseif card.name == 'Trireme Armor' then
+                                container.takeObject({
+                                    guid = card.guid,
+                                    position = {39.15, 1.10, 64.73},
+                                    rotation = {0.00, 180.00, 180.00},
+                                })
+                            elseif card.name == 'Trireme Ranged Weapons' then
+                                container.takeObject({
+                                    guid = card.guid,
+                                    position = {42.85, 1.10, 64.73},
+                                    rotation = {0.00, 180.00, 180.00},
+                                })
+                            -- Project deck
+                            elseif card.name == 'Rhetoric' or card.name == 'Titan Hunting' or card.name == 'Trading Solutions'
+                                    or card.name == 'Arrow Barrage' or card.name == 'Siren Armor' then
+                                container.takeObject({
+                                    guid = card.guid,
+                                    position = {28.28, 1.10, 64.78},
+                                    rotation = {0.00, 180.00, 0.00},
+                                })
+                            end
+                        end
+                    elseif container.getGMNotes() == 'DoomCards' then
+                        -- 1A + 2 doom
+                        for _, card in ipairs(container.getObjects()) do
+                            if card.name == 'Shape Of Things To Come' then
+                                container.takeObject({
+                                    guid = card.guid,
+                                    position = {5.28, 1.10, 49.72},
+                                    rotation = {0.00, 180.00, 0.00},
+                                    callback_function = function(spawnedObject)
+                                        getObjectFromGUID('df1c9e').takeObject({ position = {1.36, 1.18, 48.94} })
+                                        getObjectFromGUID('df1c9e').takeObject({ position = {2.12, 2.37, 48.66} })
+                                    end
+                                })
+                            end
+                        end
+                    elseif container.getGMNotes() == 'StoryCards' then
+                        -- Inward odyssey + 1 progress
+                        for _, card in ipairs(container.getObjects()) do
+                            if card.name == 'Inward Odyssey' then
+                                container.takeObject({
+                                    guid = card.guid,
+                                    position = {-5.81, 1.00, 41.96},
+                                    rotation = {0.00, 180.00, 0.00},
+                                    callback_function = function(spawnedObject)
+                                        getObjectFromGUID('2dca67').takeObject({ position = {-2.14, 1.18, 39.41} })
+                                    end
+                                })
+                            end
+                        end
+                    elseif container.getGMNotes() == 'GearDeck' then
+                        local foundCards = {}
+                        for _, card in ipairs(container.getObjects()) do
+                            if card.name == 'Sail Spolas' and not foundCards['Sail Spolas'] then
+                                container.takeObject({
+                                    guid = card.guid,
+                                    position = {39.73, 1.10, -5.11},
+                                    rotation = {0.00, 180.00, 0.00},
+                                })
+                                foundCards['Sail Spolas'] = true
+                            elseif card.name == 'Boatmace' and not foundCards['Boatmace'] then
+                                container.takeObject({
+                                    guid = card.guid,
+                                    position = {42.30, 1.10, -5.11},
+                                    rotation = {0.00, 180.00, 0.00},
+                                })
+                                foundCards['Boatmace'] = true
+                            elseif card.name == 'Kratos Kopis' and not foundCards['Kratos Kopis'] then
+                                container.takeObject({
+                                    guid = card.guid,
+                                    position = {44.87, 1.10, -5.11},
+                                    rotation = {0.00, 180.00, 0.00},
+                                })
+                                foundCards['Kratos Kopis'] = true
+                            elseif card.name == 'Siren Panoply Armor' and not foundCards['Siren Panoply Armor'] then
+                                container.takeObject({
+                                    guid = card.guid,
+                                    position = {39.73, 1.10, -9.10},
+                                    rotation = {0.00, 180.00, 0.00},
+                                })
+                                foundCards['Siren Panoply Armor'] = true
+                            elseif card.name == 'Sirenteeth' and not foundCards['Sirenteeth'] then
+                                container.takeObject({
+                                    guid = card.guid,
+                                    position = {42.30, 1.10, -9.10},
+                                    rotation = {0.00, 180.00, 0.00},
+                                })
+                                foundCards['Sirenteeth'] = true
+                            elseif card.name == 'Shipwrecker Shield' and not foundCards['Shipwrecker Shield'] then
+                                container.takeObject({
+                                    guid = card.guid,
+                                    position = {44.87, 1.10, -9.10},
+                                    rotation = {0.00, 180.00, 0.00},
+                                })
+                                foundCards['Shipwrecker Shield'] = true
+                            end
+                        end
+                    end
+                end
+
+                Player.getPlayers()[1].pingTable({42.30, 1.01, -1.90})
+                broadcastToAll('Don\'t forget to assign 1 Mnenos node to Imprisonment.', Constants.WARNING_COLOR)
+                broadcastToAll('Follow the "Skipping the Tutorial" instructions.', Constants.WARNING_COLOR)
+                if Options.cycle_count > 1 then
+                    broadcastToAll('Follow the "Unfathomable Aeons" instructions.', Constants.WARNING_COLOR)
+                end
+            end
+        end, 0.1)
+    end, function()
+        return not Ui.isUiLoading()
+    end, 60, function()
+        broadcastToAll('Could not set tutorial skip information, alter the Argo sheet and Timeline manually.', Color.Red)
+    end)
 end
 
 function Cycle.reset()
