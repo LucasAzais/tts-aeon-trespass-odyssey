@@ -802,6 +802,10 @@ function Argo.getLevelFromEvolutionIndex(index)
     return Argo.EVOLUTION_INDEX_TO_LEVEL[index]
 end
 
+function Argo.getEvolutionTrack()
+    return Argo.evolution_track
+end
+
 function Argo.setHull(hull)
     Argo.ui['hull_'..hull..'_checkbox']:select()
     Argo.hull = hull
@@ -990,6 +994,7 @@ return {
     spawnSheet = Argo.spawnSheet,
     resources = Argo.resources,
     
+    getEvolutionTrack = Argo.getEvolutionTrack,
     
     setHull = Argo.setHull,
     setCrew = Argo.setCrew,

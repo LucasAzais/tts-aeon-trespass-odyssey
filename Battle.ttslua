@@ -6,6 +6,7 @@ local BattleBoard = require('BattleBoard')
 local Content = require('Content')
 local Constants = require('Constants')
 local EventManager = require('EventManager')
+local GlobalUi
 local Log = require('Log').ForModule('Battle')
 local Triskelion = require('Triskelion')
 local Ui = require('Ui')
@@ -24,6 +25,7 @@ Battle.DROP_HEIGHT = 1.60
 
 function Battle.init(savedData)
     Argo = Argo or require('Argo')
+    GlobalUi = GlobalUi or require('GlobalUi')
 
     if savedData.current_battle then
         local battle = Battle.create({ 
@@ -222,20 +224,29 @@ function Battle:setupTerrains()
         end
 
         -- Pull the terrain tiles and set them up
-        for index, position in ipairs(terrain.positions) do
-            local x, z = self.grid:getXZ(position.row, position.column)
+        if infiniteTerrainBag then
+            for index, details in ipairs(terrain.tiles) do
+                assert(Utils.isTable(details.position))
+                local x, z = self.grid:getXZ(details.position.row, details.position.column)
 
-            infiniteTerrainBag.takeObject({
-                position = {x, Battle.DROP_HEIGHT, z},
-                rotation = terrain.rotations[index],
-                callback_function = function(spawnedObject)
-                    spawnedObject.addTag(Constants.DISPOSABLE)
-                end
-            })
+                infiniteTerrainBag.takeObject({
+                    position = {x, Battle.DROP_HEIGHT, z},
+                    rotation = details.rotation,
+                    callback_function = function(spawnedObject)
+                        spawnedObject.addTag(Constants.DISPOSABLE)
+                        if details.color then
+                            spawnedObject.setColorTint(details.color)
+                        end
+                    end
+                })
+            end
+
+            -- Put back the infinite terrain bag
+            terrainsBag.putObject(infiniteTerrainBag)
+        else
+            broadcastToAll('Could not find terrain spawner for ' .. terrain.name, Constants.WARNING_COLOR)
+            Log:error('Could not find terrain spawner bag for %s', terrain.name)
         end
-
-        -- Put back the infinite terrain bag
-        terrainsBag.putObject(infiniteTerrainBag)
     end
 end
 
@@ -476,7 +487,7 @@ function Battle.setupAmbushBattleCycleI()
     local hekatonBattles, labyrinthaurosBattles = 0, 0
     local lastMarkedLevelHekaton, lastMarkedLevelLabyrinthauros = 0, 0
     
-    for index, element in ipairs(Argo.getEvolutionTracks()) do
+    for index, element in ipairs(Argo.getEvolutionTrack() or {}) do
         if element[Constants.HEKATON] == true then
             hekatonBattles = hekatonBattles + 1
             lastMarkedLevelHekaton = Argo.getLevelFromEvolutionIndex(index)
@@ -492,16 +503,25 @@ function Battle.setupAmbushBattleCycleI()
         Battle.current_battle.level = lastMarkedLevelLabyrinthauros or Constants.LEVEL_1
         Battle.current_battle.schematics.primordials = { Constants.LABYRINTHAUROS }
         broadcastToAll('Ambushed by Labyrinthauros, at Level ' .. lastMarkedLevelLabyrinthauros, Constants.WARNING_COLOR)
+        Battle.current_battle:setup()
     elseif hekatonBattles < labyrinthaurosBattles then
         Battle.current_battle.level = lastMarkedLevelHekaton or Constants.LEVEL_1
         Battle.current_battle.schematics.primordials = { Constants.HEKATON }
         broadcastToAll('Ambushed by Hekaton, at Level ' .. lastMarkedLevelHekaton, Constants.WARNING_COLOR)
+        Battle.current_battle:setup()
     else
-        Battle.current_battle.schematics.primordials = { Constants.HEKATON, Constants.LABYRINTHAUROS }
         broadcastToAll('Ambush levels are equal, you get to choose and set it up.', Constants.WARNING_COLOR)
+
+        GlobalUi.showConfirmationDialog('Which primordial do you want to setup?', Constants.HEKATON, function()
+            Battle.current_battle.level = lastMarkedLevelHekaton or Constants.LEVEL_1
+            Battle.current_battle.schematics.primordials = { Constants.HEKATON, }
+            Battle.current_battle:setup()
+        end, Constants.LABYRINTHAUROS, function()
+            Battle.current_battle.level = lastMarkedLevelLabyrinthauros or Constants.LEVEL_1
+            Battle.current_battle.schematics.primordials = { Constants.LABYRINTHAUROS, }
+            Battle.current_battle:setup()
+        end)
     end
-    
-    Battle.current_battle:setup()
 end
 
 function Battle.cleanupCurrentBattle()

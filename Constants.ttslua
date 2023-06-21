@@ -62,10 +62,16 @@ Constants.CYCLE_V = 'V'
 Constants.MIXED = 'Mixed'
 
 -- Primordials
+-- Cycle I
 Constants.HEKATON = 'Hekaton'
 Constants.LABYRINTHAUROS = 'Labyrinthauros'
 Constants.HERMESIAN_PURSUER = 'Hermesian Pursuer'
 Constants.ALPHA_TEMENOS = 'Alpha Temenos'
+-- Cycle II
+Constants.CYCLONUS = 'Cyclonus'
+Constants.THE_NIETZSCHEAN = 'The Nietzschean'
+Constants.THE_BURDEN = 'The Burden'
+Constants.CHIMERA_METASTASIOS = 'Chimera Metastasios'
 
 -- Factions
 Constants.MINOANS = 'Minoans'

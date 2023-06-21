@@ -1,7 +1,7 @@
 local GlobalUi = {}
 GlobalUi.__index = GlobalUi
 
-local Battle = require('Battle')
+local Battle
 local Constants = require('Constants')
 local Cycle = require('Cycle')
 local Options = require('Options')
@@ -10,6 +10,8 @@ local Ui = require('Ui')
 ------------------------------------------------------
 
 function GlobalUi.init()
+    Battle = Battle or require('Battle')
+
     GlobalUi.ui = {}
 
     ----------------------
@@ -90,6 +92,26 @@ function GlobalUi.init()
     GlobalUi.ui.battle_menu_panel:button({ id = 'pursuit-end-button', text = 'Pursuit\'s End Battle', fontSize = fontSize, width = battleSelectionWidth - 10, height = 40, onClick = function()
         Battle.setupBattle('Pursuit\'s End Battle', Constants.LEVEL_1)
     end })
+
+    GlobalUi.ui.battle_menu_panel:button({ id = 'the-cruel-lesson-button', text = 'The Cruel Lesson Battle', fontSize = fontSize, width = battleSelectionWidth - 10, height = 40, onClick = function()
+        Battle.setupBattle('The Cruel Lesson Battle', Constants.LEVEL_1)
+    end })
+
+    local theBurdenLayout = GlobalUi.ui.battle_menu_panel:horizontalLayout({ id = 'the-burden-layout-button', width = battleSelectionWidth - 10, height = 40, })
+    theBurdenLayout:text({ id = 'the-burden-label', text = Constants.THE_BURDEN, fontSize = fontSize, width = 145, color = 'White' })
+    for _, level in ipairs({ Constants.LEVEL_1, }) do
+        theBurdenLayout:button({ id = 'the-burden-' .. level .. '-button', fontSize = fontSize, text = tostring(level), onClick = function()
+            Battle.setupBattle('Burden Battle', level)
+        end })
+    end
+
+    local cyclonusLayout = GlobalUi.ui.battle_menu_panel:horizontalLayout({ id = 'cyclonus-layout-button', width = battleSelectionWidth - 10, height = 40, })
+    cyclonusLayout:text({ id = 'cyclonus-label', text = Constants.CYCLONUS, fontSize = fontSize, width = 145, color = 'White' })
+    for _, level in ipairs({ Constants.LEVEL_1, Constants.LEVEL_2, Constants.LEVEL_3, Constants.LEVEL_4, }) do
+        cyclonusLayout:button({ id = 'cyclonus-' .. level .. '-button', fontSize = fontSize, text = tostring(level), onClick = function()
+            Battle.setupBattle('Cyclonus Battle', level)
+        end })
+    end
 
     -----------------
     -- Cycle setup --

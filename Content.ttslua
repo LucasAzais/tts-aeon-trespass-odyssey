@@ -25,17 +25,22 @@ Content.battles = {
             terrains = {
                 {
                     name = 'Column',
-                    positions = { 
-                        { row = 2, column = 9 }, { row = 2, column = 12 }, { row = 3, column = 4 }, { row = 3, column = 17 }, { row = 6, column = 6 },
-                        { row = 6, column = 15 }, { row = 7, column = 3 }, { row = 7, column = 18 }, { row = 8, column = 3 }, { row = 8, column = 18 },
-                        { row = 9, column = 6 }, { row = 9, column = 15 }, { row = 12, column = 4 }, { row = 12, column = 17 }, { row = 13, column = 9 },
-                        { row = 13, column = 12 },
-                    },
-                    rotations = {
-                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
-                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
-                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
-                        { x = 0, y = 180, z = 0 },
+                    tiles = {
+                        { position = { row = 2, column = 9 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 2, column = 12 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 3, column = 4 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 3, column = 17 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 6, column = 6 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 7, column = 3 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 7, column = 18 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 8, column = 3 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 8, column = 18 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 9, column = 6 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 9, column = 15 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 12, column = 4 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 12, column = 17 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 13, column = 9 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 13, column = 12 }, rotation = { x = 0, y = 180, z = 0 }, },
                     },
                 },
             }
@@ -59,26 +64,30 @@ Content.battles = {
             terrains = {
                 {
                     name = 'Column',
-                    positions = { 
-                        { row = 2, column = 9 }, { row = 2, column = 12 }, { row = 3, column = 4 }, { row = 3, column = 17 }, { row = 5, column = 15 },
-                        { row = 6, column = 6 }, { row = 7, column = 3 }, { row = 7, column = 18 }, { row = 8, column = 3 }, { row = 8, column = 18 },
-                        { row = 9, column = 15 }, { row = 10, column = 6 }, { row = 12, column = 4 }, { row = 12, column = 17 }, { row = 13, column = 9 },
-                        { row = 13, column = 12 },
-                    },
-                    rotations = {
-                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
-                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
-                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
-                        { x = 0, y = 180, z = 0 },
+                    tiles = {
+                        { position = { row = 2, column = 9 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 2, column = 12 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 3, column = 4 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 3, column = 17 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 5, column = 15 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 6, column = 6 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 7, column = 3 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 7, column = 18 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 8, column = 3 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 8, column = 18 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 9, column = 15 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 10, column = 6 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 12, column = 4 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 12, column = 17 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 13, column = 9 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 13, column = 12 }, rotation = { x = 0, y = 180, z = 0 }, },
                     },
                 },
                 {
                     name = 'City',
-                    positions = { 
-                        { row = 5, column = 17 }, { row = 10, column = 4 },
-                    },
-                    rotations = {
-                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                    tiles = {
+                        { position = { row = 5, column = 17 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 10, column = 4 }, rotation = { x = 0, y = 180, z = 0 }, },
                     },
                 },
             }
@@ -100,51 +109,44 @@ Content.battles = {
             terrains = {
                 {
                     name = 'Column',
-                    positions = { 
-                        { row = 2, column = 9 }, { row = 3, column = 4 }, { row = 3, column = 17 }, { row = 5, column = 15 }, { row = 6, column = 6 }, 
-                        { row = 8, column = 18 }, { row = 9, column = 15 }, { row = 10, column = 6 }, { row = 12, column = 4 }, { row = 12, column = 17 },
-                        { row = 13, column = 12 },
-                    },
-                    rotations = {
-                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
-                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
-                        { x = 0, y = 180, z = 0 },
+                    tiles = {
+                        { position = { row = 2, column = 9 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 3, column = 4 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 3, column = 17 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 5, column = 15 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 6, column = 6 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 8, column = 18 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 9, column = 15 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 10, column = 6 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 12, column = 4 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 12, column = 17 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 13, column = 12 }, rotation = { x = 0, y = 180, z = 0 }, },
                     },
                 },
                 {
                     name = 'City',
-                    positions = { 
-                        { row = 5, column = 17 }, { row = 10, column = 4 },
-                    },
-                    rotations = {
-                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                    tiles = {
+                        { position = { row = 5, column = 17 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 10, column = 4 }, rotation = { x = 0, y = 180, z = 0 }, },
                     },
                 },
                 {
                     name = 'Maze Fissure L',
-                    positions = { 
-                        { row = 8, column = 9.5 },
-                    },
-                    rotations = {
-                        { x = 0, y = 270, z = 180 },
+                    tiles = {
+                        { position = { row = 8, column = 9.5 }, rotation = { x = 0, y = 270, z = 180 }, },
                     },
                 },
                 {
                     name = 'Maze Fissure O',
-                    positions = { 
-                        { row = 12.5, column = 8.5 },
-                    },
-                    rotations = {
-                        { x = 0, y = 180, z = 0 },
+                    tiles = {
+                        { position = { row = 12.5, column = 8.5 }, rotation = { x = 0, y = 180, z = 0 }, },
                     },
                 },
                 {
                     name = 'Maze Fissure I',
-                    positions = { 
-                        { row = 6.5, column = 3 }, { row = 7, column = 16.5 },
-                    },
-                    rotations = {
-                        { x = 0, y = 270, z = 0 }, { x = 0, y = 180, z = 0 },
+                    tiles = {
+                        { position = { row = 6.5, column = 3 }, rotation = { x = 0, y = 270, z = 0 }, },
+                        { position = { row = 7, column = 16.5 }, rotation = { x = 0, y = 180, z = 0 }, },
                     },
                 },
             }
@@ -170,31 +172,33 @@ Content.battles = {
             terrains = {
                 {
                     name = 'Labyrinth I',
-                    positions = { { row = 5, column = 7.5 }, },
-                    rotations = { { x = 0, y = 180, z = 0 }, },
+                    tiles = {
+                        { position = { row = 5, column = 7.5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                    },
                 },
                 {
                     name = 'Labyrinth Z',
-                    positions = { { row = 5, column = 12.5 }, },
-                    rotations = { { x = 0, y = 270, z = 180 }, },
+                    tiles = {
+                        { position = { row = 5, column = 12.5 }, rotation = { x = 0, y = 270, z = 180 }, },
+                    },
                 },
                 {
                     name = 'Labyrinth O',
-                    positions = { { row = 9.5, column = 7.5 }, },
-                    rotations = { { x = 0, y = 180, z = 0 }, },
+                    tiles = {
+                        { position = { row = 9.5, column = 7.5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                    },
                 },
                 {
                     name = 'Labyrinth L',
-                    positions = { { row = 9.5, column = 12 }, },
-                    rotations = { { x = 0, y = 0, z = 180 }, },
+                    tiles = {
+                        { position = { row = 9.5, column = 12 }, rotation = { x = 0, y = 0, z = 180 }, },
+                    },
                 },
                 {
                     name = 'City',
-                    positions = { 
-                        { row = 4, column = 3 }, { row = 11, column = 15 },
-                    },
-                    rotations = {
-                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                    tiles = {
+                        { position = { row = 4, column = 3 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 11, column = 15 }, rotation = { x = 0, y = 180, z = 0 }, },
                     },
                 },
             }
@@ -216,32 +220,34 @@ Content.battles = {
             terrains = {
                 {
                     name = 'Labyrinth I',
-                    positions = { { row = 4.5, column = 12 }, },
-                    rotations = { { x = 0, y = 90, z = 0 }, },
+                    tiles = {
+                        { position = { row = 4.5, column = 12 }, rotation = { x = 0, y = 90, z = 0 }, },
+                    },
                 },
                 {
                     name = 'Labyrinth L',
-                    positions = { { row = 9, column = 7.5 }, },
-                    rotations = { { x = 0, y = 90, z = 0 }, },
+                    tiles = {
+                        { position = { row = 9, column = 7.5 }, rotation = { x = 0, y = 90, z = 0 }, },
+                    },
                 },
                 {
                     name = 'Column',
-                    positions = { 
-                        { row = 6, column = 4 }, { row = 6, column = 15 }, { row = 7, column = 6 }, { row = 9, column = 15 }, { row = 10, column = 11 }, 
-                        { row = 11, column = 13 }, { row = 12, column = 12 }, { row = 13, column = 9 }, 
-                    },
-                    rotations = {
-                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
-                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                    tiles = {
+                        { position = { row = 6, column = 4 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 6, column = 15 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 7, column = 6 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 9, column = 15 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 10, column = 11 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 11, column = 13 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 12, column = 12 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 13, column = 9 }, rotation = { x = 0, y = 180, z = 0 }, },
                     },
                 },
                 {
                     name = 'City',
-                    positions = { 
-                        { row = 4, column = 4 }, { row = 11, column = 4 },
-                    },
-                    rotations = {
-                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                    tiles = {
+                        { position = { row = 4, column = 4 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 11, column = 4 }, rotation = { x = 0, y = 180, z = 0 }, },
                     },
                 },
             }
@@ -265,42 +271,46 @@ Content.battles = {
             terrains = {
                 {
                     name = 'Labyrinth I',
-                    positions = { { row = 7, column = 7.5 }, },
-                    rotations = { { x = 0, y = 180, z = 0 }, },
+                    tiles = {
+                        { position = { row = 7, column = 7.5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                    },
                 },
                 {
                     name = 'Labyrinth Z',
-                    positions = { { row = 2.5, column = 10 }, },
-                    rotations = { { x = 0, y = 180, z = 180 }, },
+                    tiles = {
+                        { position = { row = 2.5, column = 10 }, rotation = { x = 0, y = 180, z = 180 }, },
+                    },
                 },
                 {
                     name = 'Labyrinth O',
-                    positions = { { row = 12.5, column = 12.5 }, },
-                    rotations = { { x = 0, y = 180, z = 0 }, },
+                    tiles = {
+                        { position = { row = 12.5, column = 12.5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                    },
                 },
                 {
                     name = 'Labyrinth L',
-                    positions = { { row = 7.5, column = 14 }, },
-                    rotations = { { x = 0, y = 180, z = 0 }, },
+                    tiles = {
+                        { position = { row = 7.5, column = 14 }, rotation = { x = 0, y = 180, z = 0 }, },
+                    },
                 },
                 {
                     name = 'Column',
-                    positions = { 
-                        { row = 3, column = 7 }, { row = 3, column = 15 }, { row = 4, column = 5 }, { row = 4, column = 17 }, { row = 10, column = 5 }, 
-                        { row = 10, column = 17 }, { row = 11, column = 7 }, { row = 11, column = 15 }, 
-                    },
-                    rotations = {
-                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
-                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                    tiles = {
+                        { position = { row = 3, column = 7 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 3, column = 15 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 4, column = 5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 4, column = 17 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 10, column = 5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 10, column = 17 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 11, column = 7 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 11, column = 15 }, rotation = { x = 0, y = 180, z = 0 }, },
                     },
                 },
                 {
                     name = 'City',
-                    positions = { 
-                        { row = 2, column = 17 }, { row = 12, column = 5 },
-                    },
-                    rotations = {
-                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                    tiles = {
+                        { position = { row = 2, column = 17 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 12, column = 5 }, rotation = { x = 0, y = 180, z = 0 }, },
                     },
                 },
             }
@@ -324,42 +334,46 @@ Content.battles = {
             terrains = {
                 {
                     name = 'Labyrinth I',
-                    positions = { { row = 7, column = 7.5 }, },
-                    rotations = { { x = 0, y = 180, z = 0 }, },
+                    tiles = {
+                        { position = { row = 7, column = 7.5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                    },
                 },
                 {
                     name = 'Labyrinth Z',
-                    positions = { { row = 2.5, column = 10 }, },
-                    rotations = { { x = 0, y = 180, z = 180 }, },
+                    tiles = {
+                        { position = { row = 2.5, column = 10 }, rotation = { x = 0, y = 180, z = 180 }, },
+                    },
                 },
                 {
                     name = 'Labyrinth O',
-                    positions = { { row = 12.5, column = 12.5 }, },
-                    rotations = { { x = 0, y = 180, z = 0 }, },
+                    tiles = {
+                        { position = { row = 12.5, column = 12.5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                    },
                 },
                 {
                     name = 'Labyrinth L',
-                    positions = { { row = 7.5, column = 14 }, },
-                    rotations = { { x = 0, y = 180, z = 0 }, },
+                    tiles = {
+                        { position = { row = 7.5, column = 14 }, rotation = { x = 0, y = 180, z = 0 }, },
+                    },
                 },
                 {
                     name = 'Column',
-                    positions = { 
-                        { row = 3, column = 7 }, { row = 3, column = 15 }, { row = 4, column = 5 }, { row = 4, column = 17 }, { row = 10, column = 5 }, 
-                        { row = 10, column = 17 }, { row = 11, column = 7 }, { row = 11, column = 15 }, 
-                    },
-                    rotations = {
-                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
-                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                    tiles = {
+                        { position = { row = 3, column = 7 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 3, column = 15 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 4, column = 5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 4, column = 17 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 10, column = 5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 10, column = 17 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 11, column = 7 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 11, column = 15 }, rotation = { x = 0, y = 180, z = 0 }, },
                     },
                 },
                 {
                     name = 'City',
-                    positions = { 
-                        { row = 2, column = 17 }, { row = 12, column = 5 },
-                    },
-                    rotations = {
-                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                    tiles = {
+                        { position = { row = 2, column = 17 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 12, column = 5 }, rotation = { x = 0, y = 180, z = 0 }, },
                     },
                 },
             }
@@ -383,22 +397,32 @@ Content.battles = {
             terrains = {
                 {
                     name = 'Ambrosia Pool',
-                    positions = { { row = 2.5, column = 10.5 }, { row = 7.5, column = 5.5 }, { row = 7.5, column = 14.5 }, { row = 10.5, column = 10.5 }, },
-                    rotations = { { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, },
+                    tiles = {
+                        { position = { row = 2.5, column = 10.5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 7.5, column = 5.5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 7.5, column = 14.5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 10.5, column = 10.5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                    },
                 },
                 {
                     name = 'Column',
-                    positions = { 
-                        { row = 2, column = 9 }, { row = 2, column = 12 }, { row = 3, column = 17 }, { row = 4, column = 5 }, { row = 5, column = 3 },
-                        { row = 6, column = 3 }, { row = 6, column = 6 }, { row = 6, column = 15 }, { row = 9, column = 6 }, { row = 9, column = 15 },
-                        { row = 9, column = 18 }, { row = 10, column = 18 }, { row = 12, column = 4 }, { row = 12, column = 15 }, { row = 13, column = 9 },
-                        { row = 13, column = 12 },
-                    },
-                    rotations = {
-                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
-                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
-                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
-                        { x = 0, y = 180, z = 0 },
+                    tiles = {
+                        { position = { row = 2, column = 9 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 2, column = 12 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 3, column = 17 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 4, column = 5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 5, column = 3 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 6, column = 3 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 6, column = 6 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 6, column = 15 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 9, column = 6 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 9, column = 15 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 9, column = 18 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 10, column = 18 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 12, column = 4 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 12, column = 15 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 13, column = 9 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 13, column = 12 }, rotation = { x = 0, y = 180, z = 0 }, },
                     },
                 },
             }
@@ -422,25 +446,222 @@ Content.battles = {
             terrains = {
                 {
                     name = 'Ambrosia Pool',
-                    positions = { { row = 2.5, column = 10.5 }, { row = 7.5, column = 8.5 }, { row = 7.5, column = 12.5 }, { row = 10.5, column = 10.5 }, },
-                    rotations = { { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, },
+                    tiles = {
+                        { position = { row = 2.5, column = 10.5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 7.5, column = 8.5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 7.5, column = 12.5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 10.5, column = 10.5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                    },
                 },
                 {
                     name = 'Ambrosia Trail',
-                    positions = { { row = 4, column = 15 }, { row = 8, column = 4 }, { row = 13, column = 7 }, },
-                    rotations = { { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, },
+                    tiles = {
+                        { position = { row = 4, column = 15 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 8, column = 4 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 13, column = 7 }, rotation = { x = 0, y = 180, z = 0 }, },
+                    },
                 },
                 {
                     name = 'Column',
-                    positions = { 
-                        { row = 2, column = 9 }, { row = 3, column = 17 }, { row = 4, column = 5 }, { row = 5, column = 3 }, { row = 6, column = 6 }, 
-                        { row = 6, column = 15 }, { row = 9, column = 6 }, { row = 9, column = 18 }, { row = 10, column = 18 }, { row = 12, column = 4 }, 
-                        { row = 12, column = 15 }, { row = 13, column = 12 },
+                    tiles = {
+                        { position = { row = 2, column = 9 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 3, column = 17 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 4, column = 5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 5, column = 3 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 6, column = 6 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 6, column = 15 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 9, column = 6 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 9, column = 18 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 10, column = 18 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 12, column = 4 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 12, column = 15 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 13, column = 12 }, rotation = { x = 0, y = 180, z = 0 }, },
                     },
-                    rotations = {
-                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
-                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
-                        { x = 0, y = 180, z = 0 }, { x = 0, y = 180, z = 0 },
+                },
+            }
+        },
+    },
+    ['The Cruel Lesson Battle'] = {
+        {
+            levels = { Constants.LEVEL_1, },
+            primordials = { Constants.THE_NIETZSCHEAN, },
+            primordial_start_position_rotation = { 
+                { position = { row = 7.5, column = 14.5 }, weight = 1,
+                            rotations = { { rotation = Constants.ROTATION_WEST, weight = 1 } },
+                },
+            },
+            titan_start_positions = {
+                { row = 6, column = 10 }, { row = 7, column = 10 }, { row = 8, column = 10 }, { row = 9, column = 10 },
+            },
+            terrains = {
+                {
+                    name = 'Fortified City',
+                    tiles = {
+                        { position = { row = 3, column = 6 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 13, column = 18 }, rotation = { x = 0, y = 180, z = 0 }, },
+                    },
+                },
+                {
+                    name = 'Spartan River Works 1x4',
+                    tiles = {
+                        { position = { row = 3.5, column = 16 }, rotation = { x = 0, y = 270, z = 0 }, },
+                        { position = { row = 12.5, column = 16 }, rotation = { x = 0, y = 270, z = 0 }, },
+                    },
+                },
+                {
+                    name = 'Spartan River Works 1x5',
+                    tiles = {
+                        { position = { row = 1, column = 7 }, rotation = { x = 0, y = 0, z = 0 }, },
+                        { position = { row = 1, column = 13 }, rotation = { x = 0, y = 0, z = 0 }, },
+                        { position = { row = 8, column = 16 }, rotation = { x = 0, y = 270, z = 0 }, },
+                    },
+                },
+                {
+                    name = 'Spartan River Works 1x1 Corner',
+                    tiles = {
+                        { position = { row = 1, column = 16 }, rotation = { x = 0, y = 270, z = 180 }, },
+                    },
+                },
+                {
+                    name = 'Spartan River Works 1x1 End',
+                    tiles = {
+                        { position = { row = 1, column = 10 }, rotation = { x = 0, y = 0, z = 180 }, },
+                    },
+                },
+                {
+                    name = 'Argo Hull 1x5',
+                    tiles = {
+                        { position = { row = 3, column = 1 }, rotation = { x = 0, y = 90, z = 180 }, },
+                        { position = { row = 8, column = 1 }, rotation = { x = 0, y = 90, z = 0 }, },
+                    },
+                },
+                {
+                    name = 'Argo Hull 1x4',
+                    tiles = {
+                        { position = { row = 12.5, column = 1 }, rotation = { x = 0, y = 90, z = 0 }, },
+                    },
+                },
+            }
+        },
+    },
+    ['Burden Battle'] = {
+        {
+            levels = { Constants.LEVEL_1, },
+            primordials = { Constants.THE_BURDEN, },
+            primordial_start_position_rotation = { 
+                { position = { row = 7.5, column = 10.5 }, weight = 1,
+                            rotations = { { rotation = Constants.ROTATION_WEST, weight = 1 } },
+                },
+            },
+            titan_start_positions = {
+                { row = 6, column = 3 }, { row = 7, column = 3 }, { row = 8, column = 3 }, { row = 9, column = 3 },
+            },
+            terrains = {
+                {
+                    name = 'Column',
+                    tiles = {
+                        { position = { row = 1, column = 4 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 4, column = 10 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 5, column = 16 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 6, column = 11 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 9, column = 1 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 10, column = 15 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 11, column = 8 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 11, column = 12 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 14, column = 7 }, rotation = { x = 0, y = 180, z = 0 }, },
+                    },
+                },
+                {
+                    name = 'Cliff I',
+                    tiles = {
+                        { position = { row = 2.5, column = 7 }, rotation = { x = 0, y = 270, z = 0 }, },
+                        { position = { row = 3, column = 15.5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 6.5, column = 5 }, rotation = { x = 0, y = 270, z = 0 }, },
+                        { position = { row = 12, column = 15.5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                    },
+                },
+                {
+                    name = 'Cliff L',
+                    tiles = {
+                        { position = { row = 1.5, column = 9 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 4, column = 1.5 }, rotation = { x = 0, y = 270, z = 0 }, },
+                        { position = { row = 13.5, column = 9 }, rotation = { x = 0, y = 0, z = 180 }, },
+                    },
+                },
+                {
+                    name = 'Cliff O',
+                    tiles = {
+                        { position = { row = 7.5, column = 17.5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 8.5, column = 8.5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 8.5, column = 14.5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                    },
+                },
+                {
+                    name = 'Cliff Z',
+                    tiles = {
+                        { position = { row = 2.5, column = 12 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 3.5, column = 19 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 11, column = 3.5 }, rotation = { x = 0, y = 270, z = 0 }, },
+                        { position = { row = 11.5, column = 19 }, rotation = { x = 0, y = 180, z = 180 }, },
+                        { position = { row = 12.5, column = 12 }, rotation = { x = 0, y = 180, z = 180 }, },
+                    },
+                },
+            }
+        },
+    },
+    ['Cyclonus Battle'] = {
+        {
+            levels = { Constants.LEVEL_1, Constants.LEVEL_2, Constants.LEVEL_3, Constants.LEVEL_4, },
+            primordials = { Constants.CYCLONUS, },
+            primordial_start_position_rotation = { 
+                { position = { row = 8.5, column = 10.5 }, weight = 1,
+                            rotations = { { rotation = Constants.ROTATION_NORTH, weight = 1 },
+                                          { rotation = Constants.ROTATION_EAST, weight = 1 },
+                                          { rotation = Constants.ROTATION_SOUTH, weight = 1 },
+                                          { rotation = Constants.ROTATION_WEST, weight = 1 } },
+                },
+            },
+            titan_start_positions = {
+                { row = 6, column = 8 }, { row = 6, column = 13 }, { row = 11, column = 8 }, { row = 11, column = 13 },
+            },
+            terrains = {
+                {
+                    name = 'Fortified City',
+                    tiles = {
+                        { position = { row = 4, column = 7 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 13, column = 14 }, rotation = { x = 0, y = 180, z = 0 }, },
+                    },
+                },
+                {
+                    name = 'Spartan River Works 1x1 Corner',
+                    tiles = {
+                        { position = { row = 9, column = 5 }, rotation = { x = 0, y = 270, z = 0 }, },
+                        { position = { row = 9, column = 20 }, rotation = { x = 0, y = 0, z = 180 }, },
+                        { position = { row = 10, column = 20 }, rotation = { x = 0, y = 180, z = 0 }, },
+                    },
+                },
+                {
+                    name = 'Spartan River Works 1x1 End',
+                    tiles = {
+                        { position = { row = 1, column = 10 }, rotation = { x = 0, y = 90, z = 0 }, },
+                        { position = { row = 7, column = 10 }, rotation = { x = 0, y = 90, z = 0 }, },
+                    },
+                },
+                {
+                    name = 'Spartan River Works 1x4',
+                    tiles = {
+                        { position = { row = 2.5, column = 16 }, rotation = { x = 0, y = 90, z = 0 }, },
+                        { position = { row = 6.5, column = 16 }, rotation = { x = 0, y = 90, z = 180 }, },
+                        { position = { row = 9, column = 2.5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 12.5, column = 16 }, rotation = { x = 0, y = 90, z = 0 }, },
+                    },
+                },
+                {
+                    name = 'Spartan River Works 1x5',
+                    tiles = {
+                        { position = { row = 3, column = 5 }, rotation = { x = 0, y = 270, z = 0 }, },
+                        { position = { row = 4, column = 10 }, rotation = { x = 0, y = 90, z = 180 }, },
+                        { position = { row = 12, column = 10 }, rotation = { x = 0, y = 90, z = 0 }, },
                     },
                 },
             }
@@ -464,7 +685,23 @@ Content.primordials = {
     {
         name = Constants.ALPHA_TEMENOS,
         size = {width = 3, height = 3},
-    }
+    },
+    {
+        name = Constants.CYCLONUS,
+        size = {width = 2, height = 2},
+    },
+    {
+        name = Constants.THE_NIETZSCHEAN,
+        size = {width = 2, height = 2},
+    },
+    {
+        name = Constants.THE_BURDEN,
+        size = {width = 2, height = 2},
+    },
+    {
+        name = Constants.CHIMERA_METASTASIOS,
+        size = {width = 3, height = 3},
+    },
 }
 
 Content.terrain = {
@@ -547,7 +784,51 @@ Content.terrain = {
     {
         name = 'Argo Hull 1x5',
         size = {width = 5, height = 1},
-    }
+    },
+    {
+        name = 'Fortified City',
+        size = {width = 3, height = 3},
+    },
+    {
+        name = 'Termophylaed City',
+        size = {width = 3, height = 3},
+    },
+    {
+        name = 'Spartan River Works Z',
+        size = {width = 3, height = 2},
+    },
+    {
+        name = 'Spartan River Works 1x4',
+        size = {width = 4, height = 1},
+    },
+    {
+        name = 'Spartan River Works 1x5',
+        size = {width = 5, height = 1},
+    },
+    {
+        name = 'Spartan River Works 1x1 End',
+        size = {width = 1, height = 1},
+    },
+    {
+        name = 'Spartan River Works 1x1 Corner',
+        size = {width = 1, height = 1},
+    },
+    {
+        name = 'Cliff O',
+        size = {width = 2, height = 2},
+    },
+    {
+        name = 'Cliff Z',
+        size = {width = 3, height = 2},
+    },
+    {
+        name = 'Cliff L',
+        size = {width = 3, height = 2},
+    },
+    {
+        name = 'Cliff I',
+        size = {width = 4, height = 1},
+    },
 }
 
 function Content.getByName(content, name)

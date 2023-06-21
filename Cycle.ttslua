@@ -56,7 +56,7 @@ end
 function Cycle.setupCycle(cycle, params)
     if not Cycle.CYCLES[cycle] then return end
 
-    broadcastToAll('Setting up cycle, please wait.', Constants.WARNING_COLOR)
+    broadcastToAll('Setting up cycle, please wait (~20s).', Constants.WARNING_COLOR)
     Cycle['setupCycle' .. cycle](params)
 
     Wait.condition(function()
