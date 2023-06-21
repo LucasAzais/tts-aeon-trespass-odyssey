@@ -92,10 +92,10 @@ function Grid:snapPosition(object, size)
     local epsilon = 0.001
 
     if -- Outside the grid, just do nothing
-        snapCol - widthRadius < -0.5 - epsilon
-        or snapCol + widthRadius >= self.columns + epsilon
-        or snapRow - heightRadius < -0.5 - epsilon
-        or snapRow + heightRadius >= self.rows + epsilon
+        (snapCol - widthRadius) <  - epsilon
+        or (snapCol + widthRadius) >= self.columns + 0.5 + epsilon
+        or (snapRow - heightRadius) < - epsilon
+        or (snapRow + heightRadius) >= self.rows + 0.5 + epsilon
     then
         return worldPosition
     else
