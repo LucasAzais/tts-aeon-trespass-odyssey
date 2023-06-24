@@ -487,15 +487,15 @@ function Battle.setupAmbushBattleCycleI()
     local hekatonBattles, labyrinthaurosBattles = 0, 0
     local lastMarkedLevelHekaton, lastMarkedLevelLabyrinthauros = 0, 0
     
-    for index, element in ipairs(Argo.getEvolutionTrack() or {}) do
+    for index, element in ipairs(Argo.getData(Constants.CYCLE_I):getEvolutionTrack() or {}) do
         if element[Constants.HEKATON] == true then
             hekatonBattles = hekatonBattles + 1
-            lastMarkedLevelHekaton = Argo.getLevelFromEvolutionIndex(index)
+            lastMarkedLevelHekaton = Argo.getData(Constants.CYCLE_I):getLevelFromEvolutionIndex(Constants.CYCLE_I, index)
         end
 
         if element[Constants.LABYRINTHAUROS] == true then
             labyrinthaurosBattles = labyrinthaurosBattles + 1
-            lastMarkedLevelLabyrinthauros = Argo.getLevelFromEvolutionIndex(index)
+            lastMarkedLevelLabyrinthauros = Argo.getData(Constants.CYCLE_I):getLevelFromEvolutionIndex(Constants.CYCLE_I, index)
         end
     end
 
@@ -544,9 +544,6 @@ function Battle:cleanup()
             terrainCardsBag.putObject(getObjectFromGUID(card.guid))
         end
     end
-
-    -- Reset all triskelions
-    Triskelion.resetAll()
 
     Log:debug('%s cleaned up.', self)
 end

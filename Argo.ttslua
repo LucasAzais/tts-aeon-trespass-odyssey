@@ -7,7 +7,6 @@ local Constants = require('Constants')
 local EventManager = require('EventManager')
 local GlobalUi = require('GlobalUi')
 local Log = require('Log').ForModule('Argo')
-local Options = require('Options')
 local Ui = require('Ui')
 local Utils = require('Utils')
 
@@ -25,21 +24,46 @@ Argo.SHEET_ROTATION = {60.45, 180.00, 0.00}
 Argo.SHEET_SCALE = {16.46, 1.00, 16.46}
 Argo.SHEET_URL = {
     [Constants.CYCLE_I] = 'http://cloud-3.steamusercontent.com/ugc/2064383278577606165/AFFB9737557EC154FAA960A8AC24101B05D39A1A/',
-    [Constants.CYCLE_II] = 'http://cloud-3.steamusercontent.com/ugc/2055377100655086003/8518F02014AC26C787188C1623EBC6B546250F1F/',
-    [Constants.CYCLE_III] = 'http://cloud-3.steamusercontent.com/ugc/2055377100655086102/082EF198E73D335AEAB39DE861C2D40DB75CDA36/',
+    [Constants.CYCLE_II] = 'http://cloud-3.steamusercontent.com/ugc/2049748969031541282/34A9A01AE8E4F08A2B52D821EAE2F1DD65CEFE93/',
+    [Constants.CYCLE_III] = 'http://cloud-3.steamusercontent.com/ugc/2049748969031541382/9750DBCB4D3FF554F95918DC4AB815B80C5B7594/',
 }
 
 Argo.EVOLUTION_INDEX_TO_LEVEL = {
-    [1] = Constants.LEVEL_0,
-    [2] = Constants.LEVEL_1,
-    [3] = Constants.LEVEL_1,
-    [4] = Constants.LEVEL_2,
-    [5] = Constants.LEVEL_2,
-    [6] = Constants.LEVEL_2,
-    [7] = Constants.LEVEL_3,
-    [8] = Constants.LEVEL_4,
-    [9] = Constants.LEVEL_4,
-    [10] = Constants.LEVEL_4,
+    [Constants.CYCLE_I] = {
+        [1] = Constants.LEVEL_0,
+        [2] = Constants.LEVEL_1,
+        [3] = Constants.LEVEL_1,
+        [4] = Constants.LEVEL_2,
+        [5] = Constants.LEVEL_2,
+        [6] = Constants.LEVEL_2,
+        [7] = Constants.LEVEL_3,
+        [8] = Constants.LEVEL_4,
+        [9] = Constants.LEVEL_4,
+        [10] = Constants.LEVEL_4,
+    },
+    [Constants.CYCLE_II] = {
+        [1] = Constants.LEVEL_1,
+        [2] = Constants.LEVEL_1,
+        [3] = Constants.LEVEL_2,
+        [4] = Constants.LEVEL_2,
+        [5] = Constants.LEVEL_3,
+        [6] = Constants.LEVEL_3,
+        [7] = Constants.LEVEL_4,
+        [8] = Constants.LEVEL_4,
+        [9] = Constants.LEVEL_4,
+    },
+    [Constants.CYCLE_III] = {
+        [1] = Constants.LEVEL_1,
+        [2] = Constants.LEVEL_1,
+        [3] = Constants.LEVEL_2,
+        [4] = Constants.LEVEL_2,
+        [5] = Constants.LEVEL_3,
+        [6] = Constants.LEVEL_3,
+        [7] = Constants.LEVEL_4,
+        [8] = Constants.LEVEL_4,
+        [9] = Constants.LEVEL_4,
+        [10] = Constants.LEVEL_4,
+    },
 }
 
 -- TODO: This about making everything cycle specific? like hull = {[Cycle.CYCLE_I] = 0, [Cycle.CYCLE_II] = 0, [Cycle.CYCLE_III] = 0,}
@@ -47,13 +71,18 @@ Argo.EVOLUTION_INDEX_TO_LEVEL = {
 function Argo.init(savedData)
     Battle = Battle or require('Battle')
 
-    if Options.getCurrentCycle() then
-        Argo.reset(savedData)
+    Argo.DATA = {}
+    for cycle, _ in pairs(savedData) do
+        Argo.DATA[cycle] = Argo.create(savedData[cycle])
     end
 end
 
-function Argo.spawnSheet()
-    if not Options.getCurrentCycle() then return end
+function Argo.getData(cycle)
+    return Argo.DATA[cycle]
+end
+
+function Argo.spawnSheet(params)
+    if not params or not params.cycle then return end
 
     local argoSheet = spawnObject({
         type = 'Custom_Tile',
@@ -64,58 +93,68 @@ function Argo.spawnSheet()
         callback_function = function(spawnedObject)
             spawnedObject.setLock(true)
             spawnedObject.addTag(Constants.ARGO_SHEET)
-            Argo.reset()
+            spawnedObject.addTag('Cycle' .. params.cycle)
         end
     })
 
     argoSheet.setCustomObject({
-        image = Argo.SHEET_URL[Options.getCurrentCycle()],
+        image = Argo.SHEET_URL[params.cycle],
         type = 0,
         thickness = 0.1,
     })
 
+    params.sheetGUID = argoSheet.getGUID()
+    if Argo.DATA[params.cycle] then
+        broadcastToAll('The argo content for cycle ' .. params.cycle .. ' has been overwritten with a new sheet.\n Reload your save if this was an accident.', Color.Red)
+    end
+    Argo.DATA[params.cycle] = Argo.create(params)
+
     return argoSheet
 end
 
-function Argo.reset(params)
-    if not Options.getCurrentCycle() then return end
-    if not params then params = {} end 
+function Argo.create(params)
+    if not params or not params.cycle then return end
+    
+    local argo = { 
+        cycle = params.cycle,
+    }
+    setmetatable(argo, Argo)
 
-    Argo.hull = params.hull or 0
-    Argo.hull_unlocked = params.hull_unlocked or false
-    Argo.crew = params.crew or 0
-    Argo.crew_unlocked = params.crew_unlocked or false
-    Argo.story_card = params.story_card or nil
-    Argo.doom_card = params.doom_card or ''
-    Argo.map_tile = params.map_tile or ''
-    Argo.humanity = params.humanity or 0
-    Argo.defectors = params.defectors or 0
-    Argo.argo_fate = params.argo_fate or 0
-    Argo.argo_knowledge = params.argo_knowledge or 0
-    Argo.strangers = params.strangers or 0
-    Argo.abilities_limit = params.abilities_limit or 0
-    Argo.current_titans = params.current_titans or 0
-    Argo.max_titans = params.max_titans or 0
-    Argo.titans_list1 = params.titans_list1
-    if Argo.titans_list1 == nil then
-        Argo.titans_list1 = {}
+    argo.hull = params.hull or 0
+    argo.hull_unlocked = params.hull_unlocked or false
+    argo.crew = params.crew or 0
+    argo.crew_unlocked = params.crew_unlocked or false
+    argo.story_card = params.story_card or nil
+    argo.doom_card = params.doom_card or ''
+    argo.map_tile = params.map_tile or ''
+    argo.humanity = params.humanity or 0
+    argo.defectors = params.defectors or 0
+    argo.argo_fate = params.argo_fate or 0
+    argo.argo_knowledge = params.argo_knowledge or 0
+    argo.strangers = params.strangers or 0
+    argo.abilities_limit = params.abilities_limit or 0
+    argo.current_titans = params.current_titans or 0
+    argo.max_titans = params.max_titans or 0
+    argo.titans_list1 = params.titans_list1
+    if not argo.titans_list1 then
+        argo.titans_list1 = {}
         for i = 1, 10 do
-            table.insert(Argo.titans_list1, '')
+            table.insert(argo.titans_list1, '')
         end
     end
 
-    Argo.titans_list2 = params.titans_list2
-    if Argo.titans_list2 == nil then
-        Argo.titans_list2 = {}
+    argo.titans_list2 = params.titans_list2
+    if not argo.titans_list2 then
+        argo.titans_list2 = {}
         for i = 1, 10 do
-            table.insert(Argo.titans_list2, '')
+            table.insert(argo.titans_list2, '')
         end
     end
 
-    Argo.adventure_tracks = params.adventure_tracks 
-    if not Argo.adventure_tracks then
-        if Options.getCurrentCycle() == Constants.CYCLE_I then
-            Argo.adventure_tracks = {
+    argo.adventure_tracks = params.adventure_tracks 
+    if not argo.adventure_tracks then
+        if argo.cycle == Constants.CYCLE_I then
+            argo.adventure_tracks = {
                 [Constants.FATED_CONUNDRUM] = {false, 0, 0, 0, false},
                 [Constants.PLIGHT_OF_THE_PEOPLE] = {false, 0, 0, 0, false},
                 [Constants.HIDDEN_IN_PLAIN_SIGHT] = {false, 0, 0, 0, false},
@@ -125,8 +164,8 @@ function Argo.reset(params)
                 [Constants.DREAMS_LAID_BARE] = {false, 0, 0, 0, false},
                 [Constants.TUTORIAL] = {false, 0, false},
             }
-        elseif Options.getCurrentCycle() == Constants.CYCLE_II then
-            Argo.adventure_tracks = {
+        elseif argo.cycle == Constants.CYCLE_II then
+            argo.adventure_tracks = {
                 [Constants.CONSIDER_THE_ANT] = {false, 0, 0, false},
                 [Constants.THE_OTHER_THERMOPYLAE] = {false, 0, 0, false},
                 [Constants.FROM_THE_ASHES] = {false, 0, 0, false},
@@ -136,8 +175,8 @@ function Argo.reset(params)
                 [Constants.TRUTH_TO_WEAKNESS] = {false, 0, 0, false},
                 [Constants.WHEN_THE_LAND_MEETS_THE_SEA] = {false, 0, 0, false},
             }
-        elseif Options.getCurrentCycle() == Constants.CYCLE_III then
-            Argo.adventure_tracks = {
+        elseif argo.cycle == Constants.CYCLE_III then
+            argo.adventure_tracks = {
                 [Constants.ROAD_LESS_TRAVELED] = {false, 0, 0, 0, false},
                 [Constants.CHILDREN_OF_THE_SUN] = {false, 0, 0, 0, false},
                 [Constants.WHAT_WE_LEFT_BEHIND] = {false, 0, 0, 0, false},
@@ -149,22 +188,22 @@ function Argo.reset(params)
         end
     end
 
-    Argo.diplomacy_tracks = params.diplomacy_tracks
-    if not Argo.diplomacy_tracks then
-        if Options.getCurrentCycle() == Constants.CYCLE_I then
-            Argo.diplomacy_tracks = {
+    argo.diplomacy_tracks = params.diplomacy_tracks
+    if not argo.diplomacy_tracks then
+        if argo.cycle == Constants.CYCLE_I then
+            argo.diplomacy_tracks = {
                 [Constants.MINOANS] = 0,
                 [Constants.LABYRINTHIANS] = 0,
                 [Constants.HORNSWORN] = 0,
             }
-        elseif Options.getCurrentCycle() == Constants.CYCLE_II then
-            Argo.diplomacy_tracks = {
+        elseif argo.cycle == Constants.CYCLE_II then
+            argo.diplomacy_tracks = {
                 [Constants.HELOTS] = 0,
                 [Constants.CYCLOPES] = 0,
                 [Constants.SYMMACHY] = 0,
             }
-        elseif Options.getCurrentCycle() == Constants.CYCLE_III then
-            Argo.diplomacy_tracks = {
+        elseif argo.cycle == Constants.CYCLE_III then
+            argo.diplomacy_tracks = {
                 [Constants.SUNHEIRS] = 0,
                 [Constants.DELPHIANS] = 0,
                 [Constants.TWILIGHT_WATCH] = 0,
@@ -172,14 +211,14 @@ function Argo.reset(params)
         end
     end
 
-    Argo.godforms = params.godforms or {}
-    Argo.summons = params.summons or {}
-    Argo.summons_limit = params.summons_limit or 0
+    argo.godforms = params.godforms or {}
+    argo.summons = params.summons or {}
+    argo.summons_limit = params.summons_limit or 0
 
-    Argo.evolution_track = params.evolution_track
-    if not Argo.evolution_track then
-        if Options.getCurrentCycle() == Constants.CYCLE_I then
-            Argo.evolution_track = {
+    argo.evolution_track = params.evolution_track
+    if not argo.evolution_track then
+        if argo.cycle == Constants.CYCLE_I then
+            argo.evolution_track = {
                 [1] = { [Constants.HEKATON] = false, },
                 [2] = { [Constants.HEKATON] = false, [Constants.LABYRINTHAUROS] = false },
                 [3] = { [Constants.MIXED] = false },
@@ -191,796 +230,823 @@ function Argo.reset(params)
                 [9] = { [Constants.HEKATON] = false, [Constants.LABYRINTHAUROS] = false },
                 [10] = { [Constants.MIXED] = false },
             }
-        elseif Options.getCurrentCycle() == Constants.CYCLE_II then
-        elseif Options.getCurrentCycle() == Constants.CYCLE_III then
+        elseif argo.cycle == Constants.CYCLE_II then
+            argo.evolution_track = {
+                [1] = { [Constants.CYCLONUS] = false, [Constants.CHIMERA_METASTASIOS] = false, },
+                [2] = { [Constants.MIXED] = false },
+                [3] = { [Constants.CYCLONUS] = false, [Constants.CHIMERA_METASTASIOS] = false, },
+                [4] = { [Constants.MIXED] = false },
+                [5] = { [Constants.MIXED] = false },
+                [6] = { [Constants.CYCLONUS] = false, [Constants.CHIMERA_METASTASIOS] = false, },
+                [7] = { [Constants.CYCLONUS] = false, [Constants.CHIMERA_METASTASIOS] = false, },
+                [8] = { [Constants.CYCLONUS] = false, [Constants.CHIMERA_METASTASIOS] = false, },
+                [9] = { [Constants.MIXED] = false },
+            }
+        elseif argo.cycle == Constants.CYCLE_III then
+            argo.evolution_track = {}
         end
     end
 
-    Argo.boss_track = params.boss_track or 0
-    Argo.adversary_track = params.adversary_track or 0
-    Argo.adversary_unlocked = params.adversary_unlocked or false
+    argo.boss_track = params.boss_track or 0
+    argo.adversary_track = params.adversary_track or 0
+    argo.adversary_unlocked = params.adversary_unlocked or false
 
     -- Cycle I resources
-    Argo.resources = params.resources or {}
-    if Options.getCurrentCycle() == Constants.CYCLE_I then
-        Argo.resources.trireme = params.trireme or 0
-        Argo.resources.trireme_note = params.trireme_note or {'', ''}
-        Argo.resources.monument = params.monument or 0
-        Argo.resources.monument_note = params.monument_note or {'', ''}
-        Argo.resources.armament = params.armament or 0
-        Argo.resources.armament_note = params.armament_note or {'', ''}
+    argo.resources = params.resources or nil
+    if not argo.resources then
+        argo.resources = {}
+        if argo.cycle == Constants.CYCLE_I then
+            argo.resources.trireme = params.trireme or 0
+            argo.resources.trireme_note = params.trireme_note or {'', ''}
+            argo.resources.monument = params.monument or 0
+            argo.resources.monument_note = params.monument_note or {'', ''}
+            argo.resources.armament = params.armament or 0
+            argo.resources.armament_note = params.armament_note or {'', ''}
 
-        Argo.resources.muscle_cluster = params.muscle_cluster or 0
-        Argo.resources.muscle_cluster_note = params.muscle_cluster_note or {'', ''}
-        Argo.resources.calcified_knucle_bone = params.calcified_knucle_bone or 0
-        Argo.resources.calcified_knucle_bone_note = params.calcified_knucle_bone_note or {'', ''}
-        Argo.resources.infused_mechanism = params.infused_mechanism or 0
-        Argo.resources.infused_mechanism_note = params.infused_mechanism_note or {'', ''}
-        Argo.resources.fleshy_mantle = params.fleshy_mantle or 0
-        Argo.resources.fleshy_mantle_note = params.fleshy_mantle_note or {'', ''}
-        Argo.resources.fear_essence = params.fear_essence or 0
-        Argo.resources.fear_essence_note = params.fear_essence_note or {'', ''}
-        Argo.resources.maze_fragment = params.maze_fragment or 0
-        Argo.resources.maze_fragment_note = params.maze_fragment_note or {'', ''}
-        Argo.resources.grotesque_beak = params.grotesque_beak or 0
-        Argo.resources.grotesque_beak_note = params.grotesque_beak_note or {'', ''}
-        Argo.resources.powdered_matter = params.powdered_matter or 0
-        Argo.resources.powdered_matter_note = params.powdered_matter_note or {'', ''}
-        Argo.resources.raw_ambrosia = params.raw_ambrosia or 0
-        Argo.resources.raw_ambrosia_note = params.raw_ambrosia_note or {'', ''}
-        Argo.resources.cores_note = params.cores_note or {'', ''}
+            argo.resources.muscle_cluster = params.muscle_cluster or 0
+            argo.resources.muscle_cluster_note = params.muscle_cluster_note or {'', ''}
+            argo.resources.calcified_knucle_bone = params.calcified_knucle_bone or 0
+            argo.resources.calcified_knucle_bone_note = params.calcified_knucle_bone_note or {'', ''}
+            argo.resources.infused_mechanism = params.infused_mechanism or 0
+            argo.resources.infused_mechanism_note = params.infused_mechanism_note or {'', ''}
+            argo.resources.fleshy_mantle = params.fleshy_mantle or 0
+            argo.resources.fleshy_mantle_note = params.fleshy_mantle_note or {'', ''}
+            argo.resources.fear_essence = params.fear_essence or 0
+            argo.resources.fear_essence_note = params.fear_essence_note or {'', ''}
+            argo.resources.maze_fragment = params.maze_fragment or 0
+            argo.resources.maze_fragment_note = params.maze_fragment_note or {'', ''}
+            argo.resources.grotesque_beak = params.grotesque_beak or 0
+            argo.resources.grotesque_beak_note = params.grotesque_beak_note or {'', ''}
+            argo.resources.powdered_matter = params.powdered_matter or 0
+            argo.resources.powdered_matter_note = params.powdered_matter_note or {'', ''}
+            argo.resources.raw_ambrosia = params.raw_ambrosia or 0
+            argo.resources.raw_ambrosia_note = params.raw_ambrosia_note or {'', ''}
+            argo.resources.cores_note = params.cores_note or {'', ''}
 
-        Argo.resources.priests = params.priests or 0
-        Argo.resources.priests_note = params.priests_note or {'', ''}
-        Argo.resources.sisyphus_tears = params.sisyphus_tears or 0
-        Argo.resources.sisyphus_tears_note = params.sisyphus_tears_note or {'', ''}
-        Argo.resources.rare_resources_note = params.rare_resources_note or {'', ''}
-    -- Cycle II resources
-    elseif Options.getCurrentCycle() == Constants.CYCLE_II then
-    -- Cycle III resources
-    elseif Options.getCurrentCycle() == Constants.CYCLE_III then
+            argo.resources.priests = params.priests or 0
+            argo.resources.priests_note = params.priests_note or {'', ''}
+            argo.resources.sisyphus_tears = params.sisyphus_tears or 0
+            argo.resources.sisyphus_tears_note = params.sisyphus_tears_note or {'', ''}
+            argo.resources.rare_resources_note = params.rare_resources_note or {'', ''}
+        -- Cycle II resources
+        elseif argo.cycle == Constants.CYCLE_II then
+        -- Cycle III resources
+        elseif argo.cycle == Constants.CYCLE_III then
+        end
     end
 
-    Argo.argo_sheet = getObjectsWithTag(Constants.ARGO_SHEET)[1]
-    if not Argo.argo_sheet then
-        Log:error('Could not find argo sheet with tag %s', Constants.ARGO_SHEET)
-        broadcastToAll('Could not find argo sheet. Create one with tag ' .. Constants.ARGO_SHEET 
-                .. ' then save and reload.', Color.Red)
+    local sheet = nil
+    if params.sheetGUID then
+        sheet = getObjectFromGUID(params.sheetGUID) 
+        argo.sheetGUID = params.sheetGUID
     else
-        Argo.createSheetUi(true)
+        sheet = getObjectsWithAllTags({Constants.ARGO_SHEET, 'Cycle'..argo.cycle})[1]
+        if sheet then argo.sheetGUID = sheet.getGUID() end
     end
+
+    if not sheet then
+        Log:error('Could not find argo sheet with tags %s and %s', Constants.ARGO_SHEET, 'Cycle' .. argo.cycle)
+        broadcastToAll('Could not find argo sheet. Create one with tags ' .. Constants.ARGO_SHEET .. ' and Cycle' .. argo.cycle 
+                .. ' then save and reload.', Color.Red)
+        return nil
+    else
+        argo:createSheetUi(true)
+    end
+
+    return argo
 end
 
-function Argo.createSheetUi(refresh)
-    if not Options.getCurrentCycle() then return end
-    if not Argo.argo_sheet then return end
+function Argo:createSheetUi(refresh)
+    if not self.cycle then return end
+    if not self.sheetGUID then return end
 
-    Argo.uiRoot = Ui.createRootOnObject('argo-sheet-root', Argo.argo_sheet, 1.2)
-    Argo.uiRoot:wipe()
-    Argo.ui = {}
+    local sheet = getObjectFromGUID(self.sheetGUID)
 
-    Argo.argo_sheet.UI.setCustomAssets(Constants.CUSTOM_ASSETS)
+    self.ui = {}
+    self.ui.root = Ui.createRootOnObject('argo-sheet-root', sheet, 1.2)
+    self.ui.root:wipe()
 
-    if Options.getCurrentCycle() == Constants.CYCLE_I then
-        Argo.ui.main_panel = Argo.uiRoot:panel({ id = 'global-panel', width = 4000, height = 3000 })
-        -- panel.attributes.color = 'Green'
-        
-        ------------------------
-        -- Top left section
-        Argo.ui.story_card_input = Argo.ui.main_panel:input({ id = 'story-card-input', width = 150, height = 60, x = -1110, y = 547, 
-                            fontSize = 50, placeholder = ' ', text = Argo.story_card, colors = Ui.TRANSPARENT_INPUT_COLORS,
-                            textAlignment = 'MiddleCenter', onValueChanged = function(_, value)
-                                Argo.setStoryCard(value)
-                            end })
-        Argo.ui.doom_card_input = Argo.ui.main_panel:input({ id = 'doom-card-input', width = 150, height = 60, x = -820, y = 547,
-                            fontSize = 50, placeholder = ' ', text = Argo.doom_card, colors = Ui.TRANSPARENT_INPUT_COLORS,
-                            textAlignment = 'MiddleCenter', onValueChanged = function(_, value) 
-                                Argo.setDoomCard(value)
-                            end })
-        Argo.ui.map_tile_input = Argo.ui.main_panel:input({ id = 'map-tile-input', width = 150, height = 60, x = -530, y = 547,
-                            fontSize = 50, placeholder = ' ', text = Argo.map_tile, colors = Ui.TRANSPARENT_INPUT_COLORS,
-                            textAlignment = 'MiddleCenter', onValueChanged = function(_, value) 
-                                Argo.map_tile = value
-                                Log:debug('Map tile set to %s', value)
-                            end })
+    sheet.UI.setCustomAssets(Constants.CUSTOM_ASSETS)
 
-        ------------------------
-        -- Argo fate section
-        Argo.ui.argo_fate_button = Argo.ui.main_panel:button({ id = 'argo-fate-button', fontSize = 40, 
-                            width = 55, height = 54, x = -295, y = 733,
-                            colors = Ui.TRANSPARENT_INPUT_COLORS, textAlignment = 'MiddleCenter',
-                            text = tostring(Argo.argo_fate), onClick = function(_, button)
-
-            Argo.argo_fate = Argo.argo_fate + (button == '-2' and -1 or 1)
-            Argo.argo_fate = Utils.clamp(Argo.argo_fate, 0, 10)
-            Argo.ui.argo_fate_button:setText(Argo.argo_fate)
-            Log:debug('Argo fate set to %s', Argo.argo_fate)
-
-            if Argo.argo_fate >= 10 then
-                broadcastToAll('Read 0981 immediately.', Constants.WARNING_COLOR)
-            end
-        end })
-
-        Argo.ui.argo_knowledge_button = Argo.ui.main_panel:button({ id = 'argo-knowledge-button', fontSize = 40, 
-                            width = 80, height = 50, x = -120, y = 632,
-                            colors = Ui.TRANSPARENT_INPUT_COLORS, textAlignment = 'MiddleCenter',
-                            text = tostring(Argo.argo_knowledge), onClick = function(_, button)
-            
-            Argo.argo_knowledge = Argo.argo_knowledge + (button == '-2' and -1 or 1)
-            Argo.argo_knowledge = Utils.clamp(Argo.argo_knowledge, 0, nil)
-            Argo.ui.argo_knowledge_button:setText(Argo.argo_knowledge)
-            Log:debug('Argo knowledge set to %s', Argo.argo_knowledge)
-        end })
-
-        Argo.ui.strangers_button = Argo.ui.main_panel:button({ id = 'strangers-button', fontSize = 40, 
-                            width = 80, height = 50, x = -120, y = 543,
-                            colors = Ui.TRANSPARENT_INPUT_COLORS, textAlignment = 'MiddleCenter',
-                            text = tostring(Argo.strangers), onClick = function(_, button)
-            
-            Argo.strangers = Argo.strangers + (button == '-2' and -1 or 1)
-            Argo.strangers = Utils.clamp(Argo.strangers, 0, nil)
-            Argo.ui.strangers_button:setText(Argo.strangers)
-            Log:debug('Strangers set to %s', Argo.strangers)
-        end })
-
-        ------------------------
-        -- Hull/Crew
-        Argo.ui.hull_group = Argo.ui.main_panel:checkboxGroup({ id = 'hull-group', onClick = function(checkbox)
-            Argo.setHull(checkbox.checkboxValue)
-        end })
-
-        local maxCheckboxes = 5
-        for i = maxCheckboxes, 0, -1 do
-            Argo.ui['hull_'..i..'_checkbox'] = Argo.ui.hull_group:checkbox({ id = 'hull-'..i..'-checkbox', 
-                                width = 100, height = 100, x = -998 + (maxCheckboxes-i) * 82.5, y = 387.5,
-                                checked = (Argo.hull == i) }, true)
-            Argo.ui['hull_'..i..'_checkbox'].checkboxValue = i
-        end
-
-        Argo.ui.crew_group = Argo.ui.main_panel:checkboxGroup({ id = 'crew-group', onClick = function(checkbox)
-            Argo.setCrew(checkbox.checkboxValue)
-        end })
-
-        local maxCheckboxes = 6
-        for i = maxCheckboxes, 0, -1 do
-            Argo.ui['crew_'..i..'_checkbox'] = Argo.ui.crew_group:checkbox({ id = 'crew-'..i..'-checkbox', 
-                                width = 100, height = 100, x = -998 + (maxCheckboxes-i) * 82.5, y = 295,
-                                checked = (Argo.crew == i) }, true)
-            Argo.ui['crew_'..i..'_checkbox'].checkboxValue = i
-        end
-
-        ------------------------
-        -- Titans
-        Argo.ui.abilities_limit_input = Argo.ui.main_panel:input({ id = 'abilities-limit-input', width = 95, height = 45, x = -92.5, y = 274, 
-                            fontSize = 45, placeholder = ' ', text = tostring(Argo.abilities_limit), colors = Ui.TRANSPARENT_INPUT_COLORS,
-                            textAlignment = 'MiddleCenter', characterValidation = 'Integer', onValueChanged = function(_, value) 
-                                Argo.setAbilitiesLimit(value)
-                            end })
-        Argo.ui.current_titans_input = Argo.ui.main_panel:input({ id = 'current-titans-input', width = 60, height = 45, x = -115, y = 213,
-                            fontSize = 35, placeholder = ' ', text = tostring(Argo.current_titans or ''), colors = Ui.TRANSPARENT_INPUT_COLORS,
-                            textAlignment = 'MiddleCenter', characterValidation = 'Integer', onValueChanged = function(_, value) 
-                                Argo.setCurrentTitans(value)
-                            end })
-        Argo.ui.max_titans_input = Argo.ui.main_panel:input({ id = 'max-titans-input', width = 60, height = 45, x = -70, y = 213,
-                            fontSize = 35, placeholder = ' ', text = tostring(Argo.max_titans or ''), colors = Ui.TRANSPARENT_INPUT_COLORS,
-                            textAlignment = 'MiddleCenter', characterValidation = 'Integer', onValueChanged = function(_, value) 
-                                Argo.setTitansLimit(value)
-                            end })
-
-        for index, text in ipairs(Argo.titans_list1) do
-            Argo.ui['titans_input1_line' .. index] = Argo.ui.main_panel:input({ id = 'titans-list1-input-' .. index, fontSize = 30, 
-                                    colors = Ui.TRANSPARENT_INPUT_COLORS, width = 585, height = 40, x = -957, y = 170 + (index-1)*-33.9 ,
-                                    text = text, placeholder = ' ', onValueChanged = function(_, value)
-                Argo.setTitansList1(index, value)
-            end })
-        end
-
-        for index, text in ipairs(Argo.titans_list2) do
-            Argo.ui['titans_input2_line' .. index] = Argo.ui.main_panel:input({ id = 'titans-list2-input-' .. index, fontSize = 30, 
-                                    colors = Ui.TRANSPARENT_INPUT_COLORS, width = 585, height = 40, x = -348, y = 170 + (index-1)*-33.9 ,
-                                    text = text, placeholder = ' ', onValueChanged = function(_, value)
-                Argo.setTitansList2(index, value)
-            end })
-        end
-
-        ------------------------
-        -- Adventure tracks
-        local xStart, yStart = -1075, -322
-        local xStep = 50
-        local xOffset, yOffset = 422, -123
-        -- Named array for ordering purposes
-        for adventureIndex, adventureName in ipairs({Constants.FATED_CONUNDRUM, Constants.PLIGHT_OF_THE_PEOPLE, Constants.HIDDEN_IN_PLAIN_SIGHT,
-                                                    Constants.MAN_OF_PURPOSE, Constants.UNEASY_RESTS_THE_HEAD, Constants.TEARS_OF_A_MINOTAUR,
-                                                    Constants.DREAMS_LAID_BARE, Constants.TUTORIAL}) do
-
-            local adventure = Argo.adventure_tracks[adventureName]
-
-            for index, value in ipairs(adventure) do
-                -- Calculate it, in cycle 1 it's 3 columns and 3 rows
-                local x = xStart + (index - math.ceil(#adventure / 2) - ((#adventure % 2) == 0 and 0.5 or 0)) * xStep + xOffset * ((adventureIndex - 1) % 3)
-                local y = yStart + yOffset * math.floor((adventureIndex - 1)/3)
-
-                if value == true or value == false then
-                    Argo.ui[adventureName .. '_track_input_' .. index] = Argo.ui.main_panel:checkbox({ 
-                                id = adventureName .. '-track-input-' .. index, 
-                                width = 65, height = 65, x = x, y = y,
-                                checked = value, onClick = function(_, button)
-                                    Argo.setAdventureTrack(adventureName, index, not adventure[index])
-                                end })
-                else
-                    Argo.ui[adventureName .. '_track_input_' .. index] = Argo.ui.main_panel:input({
-                                id = adventureName .. '-track-input-' .. index, colors = Ui.TRANSPARENT_INPUT_COLORS,
-                                text = (tonumber(adventure[index]) > 0 and tostring(adventure[index])) or '',
-                                width = 58, height = 50, x = x, y = y, textAlignment = 'MiddleCenter',
-                                characterLimit = 2, characterValidation = 'Integer', fontSize = 35, placeholder = ' ', onValueChanged = function(_, newValue) 
-                                    Argo.setAdventureTrack(adventureName, index, newValue)
-                                end})
-                end
-            end
-        end
-        
-        ------------------------
-        -- Diplomacy tracks
-        local cycleTracks = Argo.diplomacy_tracks
-        for index, factionName in ipairs({ Constants.MINOANS, Constants.LABYRINTHIANS, Constants.HORNSWORN }) do
-            Argo.ui[factionName .. '_checkbox_group'] = Argo.ui.main_panel:checkboxGroup({ id = factionName .. '-checkbox-group', onClick = function(checkbox)
-                checkbox:select()
-                cycleTracks[factionName] = checkbox.checkboxValue
-                Log:debug(factionName .. ' diplomacy set to %s', cycleTracks[factionName])
-            end })
-
-            for i = -10, 10 do
-                local jump = 0
-                if i >= -9 then jump = jump + 40 end
-                if i >= -4 then jump = jump + 18 end
-                if i >= 0 then jump = jump + 22 end
-                if i >= 4 then jump = jump + 22 end
-                if i >= 8 then jump = jump + 16 end
-
-                Argo.ui[factionName .. '_'..i..'_checkbox'] = Argo.ui[factionName .. '_checkbox_group']:checkbox({ id = factionName .. '-'..i..'-checkbox', 
-                                    width = 50, height = 50, x = -1008 + jump + (10 + i) * 41, y = -767 + (index - 1) * -49,
-                                    checked = (cycleTracks[factionName] == i) }, true)
-                Argo.ui[factionName .. '_'..i..'_checkbox'].checkboxValue = i
-            end
-        end
-        
-        ------------------------
-        -- Godforms
-        -- If checkbox checked -> set to true
-        -- If text entered -> set to the text
-        -- Otherwise set it to nil
-        local xStart = 76
-        for index = 1, 6 do
-            Argo.ui['godform_'..index..'_checkbox'] = Argo.ui.main_panel:checkbox({ id = 'godform-' .. index .. '-checkbox',
-                                checked = (Argo.godforms[index] ~= nil), width = 65, height = 65,
-                                x = xStart, y = 750 + (index-1) * -55, onClick = function(_, button)
-                                    if Argo.godforms[index] == nil then
-                                        Argo.godforms[index] = true
-                                        Argo.ui['godform_'..index..'_checkbox']:setChecked(true)
-                                        Log:debug('Godform %s activated.', index)
-                                    else
-                                        Argo.godforms[index] = nil
-                                        Argo.ui['godform_'..index..'_checkbox']:setChecked(false)
-                                        Argo.ui['godform_'..index..'_input']:setText('')
-                                        Log:debug('Godform %s deactivated.', index)
-                                    end
-                                end })
-
-            Argo.ui['godform_'..index..'_input'] = Argo.ui.main_panel:input({ id = 'godform-' .. index .. '-input',
-                                text = (Argo.godforms[index] == true and '') or Argo.godforms[index], width = 500, height = 50,
-                                fontSize = 40, colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ',
-                                x = xStart + 290, y = 750 + 10 + (index-1) * -55, onValueChanged = function(_, newValue)
-                                    Argo.godforms[index] = newValue
-                                    Log:debug('Godform %s set to %s', index, newValue)
-
-                                    if Argo.godforms[index] == '' then
-                                        Argo.godforms[index] = nil
-                                        Argo.ui['godform_'..index..'_checkbox']:setChecked(false)
-                                        Log:debug('Godform %s deactivated.', index)
-                                    elseif Argo.godforms[index] and Argo.godforms[index] ~= '' then
-                                        Argo.ui['godform_'..index..'_checkbox']:setChecked(true)
-                                        Log:debug('Godform %s activated.', index)
-                                    end
-                                end })
-        end
-
-        ------------------------
-        -- Summons
-        -- If checkbox checked -> set to true
-        -- If text entered -> set to the text
-        -- Otherwise set it to nil
-        Argo.ui.summons_limit_button = Argo.ui.main_panel:button({ id = 'summons-button', fontSize = 40, 
-                            width = 55, height = 55, x = 1221, y = 805,
-                            colors = Ui.TRANSPARENT_INPUT_COLORS, textAlignment = 'MiddleCenter',
-                            text = tostring(Argo.summons_limit), onClick = function(_, button)
-            
-            Argo.summons_limit = Argo.summons_limit + (button == '-2' and -1 or 1)
-            Argo.summons_limit = Utils.clamp(Argo.summons_limit, 0, nil)
-            Argo.ui.summons_limit_button:setText(Argo.summons_limit)
-            Log:debug('Summons limit set to %s', Argo.summons_limit)
-        end })
-
-        local xStart = 700
-        for index = 1, 6 do
-            Argo.ui['summon_'..index..'_checkbox'] = Argo.ui.main_panel:checkbox({ id = 'summon-' .. index .. '-checkbox',
-                                checked = (Argo.summons[index] ~= nil), width = 65, height = 65,
-                                x = xStart, y = 750 + (index-1) * -55, onClick = function(_, button)
-                                    if Argo.summons[index] == nil then
-                                        Argo.summons[index] = true
-                                        Argo.ui['summon_'..index..'_checkbox']:setChecked(true)
-                                        Log:debug('Summon %s activated.', index)
-                                    else
-                                        Argo.summons[index] = nil
-                                        Argo.ui['summon_'..index..'_checkbox']:setChecked(false)
-                                        Argo.ui['summon_'..index..'_input']:setText('')
-                                        Log:debug('Summon %s deactivated.', index)
-                                    end
-                                end })
-
-            Argo.ui['summon_'..index..'_input'] = Argo.ui.main_panel:input({ id = 'summon-' .. index .. '-input',
-                                text = Argo.summons[index], width = 500, height = 50,
-                                fontSize = 40, colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ',
-                                x = xStart + 290, y = 750 + 10 + (index-1) * -55, onValueChanged = function(_, newValue)
-                                    Argo.summons[index] = newValue
-                                    Log:debug('Summon %s set to %s', index, newValue)
-
-                                    if Argo.summons[index] == '' then
-                                        Argo.summons[index] = nil
-                                        Argo.ui['summon_'..index..'_checkbox']:setChecked(false)
-                                        Log:debug('Summon %s deactivated.', index)
-                                    elseif Argo.summons[index] and Argo.summons[index] ~= '' then
-                                        Argo.ui['summon_'..index..'_checkbox']:setChecked(true)
-                                        Log:debug('Summon %s activated.', index)
-                                    end
-                                end })
-        end
-
-        ------------------------
-        -- Evolution tracks
-        local xStart, yStart = 665, 232
-        for index, level in ipairs(Argo.evolution_track) do
-            local x = xStart + (index - 1) * 47.5
-            local y = yStart
-
-            if level[Constants.MIXED] ~= nil then
-                Argo.ui['evolution_' .. index .. '_' .. Constants.MIXED .. '_checkbox'] = 
-                                Argo.ui.main_panel:checkbox({ id = 'evolution-' .. index .. '-' .. Constants.MIXED .. '-checkbox',
-                                            checked = level[Constants.MIXED], width = 55, height = 55,
-                                            x = x, y = y, onClick = function(_, button)
-                                                level[Constants.MIXED] = not level[Constants.MIXED]
-                                                Argo.ui['evolution_' .. index .. '_' .. Constants.MIXED .. '_checkbox']:setChecked(level[Constants.MIXED])
-                                                Log:debug('Evolution track section %s set to %s.', index, tostring(level[Constants.MIXED]))
-
-                                                if(level[Constants.MIXED]) then
-                                                    -- Find the correct level, up to the current evolution level
-                                                    local lastMarkedHekatonIndex, lastMarkedLabyrinthaurosIndex = 0, 0
-        
-                                                    for jndex, element in ipairs(Argo.getEvolutionTracks()) do
-                                                        if jndex >= index then break end
-
-                                                        if element[Constants.HEKATON] == true then
-                                                            lastMarkedHekatonIndex = jndex
-                                                        end
-
-                                                        if element[Constants.LABYRINTHAUROS] == true then
-                                                            lastMarkedLabyrinthaurosIndex = jndex
-                                                        end
-                                                    end
-
-                                                    local allowHekaton, allowLabyrinthauros = false, false
-                                                    if index == lastMarkedHekatonIndex + 1 then allowHekaton = true end
-                                                    if index == lastMarkedLabyrinthaurosIndex + 1 then allowLabyrinthauros = true end
-
-                                                    -- Let the player choose which Primordial to setup
-                                                    local confirmationText = 'Which primordial do you want to setup?'
-                                                    if not allowHekaton and not allowLabyrinthauros then confirmationText = 'You cannot fill this box' end
-
-                                                    GlobalUi.showConfirmationDialog(confirmationText, (allowHekaton and 'Hekaton') or false, (allowHekaton and function()
-                                                        Battle.setupBattle('Hekaton Battle', Argo.EVOLUTION_INDEX_TO_LEVEL[index])
-                                                    end) or nil, (allowLabyrinthauros and 'Labyrinthauros') or false, (allowLabyrinthauros and function()
-                                                        Battle.setupBattle('Labyrinthauros Battle', Argo.EVOLUTION_INDEX_TO_LEVEL[index])
-                                                    end) or nil)
-                                                end
-                                            end })
-            else
-                if level[Constants.HEKATON] ~= nil then
-                    y = yStart + 30
-                    Argo.ui['evolution_' .. index .. '_' .. Constants.HEKATON .. '_checkbox'] = 
-                                Argo.ui.main_panel:checkbox({ id = 'evolution-' .. index .. '-' .. Constants.HEKATON .. '-checkbox',
-                                            checked = level[Constants.HEKATON], width = 55, height = 55,
-                                            x = x, y = y, onClick = function(_, button)
-                                                level[Constants.HEKATON] = not level[Constants.HEKATON]
-                                                Argo.ui['evolution_' .. index .. '_' .. Constants.HEKATON .. '_checkbox']:setChecked(level[Constants.HEKATON])
-                                                Log:debug('Evolution track section %s-%s set to %s.', index, Constants.HEKATON, tostring(level[Constants.HEKATON]))
-
-                                                if level[Constants.HEKATON] == true then
-                                                    if index == 1 then
-                                                        GlobalUi.showConfirmationDialog('Do you want to setup Tutorial Battle - Level 0?', 'Yes', function()
-                                                            Battle.setupBattle('Tutorial Battle', Constants.LEVEL_0)
-                                                        end)
-                                                    else
-                                                        GlobalUi.showConfirmationDialog('Do you want to setup Hekaton Battle - Level ' 
-                                                                        .. Argo.EVOLUTION_INDEX_TO_LEVEL[index] .. '?', 'Yes', function()
-                                                            Battle.setupBattle('Hekaton Battle', Argo.EVOLUTION_INDEX_TO_LEVEL[index])
-                                                        end)
-                                                    end
-                                                end
-                                            end })
-                end
-
-                if level[Constants.LABYRINTHAUROS] ~= nil then
-                    y = yStart - 30
-                    Argo.ui['evolution_' .. index .. '_' .. Constants.LABYRINTHAUROS .. '_checkbox'] = 
-                                Argo.ui.main_panel:checkbox({ id = 'evolution-' .. index .. '-' .. Constants.LABYRINTHAUROS .. '-checkbox',
-                                            checked = level[Constants.LABYRINTHAUROS], width = 55, height = 55,
-                                            x = x, y = y, onClick = function(_, button)
-                                                level[Constants.LABYRINTHAUROS] = not level[Constants.LABYRINTHAUROS]
-                                                Argo.ui['evolution_' .. index .. '_' .. Constants.LABYRINTHAUROS .. '_checkbox']:setChecked(level[Constants.LABYRINTHAUROS])
-                                                Log:debug('Evolution track section %s-%s set to %s.', index, Constants.LABYRINTHAUROS, tostring(level[Constants.LABYRINTHAUROS]))
-                                                
-                                                if level[Constants.LABYRINTHAUROS] == true then
-                                                    GlobalUi.showConfirmationDialog('Do you want to setup Labyrinthauros Battle - Level ' 
-                                                                        .. Argo.EVOLUTION_INDEX_TO_LEVEL[index] .. '?', 'Yes', function()
-                                                            Battle.setupBattle('Labyrinthauros Battle', Argo.EVOLUTION_INDEX_TO_LEVEL[index])
-                                                    end)
-                                                    
-                                                end
-                                            end })
-                end
-            end
-        end
-
-        ------------------------
-        -- Boss primordial track
-        local xStart = 332
-        local yStart = 17
-        for index = 1, 4 do
-            Argo.ui['boss_'..index..'_checkbox'] = Argo.ui.main_panel:checkbox({ id = 'boss-' .. index .. '-checkbox',
-                                    checked = (Argo.boss_track >= index), width = 65, height = 65,
-                                    x = xStart + (index-1) * 56, y = yStart, onClick = function(_, button)
-                                        if Argo.boss_track >= index then
-                                            Argo.boss_track = index - 1
-                                        else
-                                            Argo.boss_track = index
-                                            -- Setup the battle if we add a cross
-                                            GlobalUi.showConfirmationDialog('Do you want to setup Alpha Temenos Battle - Level 1?', 'Yes', function()
-                                                        Battle.setupBattle('Temenos Battle', Constants.LEVEL_1)
-                                            end)
-                                        end
-
-                                        for jndex = 1, Argo.boss_track do
-                                            Argo.ui['boss_'..jndex..'_checkbox']:setChecked(true)
-                                        end
-
-                                        for jndex = Argo.boss_track + 1, 4 do
-                                            Argo.ui['boss_'..jndex..'_checkbox']:setChecked(false)
-                                        end
-                                        
-                                        Log:debug('Boss track set to %s.', Argo.boss_track)
-                                    end })
-        end
-
-        ------------------------
-        -- Adversary track
-        local xStart = 990
-        Argo.ui['adversary_unlocked_checkbox'] = Argo.ui.main_panel:checkbox({ id = 'adversary-unlocked-checkbox',
-                                    checked = Argo.adversary_unlocked, width = 50, height = 50,
-                                    x = xStart - 52, y = yStart + 4, onClick = function(_, button)
-                                        Argo.adversary_unlocked = not Argo.adversary_unlocked
-                                        Argo.ui['adversary_unlocked_checkbox']:setChecked(Argo.adversary_unlocked)
-                                        Log:debug('Adversary unlocked set to %s.', tostring(Argo.adversary_unlocked))
-                                    end })
-
-        for index = 1, 5 do
-            Argo.ui['adversary_'..index..'_checkbox'] = Argo.ui.main_panel:checkbox({ id = 'adversary-' .. index .. '-checkbox',
-                                    checked = (Argo.adversary_track >= index), width = 65, height = 65,
-                                    x = xStart + (index-1) * 56, y = yStart, onClick = function(_, button)
-                                        if Argo.adversary_track >= index then
-                                            Argo.adversary_track = index - 1
-                                        else
-                                            Argo.adversary_track = index
-                                            -- Setup the battle if we add a cross
-                                            GlobalUi.showConfirmationDialog('Do you want to setup Hermesian Pursuer Battle - Level 1?', 'Yes', function()
-                                                Battle.setupBattle('Pursuer Battle', Constants.LEVEL_1)
-                                            end)
-                                        end
-
-                                        for jndex = 1, Argo.adversary_track do
-                                            Argo.ui['adversary_'..jndex..'_checkbox']:setChecked(true)
-                                        end
-
-                                        for jndex = Argo.adversary_track + 1, 5 do
-                                            Argo.ui['adversary_'..jndex..'_checkbox']:setChecked(false)
-                                        end
-                                        
-                                        Log:debug('Adversary track set to %s.', Argo.adversary_track)
-                                    end })
-        end
-
-        ------------------------
-        -- Mortal resource track
-        local xStart, yStart = 77, -239
-        -- This requires a named loop to keep the resources order....
-        for index, resource in ipairs({'trireme', 'monument', 'armament'}) do
-            Argo.ui[resource .. '_button'] = Argo.ui.main_panel:button({ id = resource .. '-button', fontSize = 40, 
-                                width = 55, height = 55, 
-                                x = xStart, y = yStart + (index-1) * -138 + (index == 3 and 5 or 0), -- Somehow the boxes aren't linear
-                                colors = Ui.TRANSPARENT_INPUT_COLORS, textAlignment = 'MiddleCenter',
-                                text = tostring(Argo.resources[resource]), onClick = function(_, button)
-                
-                    local newValue = Argo.resources[resource] + (button == '-2' and -1 or 1)
-                    newValue = Utils.clamp(Argo.resources[resource], 0, nil)
-                    Argo.setResource(resource, newValue)
-            end })
-
-            for jndex = 1, 2 do
-                Argo.ui[resource .. '_note_input_' .. jndex] = Argo.ui.main_panel:input({ id = resource .. '-note-button-' .. jndex,
-                                    fontSize = 24, width = 240, height = 35, textAlignment = 'LeftCenter',
-                                    x = xStart + 90, y = yStart - 56 + (index-1) * -132 + (jndex-1) * -28, -- Somehow the boxes aren't linear
-                                    colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ',
-                                    text = Argo.resources[resource .. '_note'][jndex], onValueChanged = function(_, newValue)
-                    
-                    Argo.setResourceNote(resource, jndex, newValue)
-                end })
-            end
-        end
-
-        -- Primordial resources
-        local xStart, yStart = 365, -239
-        local xOffset, yOffset = 234, -138
-        local resourcesArray = {'muscle_cluster', 'calcified_knucle_bone', 'infused_mechanism', 'fleshy_mantle', 'fear_essence', 
-                    'maze_fragment', 'grotesque_beak', 'powdered_matter', 'raw_ambrosia'}
-        for index, resource in ipairs(resourcesArray) do
-            local x = xStart + xOffset * ((index - 1) % 4) + (((index == 3 or index == 7) and -5) or 0) -- Fix some inconsistencies
-            local y = yStart + yOffset * math.floor((index - 1)/4) + (index == 9 and 5 or 0)
-
-            Argo.ui[resource .. '_button'] = Argo.ui.main_panel:button({ id = resource .. '-button', fontSize = 40, 
-                                width = 55, height = 55, x = x, y = y, 
-                                colors = Ui.TRANSPARENT_INPUT_COLORS, textAlignment = 'MiddleCenter',
-                                text = tostring(Argo.resources[resource]), onClick = function(_, button)
-                
-                    local newValue = Argo.resources[resource] + (button == '-2' and -1 or 1)
-                    newValue = Utils.clamp(Argo.resources[resource], 0, nil)
-                    Argo.setResource(resource, newValue)
-            end })
-
-            for jndex = 1, 2 do
-                Argo.ui[resource .. '_note_input_' .. jndex] = Argo.ui.main_panel:input({ id = resource .. '-note-button-' .. jndex, 
-                                    fontSize = 24, width = 220, height = 35, x = x + 84, y = y - 56 + (index > 4 and 7 or 0) + (jndex-1) * -28,
-                                    colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ',
-                                    text = Argo.resources[resource .. '_note'][jndex], onValueChanged = function(_, newValue)
-                    
-                    Argo.setResourceNote(resource, jndex, newValue)
-                end })
-            end
-        end
-
-        for jndex = 1, 2 do
-            Argo.ui['cores_note_input_' .. jndex] = Argo.ui.main_panel:input({ id = 'cores-note-button-' .. jndex, fontSize = 24, 
-                                width = 690, height = 35, x = 912, y = -559 + (jndex-1) * -28,
-                                colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ',
-                                text = Argo.resources['cores_note'][jndex], onValueChanged = function(_, newValue)
-                
-                    Argo.setResourceNote('cores', jndex, newValue)
-            end })
-        end
-
-        ------------------------
-        -- Divine resources
-        local xStart, yStart = 167, -801
-        for index, resource in ipairs({'priests', 'sisyphus_tears', 'rare_resources'}) do
-            if resource ~= 'rare_resources' then
-                Argo.ui[resource .. '_button'] = Argo.ui.main_panel:button({ id = resource .. '-button', fontSize = 40, 
-                                    width = 55, height = 55, x = xStart + (index-1) * 366, y = yStart, 
-                                    colors = Ui.TRANSPARENT_INPUT_COLORS, textAlignment = 'MiddleCenter',
-                                    text = tostring(Argo.resources[resource]), onClick = function(_, button)
-                    
-                    local newValue = Argo.resources[resource] + (button == '-2' and -1 or 1)
-                    newValue = Utils.clamp(Argo.resources[resource], 0, nil)
-                    Argo.setResource(resource, newValue)
-                end })
-            end
-
-            for jndex = 1, 2 do
-                Argo.ui[resource .. '_note_input_' .. jndex] = Argo.ui.main_panel:input({ id = resource .. '-note-button-' .. jndex, 
-                                        fontSize = 24, width = 300, height = 35, x = xStart + 110 + (index-1) * 374, y = yStart - 58 + (jndex-1) * -28,
-                                        colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ',
-                                        text = Argo.resources[resource .. '_note'][jndex], onValueChanged = function(_, newValue)
-                        
-                    Argo.setResourceNote(resource, jndex, newValue)
-                end })
-            end
-        end
+    if self.cycle == Constants.CYCLE_I then
+        self:createSheetUiForCycleI()
+    elseif self.cycle == Constants.CYCLE_II then
+        self:createSheetUiForCycleII()
+    elseif self.cycle == Constants.CYCLE_III then
+        self:createSheetUiForCycleIII()
     end
 
     if refresh then
-        Argo.uiRoot:refresh()
+        self.ui.root:refresh()
     end
 end
 
-function Argo.getLevelFromEvolutionIndex(index)
-    return Argo.EVOLUTION_INDEX_TO_LEVEL[index]
+function Argo:createSheetUiForCycleI()
+    self.ui.main_panel = self.ui.root:panel({ id = 'global-panel', width = 4000, height = 3000 })
+    -- panel.attributes.color = 'Green'
+    
+    ------------------------
+    -- Top left section
+    self.ui.story_card_input = self.ui.main_panel:input({ id = 'story-card-input', width = 150, height = 60, x = -1110, y = 547, 
+                        fontSize = 50, placeholder = ' ', text = self.story_card, colors = Ui.TRANSPARENT_INPUT_COLORS,
+                        textAlignment = 'MiddleCenter', onValueChanged = function(_, value)
+                            self:setStoryCard(value)
+                        end })
+    self.ui.doom_card_input = self.ui.main_panel:input({ id = 'doom-card-input', width = 150, height = 60, x = -820, y = 547,
+                        fontSize = 50, placeholder = ' ', text = self.doom_card, colors = Ui.TRANSPARENT_INPUT_COLORS,
+                        textAlignment = 'MiddleCenter', onValueChanged = function(_, value) 
+                            self:setDoomCard(value)
+                        end })
+    self.ui.map_tile_input = self.ui.main_panel:input({ id = 'map-tile-input', width = 150, height = 60, x = -530, y = 547,
+                        fontSize = 50, placeholder = ' ', text = self.map_tile, colors = Ui.TRANSPARENT_INPUT_COLORS,
+                        textAlignment = 'MiddleCenter', onValueChanged = function(_, value) 
+                            self.map_tile = value
+                            Log:debug('Map tile set to %s', value)
+                        end })
+
+    ------------------------
+    -- Argo fate section
+    self.ui.argo_fate_button = self.ui.main_panel:button({ id = 'argo-fate-button', fontSize = 40, 
+                        width = 55, height = 54, x = -295, y = 733,
+                        colors = Ui.TRANSPARENT_INPUT_COLORS, textAlignment = 'MiddleCenter',
+                        text = tostring(self.argo_fate), onClick = function(_, button)
+
+        self.argo_fate = self.argo_fate + (button == '-2' and -1 or 1)
+        self.argo_fate = Utils.clamp(self.argo_fate, 0, 10)
+        self.ui.argo_fate_button:setText(self.argo_fate)
+        Log:debug('Argo fate set to %s', self.argo_fate)
+
+        if self.argo_fate >= 10 then
+            broadcastToAll('Read 0981 immediately.', Constants.WARNING_COLOR)
+        end
+    end })
+
+    self.ui.argo_knowledge_button = self.ui.main_panel:button({ id = 'argo-knowledge-button', fontSize = 40, 
+                        width = 80, height = 50, x = -120, y = 632,
+                        colors = Ui.TRANSPARENT_INPUT_COLORS, textAlignment = 'MiddleCenter',
+                        text = tostring(self.argo_knowledge), onClick = function(_, button)
+        
+        self.argo_knowledge = self.argo_knowledge + (button == '-2' and -1 or 1)
+        self.argo_knowledge = Utils.clamp(self.argo_knowledge, 0, nil)
+        self.ui.argo_knowledge_button:setText(self.argo_knowledge)
+        Log:debug('Argo knowledge set to %s', self.argo_knowledge)
+    end })
+
+    self.ui.strangers_button = self.ui.main_panel:button({ id = 'strangers-button', fontSize = 40, 
+                        width = 80, height = 50, x = -120, y = 543,
+                        colors = Ui.TRANSPARENT_INPUT_COLORS, textAlignment = 'MiddleCenter',
+                        text = tostring(self.strangers), onClick = function(_, button)
+        
+        self.strangers = self.strangers + (button == '-2' and -1 or 1)
+        self.strangers = Utils.clamp(self.strangers, 0, nil)
+        self.ui.strangers_button:setText(self.strangers)
+        Log:debug('Strangers set to %s', self.strangers)
+    end })
+
+    ------------------------
+    -- Hull/Crew
+    self.ui.hull_group = self.ui.main_panel:checkboxGroup({ id = 'hull-group', onClick = function(checkbox)
+        self:setHull(checkbox.checkboxValue)
+    end })
+
+    local maxCheckboxes = 5
+    for i = maxCheckboxes, 0, -1 do
+        self.ui['hull_'..i..'_checkbox'] = self.ui.hull_group:checkbox({ id = 'hull-'..i..'-checkbox', 
+                            width = 100, height = 100, x = -998 + (maxCheckboxes-i) * 82.5, y = 387.5,
+                            checked = (self.hull == i) }, true)
+        self.ui['hull_'..i..'_checkbox'].checkboxValue = i
+    end
+
+    self.ui.crew_group = self.ui.main_panel:checkboxGroup({ id = 'crew-group', onClick = function(checkbox)
+        self:setCrew(checkbox.checkboxValue)
+    end })
+
+    local maxCheckboxes = 6
+    for i = maxCheckboxes, 0, -1 do
+        self.ui['crew_'..i..'_checkbox'] = self.ui.crew_group:checkbox({ id = 'crew-'..i..'-checkbox', 
+                            width = 100, height = 100, x = -998 + (maxCheckboxes-i) * 82.5, y = 295,
+                            checked = (self.crew == i) }, true)
+        self.ui['crew_'..i..'_checkbox'].checkboxValue = i
+    end
+
+    ------------------------
+    -- Titans
+    self.ui.abilities_limit_input = self.ui.main_panel:input({ id = 'abilities-limit-input', width = 95, height = 45, x = -92.5, y = 274, 
+                        fontSize = 45, placeholder = ' ', text = tostring(self.abilities_limit), colors = Ui.TRANSPARENT_INPUT_COLORS,
+                        textAlignment = 'MiddleCenter', characterValidation = 'Integer', onValueChanged = function(_, value) 
+                            self:setAbilitiesLimit(value)
+                        end })
+    self.ui.current_titans_input = self.ui.main_panel:input({ id = 'current-titans-input', width = 60, height = 45, x = -115, y = 213,
+                        fontSize = 35, placeholder = ' ', text = tostring(self.current_titans or ''), colors = Ui.TRANSPARENT_INPUT_COLORS,
+                        textAlignment = 'MiddleCenter', characterValidation = 'Integer', onValueChanged = function(_, value) 
+                            self:setCurrentTitans(value)
+                        end })
+    self.ui.max_titans_input = self.ui.main_panel:input({ id = 'max-titans-input', width = 60, height = 45, x = -70, y = 213,
+                        fontSize = 35, placeholder = ' ', text = tostring(self.max_titans or ''), colors = Ui.TRANSPARENT_INPUT_COLORS,
+                        textAlignment = 'MiddleCenter', characterValidation = 'Integer', onValueChanged = function(_, value) 
+                            self:setTitansLimit(value)
+                        end })
+
+    for index, text in ipairs(self.titans_list1) do
+        self.ui['titans_input1_line' .. index] = self.ui.main_panel:input({ id = 'titans-list1-input-' .. index, fontSize = 30, 
+                                colors = Ui.TRANSPARENT_INPUT_COLORS, width = 585, height = 40, x = -957, y = 170 + (index-1)*-33.9 ,
+                                text = text, placeholder = ' ', onValueChanged = function(_, value)
+                                    self:setTitansList1(index, value)
+                                end })
+    end
+
+    for index, text in ipairs(self.titans_list2) do
+        self.ui['titans_input2_line' .. index] = self.ui.main_panel:input({ id = 'titans-list2-input-' .. index, fontSize = 30, 
+                                colors = Ui.TRANSPARENT_INPUT_COLORS, width = 585, height = 40, x = -348, y = 170 + (index-1)*-33.9 ,
+                                text = text, placeholder = ' ', onValueChanged = function(_, value)
+                                    self:setTitansList2(index, value)
+                                end })
+    end
+
+    ------------------------
+    -- Adventure tracks
+    local xStart, yStart = -1075, -322
+    local xStep = 50
+    local xOffset, yOffset = 422, -123
+    -- Named array for ordering purposes
+    local ordering = {
+        Constants.FATED_CONUNDRUM, Constants.PLIGHT_OF_THE_PEOPLE, Constants.HIDDEN_IN_PLAIN_SIGHT,
+        Constants.MAN_OF_PURPOSE, Constants.UNEASY_RESTS_THE_HEAD, Constants.TEARS_OF_A_MINOTAUR,
+        Constants.DREAMS_LAID_BARE, Constants.TUTORIAL
+        -- [Constants.CYCLE_II] = {Constants.CONSIDER_THE_ANT, Constants.THE_OTHER_THERMOPYLAE, Constants.FROM_THE_ASHES,
+        -- Constants.INTENDED_PURPOSE, Constants.MISERY_INDUSTRY, Constants.PARABLE_OF_THE_BUTTERFLY,
+        -- Constants.TRUTH_TO_WEAKNESS, Constants.WHEN_THE_LAND_MEETS_THE_SEA},
+        -- [Constants.CYCLE_III] = {Constants.ROAD_LESS_TRAVELED, Constants.CHILDREN_OF_THE_SUN, Constants.WHAT_WE_LEFT_BEHIND,
+        -- Constants.OF_WAX_AND_PROMISES, Constants.CANT_GO_BACK, Constants.SIN_OF_THE_FATHERS,
+        -- Constants.COMING_OF_AGE},
+    }
+
+    for adventureIndex, adventureName in ipairs(ordering) do
+        local adventure = self.adventure_tracks[adventureName]
+
+        for index, value in ipairs(adventure) do
+            -- Calculate it, in cycle 1 it's 3 columns and 3 rows
+            local x = xStart + (index - math.ceil(#adventure / 2) - ((#adventure % 2) == 0 and 0.5 or 0)) * xStep + xOffset * ((adventureIndex - 1) % 3)
+            local y = yStart + yOffset * math.floor((adventureIndex - 1)/3)
+
+            if value == true or value == false then
+                self.ui[adventureName .. '_track_input_' .. index] = self.ui.main_panel:checkbox({ 
+                            id = adventureName .. '-track-input-' .. index, 
+                            width = 65, height = 65, x = x, y = y,
+                            checked = value, onClick = function(_, button)
+                                self:setAdventureTrack(adventureName, index, not adventure[index])
+                            end })
+            else
+                self.ui[adventureName .. '_track_input_' .. index] = self.ui.main_panel:input({
+                            id = adventureName .. '-track-input-' .. index, colors = Ui.TRANSPARENT_INPUT_COLORS,
+                            text = (tonumber(adventure[index]) > 0 and tostring(adventure[index])) or '',
+                            width = 58, height = 50, x = x, y = y, textAlignment = 'MiddleCenter',
+                            characterLimit = 2, characterValidation = 'Integer', fontSize = 35, placeholder = ' ', onValueChanged = function(_, newValue) 
+                                self:setAdventureTrack(adventureName, index, newValue)
+                            end})
+            end
+        end
+    end
+    
+    ------------------------
+    -- Diplomacy tracks
+    local cycleTracks = self.diplomacy_tracks
+    for index, factionName in ipairs({ Constants.MINOANS, Constants.LABYRINTHIANS, Constants.HORNSWORN }) do
+        self.ui[factionName .. '_checkbox_group'] = self.ui.main_panel:checkboxGroup({ id = factionName .. '-checkbox-group', onClick = function(checkbox)
+            checkbox:select()
+            cycleTracks[factionName] = checkbox.checkboxValue
+            Log:debug(factionName .. ' diplomacy set to %s', cycleTracks[factionName])
+        end })
+
+        for i = -10, 10 do
+            local jump = 0
+            if i >= -9 then jump = jump + 40 end
+            if i >= -4 then jump = jump + 18 end
+            if i >= 0 then jump = jump + 22 end
+            if i >= 4 then jump = jump + 22 end
+            if i >= 8 then jump = jump + 16 end
+
+            self.ui[factionName .. '_'..i..'_checkbox'] = self.ui[factionName .. '_checkbox_group']:checkbox({ id = factionName .. '-'..i..'-checkbox', 
+                                width = 50, height = 50, x = -1008 + jump + (10 + i) * 41, y = -767 + (index - 1) * -49,
+                                checked = (cycleTracks[factionName] == i) }, true)
+            self.ui[factionName .. '_'..i..'_checkbox'].checkboxValue = i
+        end
+    end
+    
+    ------------------------
+    -- Godforms
+    -- If checkbox checked -> set to true
+    -- If text entered -> set to the text
+    -- Otherwise set it to nil
+    local xStart = 76
+    for index = 1, 6 do
+        self.ui['godform_'..index..'_checkbox'] = self.ui.main_panel:checkbox({ id = 'godform-' .. index .. '-checkbox',
+                            checked = (self.godforms[index] ~= nil), width = 65, height = 65,
+                            x = xStart, y = 750 + (index-1) * -55, onClick = function(_, button)
+                                if self.godforms[index] == nil then
+                                    self.godforms[index] = true
+                                    self.ui['godform_'..index..'_checkbox']:setChecked(true)
+                                    Log:debug('Godform %s activated.', index)
+                                else
+                                    self.godforms[index] = nil
+                                    self.ui['godform_'..index..'_checkbox']:setChecked(false)
+                                    self.ui['godform_'..index..'_input']:setText('')
+                                    Log:debug('Godform %s deactivated.', index)
+                                end
+                            end })
+
+        self.ui['godform_'..index..'_input'] = self.ui.main_panel:input({ id = 'godform-' .. index .. '-input',
+                            text = (self.godforms[index] == true and '') or self.godforms[index], width = 500, height = 50,
+                            fontSize = 40, colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ',
+                            x = xStart + 290, y = 750 + 10 + (index-1) * -55, onValueChanged = function(_, newValue)
+                                self.godforms[index] = newValue
+                                Log:debug('Godform %s set to %s', index, newValue)
+
+                                if self.godforms[index] == '' then
+                                    self.godforms[index] = nil
+                                    self.ui['godform_'..index..'_checkbox']:setChecked(false)
+                                    Log:debug('Godform %s deactivated.', index)
+                                elseif self.godforms[index] and self.godforms[index] ~= '' then
+                                    self.ui['godform_'..index..'_checkbox']:setChecked(true)
+                                    Log:debug('Godform %s activated.', index)
+                                end
+                            end })
+    end
+
+    ------------------------
+    -- Summons
+    -- If checkbox checked -> set to true
+    -- If text entered -> set to the text
+    -- Otherwise set it to nil
+    self.ui.summons_limit_button = self.ui.main_panel:button({ id = 'summons-button', fontSize = 40, 
+                        width = 55, height = 55, x = 1221, y = 805,
+                        colors = Ui.TRANSPARENT_INPUT_COLORS, textAlignment = 'MiddleCenter',
+                        text = tostring(self.summons_limit), onClick = function(_, button)
+        
+        self.summons_limit = self.summons_limit + (button == '-2' and -1 or 1)
+        self.summons_limit = Utils.clamp(self.summons_limit, 0, nil)
+        self.ui.summons_limit_button:setText(self.summons_limit)
+        Log:debug('Summons limit set to %s', self.summons_limit)
+    end })
+
+    local xStart = 700
+    for index = 1, 6 do
+        self.ui['summon_'..index..'_checkbox'] = self.ui.main_panel:checkbox({ id = 'summon-' .. index .. '-checkbox',
+                            checked = (self.summons[index] ~= nil), width = 65, height = 65,
+                            x = xStart, y = 750 + (index-1) * -55, onClick = function(_, button)
+                                if self.summons[index] == nil then
+                                    self.summons[index] = true
+                                    self.ui['summon_'..index..'_checkbox']:setChecked(true)
+                                    Log:debug('Summon %s activated.', index)
+                                else
+                                    self.summons[index] = nil
+                                    self.ui['summon_'..index..'_checkbox']:setChecked(false)
+                                    self.ui['summon_'..index..'_input']:setText('')
+                                    Log:debug('Summon %s deactivated.', index)
+                                end
+                            end })
+
+        self.ui['summon_'..index..'_input'] = self.ui.main_panel:input({ id = 'summon-' .. index .. '-input',
+                            text = self.summons[index], width = 500, height = 50,
+                            fontSize = 40, colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ',
+                            x = xStart + 290, y = 750 + 10 + (index-1) * -55, onValueChanged = function(_, newValue)
+                                self.summons[index] = newValue
+                                Log:debug('Summon %s set to %s', index, newValue)
+
+                                if self.summons[index] == '' then
+                                    self.summons[index] = nil
+                                    self.ui['summon_'..index..'_checkbox']:setChecked(false)
+                                    Log:debug('Summon %s deactivated.', index)
+                                elseif self.summons[index] and self.summons[index] ~= '' then
+                                    self.ui['summon_'..index..'_checkbox']:setChecked(true)
+                                    Log:debug('Summon %s activated.', index)
+                                end
+                            end })
+    end
+
+    ------------------------
+    -- Evolution tracks
+    local xStart, yStart = 665, 232
+    for index, level in ipairs(self.evolution_track) do
+        local x = xStart + (index - 1) * 47.5
+        local y = yStart
+
+        if level[Constants.MIXED] ~= nil then
+            self.ui['evolution_' .. index .. '_' .. Constants.MIXED .. '_checkbox'] = 
+                            self.ui.main_panel:checkbox({ id = 'evolution-' .. index .. '-' .. Constants.MIXED .. '-checkbox',
+                                        checked = level[Constants.MIXED], width = 55, height = 55,
+                                        x = x, y = y, onClick = function(_, button)
+                                            level[Constants.MIXED] = not level[Constants.MIXED]
+                                            self.ui['evolution_' .. index .. '_' .. Constants.MIXED .. '_checkbox']:setChecked(level[Constants.MIXED])
+                                            Log:debug('Evolution track section %s set to %s.', index, tostring(level[Constants.MIXED]))
+
+                                            if(level[Constants.MIXED]) then
+                                                -- Find the correct level, up to the current evolution level
+                                                local lastMarkedHekatonIndex, lastMarkedLabyrinthaurosIndex = 0, 0
+    
+                                                for jndex, element in ipairs(self:getEvolutionTrack()) do
+                                                    if jndex >= index then break end
+
+                                                    if element[Constants.HEKATON] == true then
+                                                        lastMarkedHekatonIndex = jndex
+                                                    end
+
+                                                    if element[Constants.LABYRINTHAUROS] == true then
+                                                        lastMarkedLabyrinthaurosIndex = jndex
+                                                    end
+                                                end
+
+                                                local allowHekaton, allowLabyrinthauros = false, false
+                                                if index == lastMarkedHekatonIndex + 1 then allowHekaton = true end
+                                                if index == lastMarkedLabyrinthaurosIndex + 1 then allowLabyrinthauros = true end
+
+                                                -- Let the player choose which Primordial to setup
+                                                local confirmationText = 'Which primordial do you want to setup?'
+                                                if not allowHekaton and not allowLabyrinthauros then confirmationText = 'You cannot fill this box' end
+
+                                                GlobalUi.showConfirmationDialog(confirmationText, (allowHekaton and 'Hekaton') or false, (allowHekaton and function()
+                                                    Battle.setupBattle('Hekaton Battle', self.EVOLUTION_INDEX_TO_LEVEL[self.cycle][index])
+                                                end) or nil, (allowLabyrinthauros and 'Labyrinthauros') or false, (allowLabyrinthauros and function()
+                                                    Battle.setupBattle('Labyrinthauros Battle', self.EVOLUTION_INDEX_TO_LEVEL[self.cycle][index])
+                                                end) or nil)
+                                            end
+                                        end })
+        else
+            if level[Constants.HEKATON] ~= nil then
+                y = yStart + 30
+                self.ui['evolution_' .. index .. '_' .. Constants.HEKATON .. '_checkbox'] = 
+                            self.ui.main_panel:checkbox({ id = 'evolution-' .. index .. '-' .. Constants.HEKATON .. '-checkbox',
+                                        checked = level[Constants.HEKATON], width = 55, height = 55,
+                                        x = x, y = y, onClick = function(_, button)
+                                            level[Constants.HEKATON] = not level[Constants.HEKATON]
+                                            self.ui['evolution_' .. index .. '_' .. Constants.HEKATON .. '_checkbox']:setChecked(level[Constants.HEKATON])
+                                            Log:debug('Evolution track section %s-%s set to %s.', index, Constants.HEKATON, tostring(level[Constants.HEKATON]))
+
+                                            if level[Constants.HEKATON] == true then
+                                                if index == 1 then
+                                                    GlobalUi.showConfirmationDialog('Do you want to setup Tutorial Battle - Level 0?', 'Yes', function()
+                                                        Battle.setupBattle('Tutorial Battle', Constants.LEVEL_0)
+                                                    end)
+                                                else
+                                                    GlobalUi.showConfirmationDialog('Do you want to setup Hekaton Battle - Level ' 
+                                                                    .. self.EVOLUTION_INDEX_TO_LEVEL[self.cycle][index] .. '?', 'Yes', function()
+                                                        Battle.setupBattle('Hekaton Battle', self.EVOLUTION_INDEX_TO_LEVEL[self.cycle][index])
+                                                    end)
+                                                end
+                                            end
+                                        end })
+            end
+
+            if level[Constants.LABYRINTHAUROS] ~= nil then
+                y = yStart - 30
+                self.ui['evolution_' .. index .. '_' .. Constants.LABYRINTHAUROS .. '_checkbox'] = 
+                            self.ui.main_panel:checkbox({ id = 'evolution-' .. index .. '-' .. Constants.LABYRINTHAUROS .. '-checkbox',
+                                        checked = level[Constants.LABYRINTHAUROS], width = 55, height = 55,
+                                        x = x, y = y, onClick = function(_, button)
+                                            level[Constants.LABYRINTHAUROS] = not level[Constants.LABYRINTHAUROS]
+                                            self.ui['evolution_' .. index .. '_' .. Constants.LABYRINTHAUROS .. '_checkbox']:setChecked(level[Constants.LABYRINTHAUROS])
+                                            Log:debug('Evolution track section %s-%s set to %s.', index, Constants.LABYRINTHAUROS, tostring(level[Constants.LABYRINTHAUROS]))
+                                            
+                                            if level[Constants.LABYRINTHAUROS] == true then
+                                                GlobalUi.showConfirmationDialog('Do you want to setup Labyrinthauros Battle - Level ' 
+                                                                    .. self.EVOLUTION_INDEX_TO_LEVEL[self.cycle][index] .. '?', 'Yes', function()
+                                                        Battle.setupBattle('Labyrinthauros Battle', self.EVOLUTION_INDEX_TO_LEVEL[self.cycle][index])
+                                                end)
+                                                
+                                            end
+                                        end })
+            end
+        end
+    end
+
+    ------------------------
+    -- Boss primordial track
+    local xStart = 332
+    local yStart = 17
+    for index = 1, 4 do
+        self.ui['boss_'..index..'_checkbox'] = self.ui.main_panel:checkbox({ id = 'boss-' .. index .. '-checkbox',
+                                checked = (self.boss_track >= index), width = 65, height = 65,
+                                x = xStart + (index-1) * 56, y = yStart, onClick = function(_, button)
+                                    if self.boss_track >= index then
+                                        self.boss_track = index - 1
+                                    else
+                                        self.boss_track = index
+                                        -- Setup the battle if we add a cross
+                                        GlobalUi.showConfirmationDialog('Do you want to setup Alpha Temenos Battle - Level 1?', 'Yes', function()
+                                                    Battle.setupBattle('Temenos Battle', Constants.LEVEL_1)
+                                        end)
+                                    end
+
+                                    for jndex = 1, self.boss_track do
+                                        self.ui['boss_'..jndex..'_checkbox']:setChecked(true)
+                                    end
+
+                                    for jndex = self.boss_track + 1, 4 do
+                                        self.ui['boss_'..jndex..'_checkbox']:setChecked(false)
+                                    end
+                                    
+                                    Log:debug('Boss track set to %s.', self.boss_track)
+                                end })
+    end
+
+    ------------------------
+    -- Adversary track
+    local xStart = 990
+    self.ui['adversary_unlocked_checkbox'] = self.ui.main_panel:checkbox({ id = 'adversary-unlocked-checkbox',
+                                checked = self.adversary_unlocked, width = 50, height = 50,
+                                x = xStart - 52, y = yStart + 4, onClick = function(_, button)
+                                    self.adversary_unlocked = not self.adversary_unlocked
+                                    self.ui['adversary_unlocked_checkbox']:setChecked(self.adversary_unlocked)
+                                    Log:debug('Adversary unlocked set to %s.', tostring(self.adversary_unlocked))
+                                end })
+
+    for index = 1, 5 do
+        self.ui['adversary_'..index..'_checkbox'] = self.ui.main_panel:checkbox({ id = 'adversary-' .. index .. '-checkbox',
+                                checked = (self.adversary_track >= index), width = 65, height = 65,
+                                x = xStart + (index-1) * 56, y = yStart, onClick = function(_, button)
+                                    if self.adversary_track >= index then
+                                        self.adversary_track = index - 1
+                                    else
+                                        self.adversary_track = index
+                                        -- Setup the battle if we add a cross
+                                        GlobalUi.showConfirmationDialog('Do you want to setup Hermesian Pursuer Battle - Level 1?', 'Yes', function()
+                                            Battle.setupBattle('Pursuer Battle', Constants.LEVEL_1)
+                                        end)
+                                    end
+
+                                    for jndex = 1, self.adversary_track do
+                                        self.ui['adversary_'..jndex..'_checkbox']:setChecked(true)
+                                    end
+
+                                    for jndex = self.adversary_track + 1, 5 do
+                                        self.ui['adversary_'..jndex..'_checkbox']:setChecked(false)
+                                    end
+                                    
+                                    Log:debug('Adversary track set to %s.', self.adversary_track)
+                                end })
+    end
+
+    ------------------------
+    -- Mortal resource track
+    local xStart, yStart = 77, -239
+    -- This requires a named loop to keep the resources order....
+    for index, resource in ipairs({'trireme', 'monument', 'armament'}) do
+        self.ui[resource .. '_button'] = self.ui.main_panel:button({ id = resource .. '-button', fontSize = 40, 
+                            width = 55, height = 55, 
+                            x = xStart, y = yStart + (index-1) * -138 + (index == 3 and 5 or 0), -- Somehow the boxes aren't linear
+                            colors = Ui.TRANSPARENT_INPUT_COLORS, textAlignment = 'MiddleCenter',
+                            text = tostring(self.resources[resource]), onClick = function(_, button)
+            
+                local newValue = self.resources[resource] + (button == '-2' and -1 or 1)
+                newValue = Utils.clamp(newValue, 0, nil)
+                self:setResource(resource, newValue)
+        end })
+
+        for jndex = 1, 2 do
+            self.ui[resource .. '_note_input_' .. jndex] = self.ui.main_panel:input({ id = resource .. '-note-button-' .. jndex,
+                                fontSize = 24, width = 240, height = 35, textAlignment = 'LeftCenter',
+                                x = xStart + 90, y = yStart - 56 + (index-1) * -132 + (jndex-1) * -28, -- Somehow the boxes aren't linear
+                                colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ',
+                                text = self.resources[resource .. '_note'][jndex], onValueChanged = function(_, newValue)
+                
+                self:setResourceNote(resource, jndex, newValue)
+            end })
+        end
+    end
+
+    -- Primordial resources
+    local xStart, yStart = 365, -239
+    local xOffset, yOffset = 234, -138
+    local resourcesArray = {'muscle_cluster', 'calcified_knucle_bone', 'infused_mechanism', 'fleshy_mantle', 'fear_essence', 
+                'maze_fragment', 'grotesque_beak', 'powdered_matter', 'raw_ambrosia'}
+    for index, resource in ipairs(resourcesArray) do
+        local x = xStart + xOffset * ((index - 1) % 4) + (((index == 3 or index == 7) and -5) or 0) -- Fix some inconsistencies
+        local y = yStart + yOffset * math.floor((index - 1)/4) + (index == 9 and 5 or 0)
+
+        self.ui[resource .. '_button'] = self.ui.main_panel:button({ id = resource .. '-button', fontSize = 40, 
+                            width = 55, height = 55, x = x, y = y, 
+                            colors = Ui.TRANSPARENT_INPUT_COLORS, textAlignment = 'MiddleCenter',
+                            text = tostring(self.resources[resource]), onClick = function(_, button)
+            
+                local newValue = self.resources[resource] + (button == '-2' and -1 or 1)
+                newValue = Utils.clamp(newValue, 0, nil)
+                self:setResource(resource, newValue)
+        end })
+
+        for jndex = 1, 2 do
+            self.ui[resource .. '_note_input_' .. jndex] = self.ui.main_panel:input({ id = resource .. '-note-button-' .. jndex, 
+                                fontSize = 24, width = 220, height = 35, x = x + 84, y = y - 56 + (index > 4 and 7 or 0) + (jndex-1) * -28,
+                                colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ',
+                                text = self.resources[resource .. '_note'][jndex], onValueChanged = function(_, newValue)
+                
+                self:setResourceNote(resource, jndex, newValue)
+            end })
+        end
+    end
+
+    for jndex = 1, 2 do
+        self.ui['cores_note_input_' .. jndex] = self.ui.main_panel:input({ id = 'cores-note-button-' .. jndex, fontSize = 24, 
+                            width = 690, height = 35, x = 912, y = -559 + (jndex-1) * -28,
+                            colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ',
+                            text = self.resources['cores_note'][jndex], onValueChanged = function(_, newValue)
+            
+                self:setResourceNote('cores', jndex, newValue)
+        end })
+    end
+
+    ------------------------
+    -- Divine resources
+    local xStart, yStart = 167, -801
+    for index, resource in ipairs({'priests', 'sisyphus_tears', 'rare_resources'}) do
+        if resource ~= 'rare_resources' then
+            self.ui[resource .. '_button'] = self.ui.main_panel:button({ id = resource .. '-button', fontSize = 40, 
+                                width = 55, height = 55, x = xStart + (index-1) * 366, y = yStart, 
+                                colors = Ui.TRANSPARENT_INPUT_COLORS, textAlignment = 'MiddleCenter',
+                                text = tostring(self.resources[resource]), onClick = function(_, button)
+                
+                local newValue = self.resources[resource] + (button == '-2' and -1 or 1)
+                newValue = Utils.clamp(newValue, 0, nil)
+                self:setResource(resource, newValue)
+            end })
+        end
+
+        for jndex = 1, 2 do
+            self.ui[resource .. '_note_input_' .. jndex] = self.ui.main_panel:input({ id = resource .. '-note-button-' .. jndex, 
+                                    fontSize = 24, width = 300, height = 35, x = xStart + 110 + (index-1) * 374, y = yStart - 58 + (jndex-1) * -28,
+                                    colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ',
+                                    text = self.resources[resource .. '_note'][jndex], onValueChanged = function(_, newValue)
+                    
+                self:setResourceNote(resource, jndex, newValue)
+            end })
+        end
+    end
 end
 
-function Argo.getEvolutionTrack()
-    return Argo.evolution_track
+function Argo:createSheetUiForCycleII()
+
 end
 
-function Argo.setHull(hull)
-    Argo.ui['hull_'..hull..'_checkbox']:select()
-    Argo.hull = hull
-    Log:debug('Hull set to %s', Argo.hull)
+function Argo:createSheetUiForCycleIII()
 
-    if Argo.hull == 0 then
+end
+
+function Argo:getLevelFromEvolutionIndex(cycle, index)
+    return self.EVOLUTION_INDEX_TO_LEVEL[cycle][index]
+end
+
+function Argo:getEvolutionTrack()
+    return self.evolution_track
+end
+
+function Argo:setHull(hull)
+    self.ui['hull_'..hull..'_checkbox']:select()
+    self.hull = hull
+    Log:debug('Hull set to %s', self.hull)
+
+    if self.hull == 0 then
         broadcastToAll('Read 0415 immediately.', Constants.WARNING_COLOR)
     end
 end
 
-function Argo.setCrew(crew)
-    Argo.ui['crew_'..crew..'_checkbox']:select()
-    Argo.crew = crew
-    Log:debug('Crew set to %s', Argo.crew)
+function Argo:setCrew(crew)
+    self.ui['crew_'..crew..'_checkbox']:select()
+    self.crew = crew
+    Log:debug('Crew set to %s', self.crew)
 
-    if Argo.crew == 0 then
+    if self.crew == 0 then
         broadcastToAll('Read 0562 immediately.', Constants.WARNING_COLOR)
     end
 end
 
-function Argo.setStoryCard(card)
-    Argo.story_card = card
-    Argo.ui.story_card_input:setText(Argo.story_card)
-    Log:debug('Story card set to %s', Argo.story_card)
+function Argo:setStoryCard(card)
+    self.story_card = card
+    self.ui.story_card_input:setText(self.story_card)
+    Log:debug('Story card set to %s', self.story_card)
 end
 
-function Argo.setDoomCard(card)
-    Argo.doom_card = card
-    Argo.ui.doom_card_input:setText(Argo.doom_card)
-    Log:debug('Doom card set to %s', Argo.doom_card)
+function Argo:setDoomCard(card)
+    self.doom_card = card
+    self.ui.doom_card_input:setText(self.doom_card)
+    Log:debug('Doom card set to %s', self.doom_card)
 end
 
-function Argo.setAbilitiesLimit(limit)
-    Argo.abilities_limit = limit
-    Argo.ui.abilities_limit_input:setText(Argo.abilities_limit)
-    Log:debug('Abilities limit set to %s', Argo.abilities_limit)
+function Argo:setAbilitiesLimit(limit)
+    self.abilities_limit = limit
+    self.ui.abilities_limit_input:setText(self.abilities_limit)
+    Log:debug('Abilities limit set to %s', self.abilities_limit)
 end
 
-function Argo.setTitansLimit(titans)
-    Argo.max_titans = titans
-    Argo.ui.max_titans_input:setText(Argo.max_titans)
-    Log:debug('Max titans set to %s', Argo.max_titans)
+function Argo:setTitansLimit(titans)
+    self.max_titans = titans
+    self.ui.max_titans_input:setText(self.max_titans)
+    Log:debug('Max titans set to %s', self.max_titans)
 end
 
-function Argo.setCurrentTitans(titans)
-    Argo.current_titans = titans
-    Argo.ui.current_titans_input:setText(Argo.current_titans)
-    Log:debug('Current titans set to %s', Argo.current_titans)
+function Argo:setCurrentTitans(titans)
+    self.current_titans = titans
+    self.ui.current_titans_input:setText(self.current_titans)
+    Log:debug('Current titans set to %s', self.current_titans)
 end
 
-function Argo.setEvolutionTrack(index, type, value)
-    if not Argo.evolution_track[index] or Argo.evolution_track[index][type] == nil then return end
+function Argo:setEvolutionTrack(index, type, value)
+    if not self.evolution_track[index] or self.evolution_track[index][type] == nil then return end
     if value ~= true and value ~= false then return end
 
-    Argo.evolution_track[index][type] = value
-    Argo.ui['evolution_' .. index .. '_' .. type .. '_checkbox']:setChecked(value)
-    Log:debug('Evolution track section %s set to %s.', index, tostring(Argo.evolution_track[index][type]))
+    self.evolution_track[index][type] = value
+    self.ui['evolution_' .. index .. '_' .. type .. '_checkbox']:setChecked(value)
+    Log:debug('Evolution track section %s set to %s.', index, tostring(self.evolution_track[index][type]))
 end
 
-function Argo.setTitansList1(boxIndex, value)
-    Argo.titans_list1[boxIndex] = value
-    Argo.ui['titans_input1_line' .. boxIndex]:setText(value)
-    Log:debug('Titans list 1 line %s set to %s', boxIndex, Argo.titans_list1[boxIndex])
+function Argo:setTitansList1(boxIndex, value)
+    self.titans_list1[boxIndex] = value
+    self.ui['titans_input1_line' .. boxIndex]:setText(value)
+    Log:debug('Titans list 1 line %s set to %s', boxIndex, self.titans_list1[boxIndex])
 end
 
-function Argo.getTitansList2(boxIndex, value)
-    Argo.titans_list2[boxIndex] = value
-    Argo.ui['titans_input2_line' .. boxIndex]:setText(value)
-    Log:debug('Titans list 2 line %s set to %s', boxIndex, Argo.titans_list2[boxIndex])
+function Argo:setTitansList2(boxIndex, value)
+    self.titans_list2[boxIndex] = value
+    self.ui['titans_input2_line' .. boxIndex]:setText(value)
+    Log:debug('Titans list 2 line %s set to %s', boxIndex, self.titans_list2[boxIndex])
 end
 
-function Argo.setAdventureTrack(adventureName, boxIndex, value)
-    if not Argo.adventure_tracks[adventureName] or not Argo.adventure_tracks[adventureName][boxIndex] == nil then return end
+function Argo:setAdventureTrack(adventureName, boxIndex, value)
+    if not self.adventure_tracks[adventureName] or not self.adventure_tracks[adventureName][boxIndex] == nil then return end
 
-    if Argo.adventure_tracks[adventureName][boxIndex] == true or Argo.adventure_tracks[adventureName][boxIndex] == false then
-        Argo.ui[adventureName .. '_track_input_' .. boxIndex]:setChecked(value)
-        Argo.adventure_tracks[adventureName][boxIndex] = value
+    if self.adventure_tracks[adventureName][boxIndex] == true or self.adventure_tracks[adventureName][boxIndex] == false then
+        self.ui[adventureName .. '_track_input_' .. boxIndex]:setChecked(value)
+        self.adventure_tracks[adventureName][boxIndex] = value
         Log:debug('Adventure track for [%s - space %s] set to %s', adventureName, boxIndex, tostring(value))
     else
-        Argo.ui[adventureName .. '_track_input_' .. boxIndex]:setText(value)
-        Argo.adventure_tracks[adventureName][boxIndex] = value
+        self.ui[adventureName .. '_track_input_' .. boxIndex]:setText(value)
+        self.adventure_tracks[adventureName][boxIndex] = value
         Log:debug('Adventure track for [%s - space %d] set to %s', adventureName, boxIndex, value)
     end
 end
 
-function Argo.setResource(resourceName, value)
-    if Argo.resources[resourceName] == nil then return end
-
-    Argo.resources[resourceName] = value
+function Argo:setResource(resourceName, value)
+    if self.resources[resourceName] == nil then return end
+    
+    self.resources[resourceName] = value
 
     -- Only do it once on 100 (avoid unecessary sets)
-    if Argo.resources[resourceName] == 100 then
-        Argo.ui[resourceName .. '_button']:setFontSize(35)
-        Argo.ui[resourceName .. '_button']:setWidth(70)
-    elseif Argo.resources[resourceName] == 99 then
-        Argo.ui[resourceName .. '_button']:setFontSize(40)
-        Argo.ui[resourceName .. '_button']:setWidth(55)
+    if self.resources[resourceName] == 100 then
+        self.ui[resourceName .. '_button']:setFontSize(35)
+        self.ui[resourceName .. '_button']:setWidth(70)
+    elseif self.resources[resourceName] == 99 then
+        self.ui[resourceName .. '_button']:setFontSize(40)
+        self.ui[resourceName .. '_button']:setWidth(55)
     end
-    Argo.ui[resourceName .. '_button']:setText(Argo.resources[resourceName])
-    
-    Log:debug('Resource %s set to %s', resourceName, Argo.resources[resourceName])
+    self.ui[resourceName .. '_button']:setText(self.resources[resourceName])
+    Log:debug('Resource %s set to %s', resourceName, self.resources[resourceName])
 end
 
-function Argo.setResourceNote(resourceName, line, value)
-    if Argo.resources[resourceName .. '_note'] == nil then return end
+function Argo:setResourceNote(resourceName, line, value)
+    if self.resources[resourceName .. '_note'] == nil then return end
 
-    Argo.resources[resourceName .. '_note'][line] = value
-    Log:debug('Note for resource %s set to %s', resourceName, Argo.resources[resourceName .. '_note'][line])
+    self.resources[resourceName .. '_note'][line] = value
+    Log:debug('Note for resource %s set to %s', resourceName, self.resources[resourceName .. '_note'][line])
 end
 
 function Argo.save()
-    local flatData = {
-        hull = Argo.hull,
-        hull_unlocked = Argo.hull_unlocked,
-        crew = Argo.crew,
-        crew_unlocked = Argo.crew_unlocked,
-        story_card = Argo.story_card,
-        doom_card = Argo.doom_card,
-        map_tile = Argo.map_tile,
-        humanity = Argo.humanity,
-        defectors = Argo.defectors,
-        argo_fate = Argo.argo_fate,
-        argo_knowledge = Argo.argo_knowledge,
-        strangers = Argo.strangers,
-        abilities_limit = Argo.abilities_limit,
-        current_titans = Argo.current_titans,
-        max_titans = Argo.max_titans,
-        titans_list1 = Argo.titans_list1,
-        titans_list2 = Argo.titans_list2,
-        adventure_tracks = Argo.adventure_tracks,
+    local flatData = {}
 
-        diplomacy_tracks = Argo.diplomacy_tracks,
+    for cycle, argo in pairs(Argo.DATA) do
+        flatData[cycle] = {
+            cycle = argo.cycle,
+            sheetGUID = argo.sheetGUID,
 
-        godforms = Argo.godforms,
-        summons = Argo.summons,
-        summons_limit = Argo.summons_limit,
-        evolution_track = Argo.evolution_track,
-        boss_track = Argo.boss_track,
-        adversary_track = Argo.adversary_track,
-        adversary_unlocked = Argo.adversary_unlocked,
+            hull = argo.hull,
+            hull_unlocked = argo.hull_unlocked,
+            crew = argo.crew,
+            crew_unlocked = argo.crew_unlocked,
+            story_card = argo.story_card,
+            doom_card = argo.doom_card,
+            map_tile = argo.map_tile,
+            humanity = argo.humanity,
+            defectors = argo.defectors,
+            argo_fate = argo.argo_fate,
+            argo_knowledge = argo.argo_knowledge,
+            strangers = argo.strangers,
+            abilities_limit = argo.abilities_limit,
+            current_titans = argo.current_titans,
+            max_titans = argo.max_titans,
+            titans_list1 = argo.titans_list1,
+            titans_list2 = argo.titans_list2,
+            adventure_tracks = argo.adventure_tracks,
+            diplomacy_tracks = argo.diplomacy_tracks,
+    
+            godforms = argo.godforms,
+            summons = argo.summons,
+            summons_limit = argo.summons_limit,
 
-        -- Cycle I resources
-        trireme = Argo.trireme,
-        trireme_note = Argo.trireme_note,
-        monument = Argo.monument,
-        monument_note = Argo.monument_note,
-        armament = Argo.armament,
-        armament_note = Argo.armament_note,
+            evolution_track = argo.evolution_track,
+            boss_track = argo.boss_track,
+            adversary_track = argo.adversary_track,
+            adversary_unlocked = argo.adversary_unlocked,
 
-        muscle_cluster = Argo.muscle_cluster,
-        muscle_cluster_note = Argo.muscle_cluster_note,
-        calcified_knucle_bone = Argo.calcified_knucle_bone,
-        calcified_knucle_bone_note = Argo.calcified_knucle_bone_note,
-        infused_mechanism = Argo.infused_mechanism,
-        infused_mechanism_note = Argo.infused_mechanism_note,
-        fleshy_mantle = Argo.fleshy_mantle,
-        fleshy_mantle_note = Argo.fleshy_mantle_note,
-        fear_essence = Argo.fear_essence,
-        fear_essence_note = Argo.fear_essence_note,
-        maze_fragment = Argo.maze_fragment,
-        maze_fragment_note = Argo.maze_fragment_note,
-        grotesque_beak = Argo.grotesque_beak,
-        grotesque_beak_note = Argo.grotesque_beak_note,
-        powdered_matter = Argo.powdered_matter,
-        powdered_matter_note = Argo.powdered_matter_note,
-        raw_ambrosia = Argo.raw_ambrosia,
-        raw_ambrosia_note = Argo.raw_ambrosia_note,
-        cores_note = Argo.cores_note,
-
-        priests = Argo.priests,
-        priests_note = Argo.priests_note,
-        sisyphus_tears = Argo.sisyphus_tears,
-        sisyphus_tears_note = Argo.sisyphus_tears_note,
-        rare_resources_note = Argo.rare_resources_note,
-    }
+            resources = argo.resources,
+        }
+    end
 
     return flatData
 end
@@ -992,21 +1058,6 @@ return {
     save = Argo.save,
     getLevelFromEvolutionIndex = Argo.getLevelFromEvolutionIndex,
     spawnSheet = Argo.spawnSheet,
-    resources = Argo.resources,
     
-    getEvolutionTrack = Argo.getEvolutionTrack,
-    
-    setHull = Argo.setHull,
-    setCrew = Argo.setCrew,
-    setStoryCard = Argo.setStoryCard,
-    setDoomCard = Argo.setDoomCard,
-    setAbilitiesLimit = Argo.setAbilitiesLimit,
-    setTitansLimit = Argo.setTitansLimit,
-    setCurrentTitans = Argo.setCurrentTitans,
-    setAdventureTrack = Argo.setAdventureTrack,
-    setResource = Argo.setResource,
-    setResourceNote = Argo.setResourceNote,
-    setTitansList1 = Argo.setTitansList1,
-    setTitansList2 = Argo.setTitansList2,
-    setEvolutionTrack = Argo.setEvolutionTrack,
+    getData = Argo.getData,
 }
