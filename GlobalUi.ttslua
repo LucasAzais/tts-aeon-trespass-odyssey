@@ -97,6 +97,10 @@ function GlobalUi.init()
         Battle.setupBattle('The Cruel Lesson Battle', Constants.LEVEL_1)
     end })
 
+    GlobalUi.ui.battle_menu_panel:button({ id = 'what-are-you-button', text = 'What Are You? Battle', fontSize = fontSize, width = battleSelectionWidth - 10, height = 40, onClick = function()
+        Battle.setupBattle('What Are You? Battle', Constants.LEVEL_1)
+    end })
+
     local theBurdenLayout = GlobalUi.ui.battle_menu_panel:horizontalLayout({ id = 'the-burden-layout-button', width = battleSelectionWidth - 10, height = 40, })
     theBurdenLayout:text({ id = 'the-burden-label', text = Constants.THE_BURDEN, fontSize = fontSize, width = 145, color = 'White' })
     for _, level in ipairs({ Constants.LEVEL_1, }) do
@@ -110,6 +114,14 @@ function GlobalUi.init()
     for _, level in ipairs({ Constants.LEVEL_1, Constants.LEVEL_2, Constants.LEVEL_3, Constants.LEVEL_4, }) do
         cyclonusLayout:button({ id = 'cyclonus-' .. level .. '-button', fontSize = fontSize, text = tostring(level), onClick = function()
             Battle.setupBattle('Cyclonus Battle', level)
+        end })
+    end
+
+    local chimeraMetastasiosLayout = GlobalUi.ui.battle_menu_panel:horizontalLayout({ id = 'chimera-metastasios-layout-button', width = battleSelectionWidth - 10, height = 40, })
+    chimeraMetastasiosLayout:text({ id = 'chimera-metastasios-label', text = Constants.CHIMERA_METASTASIOS, fontSize = fontSize, width = 145, color = 'White' })
+    for _, level in ipairs({ Constants.LEVEL_1, Constants.LEVEL_2, Constants.LEVEL_3, Constants.LEVEL_4, }) do
+        chimeraMetastasiosLayout:button({ id = 'chimera-metastasios-' .. level .. '-button', fontSize = fontSize, text = tostring(level), onClick = function()
+            Battle.setupBattle('Chimera Metastasios Battle', level)
         end })
     end
 
@@ -176,9 +188,9 @@ function GlobalUi.init()
                 if GlobalUi.selected_cycle ~= cycleIndex then
                     GlobalUi.selected_cycle = cycleIndex
                     if GlobalUi.selected_cycle ~= Constants.CYCLE_I then
-                        GlobalUi.ui.additional_options_grid:hide()
+                        GlobalUi.ui.use_tutorial_button:hide()
                     else
-                        GlobalUi.ui.additional_options_grid:show()
+                        GlobalUi.ui.use_tutorial_button:show()
                     end
                 end
             end
@@ -191,7 +203,7 @@ function GlobalUi.init()
     -- Additional options appear at the bottom
     GlobalUi.selected_params = {
         useTutorial = true,
-        resetFatedBoxes = false,
+        newCampaign = false,
     }
 
     GlobalUi.ui.additional_options_grid = GlobalUi.ui.campaign_setup_panel:gridLayout({
@@ -201,18 +213,18 @@ function GlobalUi.init()
     })
     GlobalUi.ui.additional_options_grid.attributes.childAlignment = 'MiddleCenter'
     
+    GlobalUi.ui.reset_fated_boxes_button = GlobalUi.ui.additional_options_grid:toggle({ 
+        id = 'new-campaign-button', text = 'New Campaign', fontSize = 20, onValueChanged = function(_, isOn)
+            GlobalUi.selected_params.newCampaign = (isOn == 'True')
+        end})
+    GlobalUi.ui.reset_fated_boxes_button.attributes.isOn = GlobalUi.selected_params.newCampaign == true
+    GlobalUi.ui.reset_fated_boxes_button.attributes.verticalOverflow = 'Overflow'
     GlobalUi.ui.use_tutorial_button = GlobalUi.ui.additional_options_grid:toggle({ 
         id = 'use-tutorial-button', text = 'Use tutorial', fontSize = 20, onValueChanged = function(_, isOn)
             GlobalUi.selected_params.useTutorial = (isOn == 'True')
         end })
     GlobalUi.ui.use_tutorial_button.attributes.isOn = GlobalUi.selected_params.useTutorial == true
     GlobalUi.ui.use_tutorial_button.attributes.verticalOverflow = 'Overflow'
-    GlobalUi.ui.reset_fated_boxes_button = GlobalUi.ui.additional_options_grid:toggle({ 
-        id = 'reset-fated-boxes-button', text = 'Reset fated boxes', fontSize = 20, onValueChanged = function(_, isOn)
-            GlobalUi.selected_params.resetFatedBoxes = (isOn == 'True')
-        end})
-    GlobalUi.ui.reset_fated_boxes_button.attributes.isOn = GlobalUi.selected_params.resetFatedBoxes == true
-    GlobalUi.ui.reset_fated_boxes_button.attributes.verticalOverflow = 'Overflow'
 
     -- Confirmation button
     GlobalUi.ui.cycle_start_button = GlobalUi.ui.campaign_setup_panel:button({
