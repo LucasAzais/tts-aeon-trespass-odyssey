@@ -45,6 +45,11 @@ Constants.SEARCHABLE = 'Searchable'
 Constants.CYCLE_BOOK = 'CycleBook'
 Constants.TUTORIAL_BOOK = 'TutorialBook'
 Constants.PERSISTENT = 'Persistent'
+Constants.CYCLE_SPECIFIC_I = 'CycleI'
+Constants.CYCLE_SPECIFIC_II = 'CycleII'
+Constants.CYCLE_SPECIFIC_III = 'CycleIII'
+Constants.CYCLE_SPECIFIC_IV = 'CycleIV'
+Constants.CYCLE_SPECIFIC_V = 'CycleV'
 Constants.MAP_TILES_BAG = 'MapTilesBag'
 
 -- Battle types

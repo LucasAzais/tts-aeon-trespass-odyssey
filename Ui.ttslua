@@ -576,7 +576,7 @@ end
 
 function Ui.globalRefresh(broadcast)
     if broadcast then
-        broadcastToAll('Initialising the Ui.', Color.Red)
+        broadcastToAll('Initialising the Ui, please wait (~20s).', Color.Red)
     end
 
     Wait.condition(function()

@@ -15,6 +15,10 @@ function Options.getCurrentCycle()
     return Options.current_cycle
 end
 
+function Options.getCurrentCycleTag()
+    return 'Cycle' .. Options.current_cycle
+end
+
 function Options.save()
     local flatData = {
         current_cycle = Options.current_cycle,

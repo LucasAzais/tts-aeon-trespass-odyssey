@@ -49,6 +49,7 @@ function Titan.spawnSheet(position, type, urlType)
         scale = Titan.TITAN_SHEET_SCALE,
         callback_function = function(spawnedObject)
             spawnedObject.addTag(Constants.TITAN_SHEET)
+            spawnedObject.setColorTint({128/255, 128/255, 128/255})
         end
     })
     

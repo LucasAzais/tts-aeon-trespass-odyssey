@@ -19,8 +19,8 @@ Timeline.SHEET_ROTATION = {60.45, 180.00, 0.00}
 Timeline.SHEET_SCALE = {16.46, 1.00, 16.46}
 Timeline.SHEET_URL = {
     [Constants.CYCLE_I] = 'http://cloud-3.steamusercontent.com/ugc/2064383278577606310/BC5581142434D1EE85307B3769808936B81E659C/',
-    [Constants.CYCLE_II] = 'http://cloud-3.steamusercontent.com/ugc/2055377100655086204/93A47A6CA2CE9925253297EECD65CE19C1D06321/',
-    [Constants.CYCLE_III] = 'http://cloud-3.steamusercontent.com/ugc/2055377100655086309/124B8FC2229CBFABFD529CA2909A298CC01209C9/',
+    [Constants.CYCLE_II] = 'http://cloud-3.steamusercontent.com/ugc/2049748969031541935/CC55C63BF987B8584EB441AED943C9B1546B3F1C/',
+    [Constants.CYCLE_III] = 'http://cloud-3.steamusercontent.com/ugc/2049748969031542100/73BDC7C41CDFF5D07AA7643FE50A9A30ED4403F6/',
 }
 
 function Timeline.init(savedData)
@@ -29,7 +29,7 @@ function Timeline.init(savedData)
     end
 end
 
-function Timeline.spawnSheet()
+function Timeline.spawnSheet(params)
     if not Options.getCurrentCycle() then return end
 
     local timelineSheet = spawnObject({
@@ -41,7 +41,8 @@ function Timeline.spawnSheet()
         callback_function = function(spawnedObject)
             spawnedObject.setLock(true)
             spawnedObject.addTag(Constants.TIMELINE_SHEET)
-            Timeline.reset()
+            spawnedObject.addTag(Options.getCurrentCycleTag())
+            Timeline.reset(params)
         end
     })
     
@@ -103,7 +104,7 @@ function Timeline.reset(params)
         end
     end
 
-    Timeline.timeline_sheet = getObjectsWithTag(Constants.TIMELINE_SHEET)[1]
+    Timeline.timeline_sheet = getObjectsWithAllTags({Constants.TIMELINE_SHEET, Options.getCurrentCycleTag()})[1]
     if not Timeline.timeline_sheet then
         Log:error('Could not find timeline sheet with tag %s', Constants.TIMELINE_SHEET)
         broadcastToAll('Could not find timeline sheet. Create one with tag ' .. Constants.TIMELINE_SHEET 
