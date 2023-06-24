@@ -109,7 +109,7 @@ function Argo.spawnSheet(params)
     end
     Argo.DATA[params.cycle] = Argo.create(params)
 
-    return argoSheet
+    return Argo.DATA[params.cycle], argoSheet
 end
 
 function Argo.create(params)

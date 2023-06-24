@@ -1,4 +1,5 @@
 local Timeline = {}
+Timeline.__index = Timeline
 
 local Constants = require('Constants')
 local Log = require('Log').ForModule('Timeline')
@@ -24,13 +25,18 @@ Timeline.SHEET_URL = {
 }
 
 function Timeline.init(savedData)
-    if Options.getCurrentCycle() then
-        Timeline.reset(savedData)
+    Timeline.DATA = {}
+    for cycle, _ in pairs(savedData) do
+        Timeline.DATA[cycle] = Timeline.create(savedData[cycle])
     end
 end
 
+function Timeline.getData(cycle)
+    return Timeline.DATA[cycle]
+end
+
 function Timeline.spawnSheet(params)
-    if not Options.getCurrentCycle() then return end
+    if not params or not params.cycle then return end
 
     local timelineSheet = spawnObject({
         type = 'Custom_Tile',
@@ -41,29 +47,38 @@ function Timeline.spawnSheet(params)
         callback_function = function(spawnedObject)
             spawnedObject.setLock(true)
             spawnedObject.addTag(Constants.TIMELINE_SHEET)
-            spawnedObject.addTag(Options.getCurrentCycleTag())
-            Timeline.reset(params)
+            spawnedObject.addTag('Cycle' .. params.cycle)
         end
     })
     
     timelineSheet.setCustomObject({
-        image = Timeline.SHEET_URL[Options.getCurrentCycle()],
+        image = Timeline.SHEET_URL[params.cycle],
         type = 0,
         thickness = 0.1,
     })
 
-    return timelineSheet
+    params.sheetGUID = timelineSheet.getGUID()
+    if Timeline.DATA[params.cycle] then
+        broadcastToAll('The timeline content for cycle ' .. params.cycle .. ' has been overwritten with a new sheet.\n Reload your save if this was an accident.', Color.Red)
+    end
+    Timeline.DATA[params.cycle] = Timeline.create(params)
+
+    return Timeline.DATA[params.cycle], timelineSheet
 end
 
-function Timeline.reset(params)
-    if not Options.getCurrentCycle() then return end
-    if not params then params = {} end 
+function Timeline.create(params)
+    if not params or not params.cycle then return end
 
-    Timeline.voyage_timeline = params.voyage_timeline or nil
-    if not Timeline.voyage_timeline then
-        Timeline.voyage_timeline = {}
+    local timeline = {
+        cycle = params.cycle,
+    }
+    setmetatable(timeline, Timeline)
 
-        if Options.getCurrentCycle() == Constants.CYCLE_I then
+    timeline.voyage_timeline = params.voyage_timeline or nil
+    if not timeline.voyage_timeline then
+        timeline.voyage_timeline = {}
+
+        if timeline.cycle == Constants.CYCLE_I then
             for index = 1, 87 do
                 local name = ''
                 if index <= 7 then
@@ -74,179 +89,357 @@ function Timeline.reset(params)
                     name = tostring(index - 7)
                 end
 
-                table.insert(Timeline.voyage_timeline, { name = name, index = index, checked = false, note = nil })
+                table.insert(timeline.voyage_timeline, { name = name, index = index, checked = false, note = nil })
             end
-        elseif Options.getCurrentCycle() == Constants.CYCLE_II then
-        elseif Options.getCurrentCycle() == Constants.CYCLE_III then
+        elseif timeline.cycle == Constants.CYCLE_II then
+            for index = 0, 80 do
+                local name = ''
+                if index < 10 then
+                    name = '0' .. tostring(index)
+                else
+                    name = tostring(index)
+                end
+
+                table.insert(timeline.voyage_timeline, { name = name, index = index, checked = false, note = nil })
+            end
+        elseif timeline.cycle == Constants.CYCLE_III then
+            for index = 0, 90 do
+                local name = ''
+                if index < 10 then
+                    name = '0' .. tostring(index)
+                else
+                    name = tostring(index)
+                end
+
+                table.insert(timeline.voyage_timeline, { name = name, index = index, checked = false, note = nil })
+            end
         end
     end
 
-    Timeline.choice_matrix = params.choice_matrix or nil
-    if not Timeline.choice_matrix then
-        Timeline.choice_matrix = {}
+    timeline.pygmalion_track = params.pygmalion_track or nil
+    if not timeline.pygmalion_track then
+        if timeline.cycle == Constants.CYCLE_I then
+            timeline.pygmalion_track = {}
+        elseif timeline.cycle == Constants.CYCLE_II then
+            timeline.pygmalion_track = { 
+                false, false, false, false, false, false,
+                false, false, false, false, false, false,
+                false, false, false, false, false, false,
+                false, false, false, false, false, false,
+                false, false, false, false, false, false,
+            }
+        elseif timeline.cycle == Constants.CYCLE_III then
+            timeline.pygmalion_track = {
+                false, false, false, false, false, false,
+            }
+        end
 
-        if Options.getCurrentCycle() == Constants.CYCLE_I then
-            for index = 1, 336 do
-                -- This will not keep the order so we'll have to rebuild it
-                Timeline.choice_matrix[Timeline.getChoiceName(index)] = false
-            end
-        elseif Options.getCurrentCycle() == Constants.CYCLE_II then
-        elseif Options.getCurrentCycle() == Constants.CYCLE_III then
+    end
+
+    timeline.choice_matrix = params.choice_matrix or nil
+    if not timeline.choice_matrix then
+        timeline.choice_matrix = {}
+
+        for index = 1, 336 do
+            -- This will not keep the order so we'll have to rebuild it
+            timeline.choice_matrix[Timeline.getChoiceName(index)] = false
         end
     end
 
-    Timeline.map_notes = params.map_notes or {}
-    Timeline.notes = params.notes
-    if Timeline.notes == nil then
-        Timeline.notes = {}
+    timeline.map_notes = params.map_notes or {}
+    timeline.notes = params.notes
+    if timeline.notes == nil then
+        timeline.notes = {}
         for i = 1, 22 do
-            table.insert(Timeline.notes, '')
+            table.insert(timeline.notes, '')
         end
     end
 
-    Timeline.timeline_sheet = getObjectsWithAllTags({Constants.TIMELINE_SHEET, Options.getCurrentCycleTag()})[1]
-    if not Timeline.timeline_sheet then
-        Log:error('Could not find timeline sheet with tag %s', Constants.TIMELINE_SHEET)
-        broadcastToAll('Could not find timeline sheet. Create one with tag ' .. Constants.TIMELINE_SHEET 
-                .. ' then save and reload.', Color.Red)
+    local sheet = nil
+    if params.sheetGUID then
+        sheet = getObjectFromGUID(params.sheetGUID) 
+        timeline.sheetGUID = params.sheetGUID
     else
-        Timeline.createSheetUi(true)
+        sheet = getObjectsWithAllTags({Constants.TIMELINE_SHEET, 'Cycle'..timeline.cycle})[1]
+        if sheet then timeline.sheetGUID = sheet.getGUID() end
     end
+
+    if not sheet then
+        Log:error('Could not find timeline sheet with tags %s and %s', Constants.TIMELINE_SHEET, 'Cycle' .. timeline.cycle)
+        broadcastToAll('Could not find timeline sheet. Create one with tags ' .. Constants.TIMELINE_SHEET .. ' and Cycle' .. timeline.cycle
+                .. ' then save and reload.', Color.Red)
+        return nil
+    else
+        timeline:createSheetUi(true)
+    end
+
+    return timeline
 end
 
-function Timeline.createSheetUi(refresh)
-    if not Options.getCurrentCycle() then return end
-    if not Timeline.timeline_sheet then return end
+function Timeline:createSheetUi(refresh)
+    if not self.cycle then return end
+    if not self.sheetGUID then return end
 
-    Timeline.uiRoot = Ui.createRootOnObject('timeline-sheet-root', Timeline.timeline_sheet, 1.2)
-    Timeline.uiRoot:wipe()
-    Timeline.ui = {}
+    local sheet = getObjectFromGUID(self.sheetGUID)
 
-    Timeline.timeline_sheet.UI.setCustomAssets(Constants.CUSTOM_ASSETS)
+    self.ui = {}
+    self.ui.root = Ui.createRootOnObject('timeline-sheet-root', sheet, 1.2)
+    self.ui.root:wipe()
 
-    if Options.getCurrentCycle() == Constants.CYCLE_I then
-        Timeline.ui.main_panel = Timeline.uiRoot:panel({ id = 'global-panel', width = 4000, height = 3000 })
+    sheet.UI.setCustomAssets(Constants.CUSTOM_ASSETS)
 
-        ------------------------
-        -- Voyage timeline
-        local xStart, yStart = -1262, 793
-        local yOffset = -34.7
-        for index, day in ipairs(Timeline.voyage_timeline) do
-            local jump = 0
-            if index <= 47 then
-                if index >= 25 then -- Day 18
-                    jump = jump - 16
-                end
-                if index >= 26 then -- Day 19+
-                    jump = jump - 17
-                end
-                if index >= 43 then -- Day 36
-                    jump = jump - 17
-                end
-                if index >= 44 then -- Day 17+
-                    jump = jump - 17
-                end
-            else
-                if index >= 61 then -- Day 54
-                    jump = jump - 17
-                end
-                if index >= 62 then -- Day 55+
-                    jump = jump - 17
-                end
-            end
-
-            Timeline.ui['voyage_'..index..'_checkbox'] = Timeline.ui.main_panel:checkbox({ id = 'voyage-' .. index .. '-checkbox',
-                                checked = day.checked, width = 35, height = 35,
-                                x = xStart + (index > 47 and 641 or 0), 
-                                y = yStart + ((index-1)%47) * yOffset + jump, 
-                                onClick = function(_, button)
-                                    day.checked = not day.checked
-                                    Timeline.ui['voyage_'..index..'_checkbox']:setChecked(day.checked)
-                                    Log:debug('Voyage day %s set to %s.', day.name, tostring(day.checked))
-                                end })
-
-            Timeline.ui['voyage_'..index..'_input'] = Timeline.ui.main_panel:input({ id = 'voyage-' .. index .. '-input',
-                                text = day.note, width = (index > 47 and 400 or 475), height = 40,
-                                fontSize = 30, colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ',
-                                x = xStart + (index > 47 and 330 or 365) + (index > 47 and 641 or 0), 
-                                y = yStart + 2 + ((index-1)%47) * yOffset + jump + ((index == 25 or index == 43 or index == 61) and 15 or 0), 
-                                onValueChanged = function(_, newValue)
-                                    day.note = newValue
-                                    Log:debug('Voyage day note %s set to %s', day.name, day.note)
-                                end })
-        end
-
-        ------------------------
-        -- Choice matrix
-        local xStart, yStart = 65, 761
-        local xOffset, yOffset = 50, -50
-        local xJump, yJump = 7, -7
-        local finalYJump = -50
-        for index = 1, 336 do
-            local name = Timeline.getChoiceName(index)
-            local x = xStart + xOffset * ((index - 1) % 12) + xJump * (math.floor((index - 1)/2) % 6)
-            local y = yStart + yOffset * math.floor((index - 1)/12) + yJump * math.floor((index - 1)/24) + (index > 312 and finalYJump or 0)
-
-            Timeline.ui['choice_matrix_' .. name .. '_checkbox'] = Timeline.ui.main_panel:checkbox({ 
-                id = 'choice_matrix-' .. name .. '-checkbox', 
-                width = 65, height = 65, x = x, y = y,
-                checked = Timeline.choice_matrix[name], onClick = function(_, button)
-                    Timeline.setChoice(name, not Timeline.choice_matrix[name])
-                end })
-        end
-
-        ------------------------
-        -- Map notes
-        local xStart = 768
-        for index = 1, 10 do
-            Timeline.ui['map_'..index..'_checkbox'] = Timeline.ui.main_panel:checkbox({ id = 'map-' .. index .. '-checkbox',
-                                checked = (Timeline.map_notes[index] ~= nil), width = 65, height = 65,
-                                x = xStart, y = 795 + (index-1) * -55.5, onClick = function(_, button)
-                                    if Timeline.map_notes[index] == nil then
-                                        Timeline.map_notes[index] = true
-                                        Timeline.ui['map_'..index..'_checkbox']:setChecked(true)
-                                        Log:debug('Map note %s activated.', index)
-                                    else
-                                        Timeline.map_notes[index] = nil
-                                        Timeline.ui['map_'..index..'_checkbox']:setChecked(false)
-                                        Timeline.ui['map_'..index..'_input']:setText('')
-                                        Log:debug('Map note %s deactivated.', index)
-                                    end
-                                end })
-
-            Timeline.ui['map_'..index..'_input'] = Timeline.ui.main_panel:input({ id = 'map-' .. index .. '-input',
-                                text = Timeline.map_notes[index], width = 470, height = 50,
-                                fontSize = 35, colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ',
-                                x = xStart + 268, y = 795 + 5 + (index-1) * -55.5, onValueChanged = function(_, newValue)
-                                    Timeline.map_notes[index] = newValue
-                                    Log:debug('Map note %s set to %s', index, newValue)
-
-                                    if Timeline.map_notes[index] == '' then
-                                        Timeline.map_notes[index] = nil
-                                        Timeline.ui['map_'..index..'_checkbox']:setChecked(false)
-                                        Log:debug('Map note %s deactivated.', index)
-                                    elseif Timeline.map_notes[index] and Timeline.map_notes[index] ~= '' then
-                                        Timeline.ui['map_'..index..'_checkbox']:setChecked(true)
-                                        Log:debug('Map note %s activated.', index)
-                                    end
-                                end })
-        end
-
-        ------------------------
-        -- Notes
-        for jndex = 1, 22 do
-            Timeline.ui['notes_input_' .. jndex] = Timeline.ui.main_panel:input({ id = 'notes-input-' .. jndex, fontSize = 38,
-                                    colors = Ui.TRANSPARENT_INPUT_COLORS, 
-                                    width = 590, height = 45, x = 985, y = 116 + (jndex-1) * -43.9,
-                                    text = Timeline.notes[jndex], placeholder = ' ', onValueChanged = function(_, value)
-                Timeline.notes[jndex] = value
-                Log:debug('Notes %s set to %s', jndex, Timeline.notes[jndex])
-            end })
-        end
+    if self.cycle == Constants.CYCLE_I then
+        self:createSheetUiForCycleI()
+    elseif self.cycle == Constants.CYCLE_II then
+        self:createSheetUiForCycleII()
+    elseif self.cycle == Constants.CYCLE_III then
+        self:createSheetUiForCycleIII()
     end
 
     if refresh then
-        Timeline.uiRoot:refresh()
+        self.ui.root:refresh()
+    end
+end
+
+function Timeline:createSheetUiForCycleI()
+    self.ui.main_panel = self.ui.root:panel({ id = 'global-panel', width = 4000, height = 3000 })
+
+    ------------------------
+    -- Voyage timeline
+    local xStart, yStart = -1262, 793
+    local yOffset = -34.7
+    for index, day in ipairs(self.voyage_timeline) do
+        local jump = 0
+        if index <= 47 then
+            if index >= 25 then -- Day 18
+                jump = jump - 16
+            end
+            if index >= 26 then -- Day 19+
+                jump = jump - 17
+            end
+            if index >= 43 then -- Day 36
+                jump = jump - 17
+            end
+            if index >= 44 then -- Day 17+
+                jump = jump - 17
+            end
+        else
+            if index >= 61 then -- Day 54
+                jump = jump - 17
+            end
+            if index >= 62 then -- Day 55+
+                jump = jump - 17
+            end
+        end
+
+        self.ui['voyage_'..index..'_checkbox'] = self.ui.main_panel:checkbox({ id = 'voyage-' .. index .. '-checkbox',
+                            checked = day.checked, width = 35, height = 35,
+                            x = xStart + (index > 47 and 641 or 0), 
+                            y = yStart + ((index-1)%47) * yOffset + jump, 
+                            onClick = function(_, button)
+                                day.checked = not day.checked
+                                self.ui['voyage_'..index..'_checkbox']:setChecked(day.checked)
+                                Log:debug('Voyage day %s set to %s.', day.name, tostring(day.checked))
+                            end })
+
+        self.ui['voyage_'..index..'_input'] = self.ui.main_panel:input({ id = 'voyage-' .. index .. '-input',
+                            text = day.note, width = (index > 47 and 425 or 475), height = 40,
+                            fontSize = 30, colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ',
+                            x = xStart + (index > 47 and 330 or 365) + (index > 47 and 653.5 or 0), 
+                            y = yStart + 2 + ((index-1)%47) * yOffset + jump + ((index == 25 or index == 43 or index == 61) and 15 or 0), 
+                            onValueChanged = function(_, newValue)
+                                day.note = newValue
+                                Log:debug('Voyage day note %s set to %s', day.name, day.note)
+                            end })
+    end
+
+    ------------------------
+    -- Choice matrix
+    local xStart, yStart = 65, 761
+    local xOffset, yOffset = 50, -50
+    local xJump, yJump = 7, -7
+    local finalYJump = -50
+    for index = 1, 336 do
+        local name = Timeline.getChoiceName(index)
+        local x = xStart + xOffset * ((index - 1) % 12) + xJump * (math.floor((index - 1)/2) % 6)
+        local y = yStart + yOffset * math.floor((index - 1)/12) + yJump * math.floor((index - 1)/24) + (index > 312 and finalYJump or 0)
+
+        self.ui['choice_matrix_' .. name .. '_checkbox'] = self.ui.main_panel:checkbox({ 
+            id = 'choice_matrix-' .. name .. '-checkbox', 
+            width = 65, height = 65, x = x, y = y,
+            checked = self.choice_matrix[name], onClick = function(_, button)
+                self:setChoice(name, not self.choice_matrix[name])
+            end })
+    end
+
+    ------------------------
+    -- Map notes
+    local xStart = 768
+    for index = 1, 10 do
+        self.ui['map_'..index..'_checkbox'] = self.ui.main_panel:checkbox({ id = 'map-' .. index .. '-checkbox',
+                            checked = (self.map_notes[index] ~= nil), width = 65, height = 65,
+                            x = xStart, y = 795 + (index-1) * -55.5, onClick = function(_, button)
+                                if self.map_notes[index] == nil then
+                                    self.map_notes[index] = true
+                                    self.ui['map_'..index..'_checkbox']:setChecked(true)
+                                    Log:debug('Map note %s activated.', index)
+                                else
+                                    self.map_notes[index] = nil
+                                    self.ui['map_'..index..'_checkbox']:setChecked(false)
+                                    self.ui['map_'..index..'_input']:setText('')
+                                    Log:debug('Map note %s deactivated.', index)
+                                end
+                            end })
+
+        self.ui['map_'..index..'_input'] = self.ui.main_panel:input({ id = 'map-' .. index .. '-input',
+                            text = self.map_notes[index], width = 470, height = 50,
+                            fontSize = 35, colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ',
+                            x = xStart + 268, y = 795 + 5 + (index-1) * -55.5, onValueChanged = function(_, newValue)
+                                self.map_notes[index] = newValue
+                                Log:debug('Map note %s set to %s', index, newValue)
+
+                                if self.map_notes[index] == '' then
+                                    self.map_notes[index] = nil
+                                    self.ui['map_'..index..'_checkbox']:setChecked(false)
+                                    Log:debug('Map note %s deactivated.', index)
+                                elseif self.map_notes[index] and self.map_notes[index] ~= '' then
+                                    self.ui['map_'..index..'_checkbox']:setChecked(true)
+                                    Log:debug('Map note %s activated.', index)
+                                end
+                            end })
+    end
+
+    ------------------------
+    -- Notes
+    for jndex = 1, 22 do
+        self.ui['notes_input_' .. jndex] = self.ui.main_panel:input({ id = 'notes-input-' .. jndex, fontSize = 38,
+                                colors = Ui.TRANSPARENT_INPUT_COLORS, 
+                                width = 590, height = 45, x = 985, y = 116 + (jndex-1) * -43.9,
+                                text = self.notes[jndex], placeholder = ' ', onValueChanged = function(_, value)
+            self.notes[jndex] = value
+            Log:debug('Notes %s set to %s', jndex, self.notes[jndex])
+        end })
+    end
+end
+
+function Timeline:createSheetUiForCycleII()
+    self.ui.main_panel = self.ui.root:panel({ id = 'global-panel', width = 4000, height = 3000 })
+
+    ------------------------
+    -- Voyage timeline
+    local xStart, yStart = -1262, 800
+    local yOffset = -34.55
+    for index, day in ipairs(self.voyage_timeline) do
+        local jump = 0
+        if index <= 47 then
+            if index >= 23 then -- Day 18
+                jump = jump - 16
+            end
+            if index >= 24 then -- Day 19+
+                jump = jump - 17
+            end
+            if index >= 37 then -- Day 36
+                jump = jump - 17
+            end
+            if index >= 38 then -- Day 17+
+                jump = jump - 17
+            end
+        else
+            if index >= 55 then -- Day 54
+                jump = jump - 17
+            end
+            if index >= 56 then -- Day 55+
+                jump = jump - 17
+            end
+        end
+
+        self.ui['voyage_'..index..'_checkbox'] = self.ui.main_panel:checkbox({ id = 'voyage-' .. index .. '-checkbox',
+                            checked = day.checked, width = 35, height = 35,
+                            x = xStart + (index > 47 and 645 or 0), 
+                            y = yStart + ((index-1)%47) * yOffset + jump, 
+                            onClick = function(_, button)
+                                day.checked = not day.checked
+                                self.ui['voyage_'..index..'_checkbox']:setChecked(day.checked)
+                                Log:debug('Voyage day %s set to %s.', day.name, tostring(day.checked))
+                            end })
+
+        self.ui['voyage_'..index..'_input'] = self.ui.main_panel:input({ id = 'voyage-' .. index .. '-input',
+                            text = day.note, width = (index > 47 and 425 or 475), height = 40,
+                            fontSize = 30, colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ',
+                            x = xStart + (index > 47 and 331 or 365) + (index > 47 and 653.5 or 0), 
+                            y = yStart + 2 + ((index-1)%47) * yOffset + jump + ((index == 25 or index == 43 or index == 61) and 15 or 0), 
+                            onValueChanged = function(_, newValue)
+                                day.note = newValue
+                                Log:debug('Voyage day note %s set to %s', day.name, day.note)
+                            end })
+    end
+
+    ------------------------
+    -- Choice matrix
+    local xStart, yStart = 63, 762
+    local xOffset, yOffset = 50, -50
+    local xJump, yJump = 7, -7
+    local finalYJump = -50
+    for index = 1, 336 do
+        local name = Timeline.getChoiceName(index)
+        local x = xStart + xOffset * ((index - 1) % 12) + xJump * (math.floor((index - 1)/2) % 6)
+        local y = yStart + yOffset * math.floor((index - 1)/12) + yJump * math.floor((index - 1)/24) + (index > 312 and finalYJump or 0)
+
+        self.ui['choice_matrix_' .. name .. '_checkbox'] = self.ui.main_panel:checkbox({ 
+            id = 'choice_matrix-' .. name .. '-checkbox', 
+            width = 65, height = 65, x = x, y = y,
+            checked = self.choice_matrix[name], onClick = function(_, button)
+                self:setChoice(name, not self.choice_matrix[name])
+            end })
+    end
+
+    ------------------------
+    -- Map notes
+    local xStart = 766
+    for index = 1, 10 do
+        self.ui['map_'..index..'_checkbox'] = self.ui.main_panel:checkbox({ id = 'map-' .. index .. '-checkbox',
+                            checked = (self.map_notes[index] ~= nil), width = 65, height = 65,
+                            x = xStart, y = 795 + (index-1) * -55.5, onClick = function(_, button)
+                                if self.map_notes[index] == nil then
+                                    self.map_notes[index] = true
+                                    self.ui['map_'..index..'_checkbox']:setChecked(true)
+                                    Log:debug('Map note %s activated.', index)
+                                else
+                                    self.map_notes[index] = nil
+                                    self.ui['map_'..index..'_checkbox']:setChecked(false)
+                                    self.ui['map_'..index..'_input']:setText('')
+                                    Log:debug('Map note %s deactivated.', index)
+                                end
+                            end })
+
+        self.ui['map_'..index..'_input'] = self.ui.main_panel:input({ id = 'map-' .. index .. '-input',
+                            text = self.map_notes[index], width = 470, height = 50,
+                            fontSize = 35, colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ',
+                            x = xStart + 268, y = 795 + 5 + (index-1) * -55.5, onValueChanged = function(_, newValue)
+                                self.map_notes[index] = newValue
+                                Log:debug('Map note %s set to %s', index, newValue)
+
+                                if self.map_notes[index] == '' then
+                                    self.map_notes[index] = nil
+                                    self.ui['map_'..index..'_checkbox']:setChecked(false)
+                                    Log:debug('Map note %s deactivated.', index)
+                                elseif self.map_notes[index] and self.map_notes[index] ~= '' then
+                                    self.ui['map_'..index..'_checkbox']:setChecked(true)
+                                    Log:debug('Map note %s activated.', index)
+                                end
+                            end })
+    end
+
+    ------------------------
+    -- Notes
+    for jndex = 1, 12 do
+        self.ui['notes_input_' .. jndex] = self.ui.main_panel:input({ id = 'notes-input-' .. jndex, fontSize = 38,
+                                colors = Ui.TRANSPARENT_INPUT_COLORS, 
+                                width = 590, height = 45, x = 985, y = 116 + (jndex-1) * -43.9,
+                                text = self.notes[jndex], placeholder = ' ', onValueChanged = function(_, value)
+            self.notes[jndex] = value
+            Log:debug('Notes %s set to %s', jndex, self.notes[jndex])
+        end })
     end
 end
 
@@ -263,8 +456,8 @@ function Timeline.getChoiceName(index)
     return name
 end
 
-function Timeline.getTimelineDay(day)
-    for _, timelineDay in ipairs(Timeline.voyage_timeline) do
+function Timeline:getTimelineDay(day)
+    for _, timelineDay in ipairs(self.voyage_timeline) do
         if timelineDay.name == day then
             return timelineDay
         end
@@ -273,33 +466,38 @@ function Timeline.getTimelineDay(day)
     return nil
 end
 
-function Timeline.setTimelineDay(day, checked, note)
-    local timelineDay = Timeline.getTimelineDay(day)
+function Timeline:setTimelineDay(day, checked, note)
+    local timelineDay = self:getTimelineDay(day)
     if not timelineDay then return end
 
     if checked ~= nil then
         timelineDay.checked = checked
-        Timeline.ui['voyage_'..timelineDay.index..'_checkbox']:setChecked(timelineDay.checked)
+        self.ui['voyage_'..timelineDay.index..'_checkbox']:setChecked(timelineDay.checked)
     end
     if note then
         timelineDay.note = note
-        Timeline.ui['voyage_'..timelineDay.index..'_input']:setText(timelineDay.note)
+        self.ui['voyage_'..timelineDay.index..'_input']:setText(timelineDay.note)
     end
 end
 
-function Timeline.setChoice(name, value)
-    Timeline.choice_matrix[name] = value
-    Timeline.ui['choice_matrix_' .. name .. '_checkbox']:setChecked(Timeline.choice_matrix[name])
-    Log:debug('Choice matrix %s set to %s', name, tostring(Timeline.choice_matrix[name]))
+function Timeline:setChoice(name, value)
+    self.choice_matrix[name] = value
+    self.ui['choice_matrix_' .. name .. '_checkbox']:setChecked(self.choice_matrix[name])
+    Log:debug('Choice matrix %s set to %s', name, tostring(self.choice_matrix[name]))
 end
 
 function Timeline.save()
-    local flatData = {
-        voyage_timeline = Timeline.voyage_timeline,
-        choice_matrix = Timeline.choice_matrix,
-        map_notes = Timeline.map_notes,
-        notes = Timeline.notes,
-    }
+    local flatData = {}
+
+    for cycle, timeline in pairs(Timeline.DATA) do
+        flatData[cycle] = {
+            voyage_timeline = timeline.voyage_timeline,
+            choice_matrix = timeline.choice_matrix,
+            pygmalion_track = timeline.pygmalion_track,
+            map_notes = timeline.map_notes,
+            notes = timeline.notes,
+        }
+    end
 
     return flatData
 end
@@ -311,6 +509,5 @@ return {
     save = Timeline.save,
     spawnSheet = Timeline.spawnSheet,
 
-    setTimelineDay = Timeline.setTimelineDay,
-    setChoice = Timeline.setChoice,
+    getData = Timeline.getData,
 }

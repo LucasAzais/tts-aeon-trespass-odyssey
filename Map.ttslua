@@ -204,7 +204,7 @@ Map.TILES_LIST = {
         { name = '081', connectedTiles = { [Map.TOP_MIDDLE] = '074', [Map.RIGHT_MIDDLE] = '082', [Map.LEFT_MIDDLE] = '080', }, },
         { name = '082', connectedTiles = { [Map.TOP_MIDDLE] = '075', [Map.RIGHT_MIDDLE] = '083', [Map.LEFT_MIDDLE] = '081', }, },
         { name = '083', connectedTiles = { [Map.TOP_MIDDLE] = '076', [Map.RIGHT_MIDDLE] = '084', [Map.LEFT_MIDDLE] = '082', }, },
-        { name = '084', connectedTiles = { [Map.TOP_MIDDLE] = '077', [Map.LEFT_MIDDLE] = '083as', }, },
+        { name = '084', connectedTiles = { [Map.TOP_MIDDLE] = '077', [Map.LEFT_MIDDLE] = '083', }, },
     },
     [Constants.CYCLE_III] = {
 

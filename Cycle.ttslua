@@ -49,9 +49,11 @@ Cycle.CYCLES = {
 }
 Cycle.DROP_HEIGHT = 2.00
 
-function Cycle.init()
+function Cycle.init(savedData)
     -- Not sure why this is needed tbh... There isn't any cross-loading as far as I can tell
     Argo = require('Argo')
+
+    Cycle.secretBagGUID = savedData.secretBagGUID or nil
 end
 
 function Cycle.setupCycle(cycle, params)
@@ -138,7 +140,7 @@ function Cycle.initialSetup()
                 end
             })
         elseif object.gm_notes == 'SecretsBag' then
-            genericBag.takeObject({
+            local bag = genericBag.takeObject({
                 guid = object.guid,
                 position = {-14.10, 0.80, 65.64},
                 rotation = {0.00, 180.00, 0.00},
@@ -147,6 +149,7 @@ function Cycle.initialSetup()
                     spawnedObject.setLock(true)
                 end
             })
+            Cycle.secretBagGUID = bag.getGUID()
         elseif object.gm_notes == 'Conditions' then
             genericBag.takeObject({
                 guid = object.guid,
@@ -501,9 +504,10 @@ function Cycle.setupCycleI(params)
 
     -- New Argo/Timeline sheets (takes the current cycle into account)
     Argo.spawnSheet({ cycle = Constants.CYCLE_I, hull = 4, crew = 5 })
-    Timeline.spawnSheet()
+    Timeline.spawnSheet({ cycle = Constants.CYCLE_I, })
 
     local currentArgo = Argo.getData(Constants.CYCLE_I)
+    local currentTimeline = Timeline.getData(Constants.CYCLE_I)
 
     -- Get map tiles out of the bag
     for _, bag in ipairs(getObjectsWithTag(Constants.MAP_TILES_BAG)) do
@@ -634,19 +638,19 @@ function Cycle.setupCycleI(params)
                 currentArgo:setAdventureTrack(Constants.TUTORIAL, 2, 1)
                 currentArgo:setAdventureTrack(Constants.TUTORIAL, 3, true)
                 
-                Timeline.setTimelineDay('T0', true)
-                Timeline.setTimelineDay('T1', true)
-                Timeline.setTimelineDay('T2', true)
-                Timeline.setTimelineDay('T3', true)
-                Timeline.setTimelineDay('T4', true)
-                Timeline.setTimelineDay('T5', true)
-                Timeline.setTimelineDay('T6', true)
+                currentTimeline:setTimelineDay('T0', true)
+                currentTimeline:setTimelineDay('T1', true)
+                currentTimeline:setTimelineDay('T2', true)
+                currentTimeline:setTimelineDay('T3', true)
+                currentTimeline:setTimelineDay('T4', true)
+                currentTimeline:setTimelineDay('T5', true)
+                currentTimeline:setTimelineDay('T6', true)
                 
                 -- Mark A7 or A8
                 if math.random(1, 2) == 1 then
-                    Timeline.setChoice('A7', true)
+                    currentTimeline:setChoice('A7', true)
                 else
-                    Timeline.setChoice('A8', true)
+                    currentTimeline:setChoice('A8', true)
                 end
 
                 -- Gain resources
@@ -794,6 +798,7 @@ function Cycle.setupCycleI(params)
                     end
                 end
 
+                -- Ping new gear location
                 Player.getPlayers()[1].pingTable({42.30, 1.01, -1.90})
                 broadcastToAll('Don\'t forget to assign 1 Mnenos node to Imprisonment.', Constants.WARNING_COLOR)
                 broadcastToAll('Follow the "Skipping the Tutorial" instructions.', Constants.WARNING_COLOR)
@@ -813,17 +818,15 @@ function Cycle.setupCycleII(params)
     -- Check parameters
     local useTutorial = params.useTutorial or false
 
-    Argo.spawnSheet({ cycle = Constants.CYCLE_II, hull = 5, crew = 5, current_titans = 10, argo_knowledge = 20, })
-    Timeline.spawnSheet()
-
-    local currentArgo = Argo.getData(Constants.CYCLE_II)
+    local currentArgo, _ = Argo.spawnSheet({ cycle = Constants.CYCLE_II, hull = 5, crew = 5, current_titans = 10, argo_knowledge = 20, })
+    local currentTimeline, _ = Timeline.spawnSheet({ cycle = Constants.CYCLE_II, })
 
     -- Get map tiles out of the bag
     for _, bag in ipairs(getObjectsWithTag(Constants.MAP_TILES_BAG)) do
         for _, tile in ipairs(bag.getObjects()) do
             local position = nil
             if tile.name == '078' then
-                position = {-73.39, 0.98, 37.24}
+                position = {-73.39, 0.98, 28.57}
                 params.startMapTile = tile.guid
             end
 
@@ -843,53 +846,62 @@ function Cycle.setupCycleII(params)
     
     Map.reset({ discovered_map = { ['078'] = params.startMapTile, }})
 
-    -- Move argo to T00 or 027
+    -- Move argo to 078
     local argoMini = getObjectFromGUID(Constants.ARGO_MINI_GUID)
     local argoPosition = {-73.37, Cycle.DROP_HEIGHT, 37.16}
-    if useTutorial then
-        argoPosition = {-77.12, Cycle.DROP_HEIGHT, 70.04}
-    end
     if argoMini then argoMini.setPosition(argoPosition) end
 
-    -- Grab the tech cards
-    for _, card in ipairs(params.techDeck.getObjects()) do
-        if card.name == 'Last Tome' then
-            params.techDeck.takeObject({
+    -- Grab the secret cards
+    local secretBag = getObjectFromGUID(Cycle.secretBagGUID)
+    for _, card in ipairs(secretBag.getObjects()) do
+        -- Grab Tech cards
+        if card.name == 'Forgotten Knowledge' then
+            secretBag.takeObject({
                 guid = card.guid,
                 position = {37.85, Cycle.DROP_HEIGHT, 71.21},
-                rotation = {0, 180, useTutorial and 180 or 0},
+                rotation = {0, 180, 180},
                 smooth = false,
             })
-        elseif card.name == 'Titanogenesis' then
-            params.techDeck.takeObject({
+        elseif card.name == 'Titanomorphosis' then
+            secretBag.takeObject({
                 guid = card.guid,
                 position = {46.32, Cycle.DROP_HEIGHT, 71.21},
-                rotation = {0, 180, useTutorial and 180 or 0},
+                rotation = {0, 180, 180},
                 smooth = false,
             })
-        elseif card.name == 'Argo Works' then
-            params.techDeck.takeObject({
+        elseif card.name == 'Argo Works II' then
+            secretBag.takeObject({
                 guid = card.guid,
                 position = {54.78, Cycle.DROP_HEIGHT, 71.21},
-                rotation = {0, 180, useTutorial and 180 or 0},
+                rotation = {0, 180, 180},
                 smooth = false,
             })
-        elseif card.name == 'Antikratos Project' then
-            params.techDeck.takeObject({
+        elseif card.name == 'Temenos Project' then
+            secretBag.takeObject({
                 guid = card.guid,
                 position = {63.24, Cycle.DROP_HEIGHT, 71.21},
-                rotation = {0, 180, useTutorial and 180 or 0},
+                rotation = {0, 180, 180},
                 smooth = false,
             })
-        elseif card.name == 'Primordial Dawn' then
-            params.techDeck.takeObject({
+        elseif card.name == 'Argo\'s Mission' then
+            secretBag.takeObject({
                 guid = card.guid,
                 position = {71.70, Cycle.DROP_HEIGHT, 71.21},
-                rotation = {0, 180, useTutorial and 180 or 0},
+                rotation = {0, 180, 180},
+                smooth = false,
+            })
+        elseif card.name == 'Violent Awakening' then
+            -- Add Kratos card
+            secretBag.takeObject({
+                guid = card.guid,
+                position = {-5.47, Cycle.DROP_HEIGHT, 12.19},
+                rotation = {0, 180, 180},
                 smooth = false,
             })
         end
     end
+
+    broadcastToAll('Perform a Divine Surge then read 001.', Constants.WARNING_COLOR)
 end
 
 function Cycle.reset()
@@ -972,7 +984,7 @@ end
 
 function Cycle.save()
     local flatData = {
-        
+        secretBagGUID = Cycle.secretBagGUID
     }
 
     return flatData
