@@ -475,7 +475,7 @@ function Battle:shuffleDecks()
 end
 
 function Battle.endTutorialSetup()
-    broadcastToAll('Don\'t forget to remove the Trauma cards excluded in the tutorial.', Constants.WARNING_COLOR)
+    broadcastToAll('Don\'t forget to add the Trauma cards back into their decks after the tutorial.', Constants.WARNING_COLOR)
 end
 
 function Battle.endLabyrinthaurosSetup()

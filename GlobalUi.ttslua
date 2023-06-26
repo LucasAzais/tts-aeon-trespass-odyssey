@@ -45,6 +45,9 @@ function GlobalUi.init()
         Battle.cleanupCurrentBattle()
     end })
 
+    GlobalUi.ui.cycle_I_text = GlobalUi.ui.battle_menu_panel:text({ id = 'cycle-I-text', text = 'Cycle I', fontSize = fontSize + 5,
+                    color = 'White', textAlignment = 'MiddleCenter', width = battleSelectionWidth })
+
     local hekatonLayout = GlobalUi.ui.battle_menu_panel:horizontalLayout({ id = 'hekaton-layout-button', width = battleSelectionWidth - 10, height = 40, })
     hekatonLayout:text({ id = 'hekaton-label', text = Constants.HEKATON, fontSize = fontSize, width = 100, color = 'White' })
     for _, level in ipairs({ Constants.LEVEL_0, Constants.LEVEL_1, Constants.LEVEL_2, Constants.LEVEL_3, Constants.LEVEL_4, }) do
@@ -93,21 +96,12 @@ function GlobalUi.init()
         Battle.setupBattle('Pursuit\'s End Battle', Constants.LEVEL_1)
     end })
 
+    GlobalUi.ui.cycle_II_text = GlobalUi.ui.battle_menu_panel:text({ id = 'cycle-II-text', text = 'Cycle II', fontSize = fontSize + 5,
+                    color = 'White', textAlignment = 'MiddleCenter', width = battleSelectionWidth })
+
     GlobalUi.ui.battle_menu_panel:button({ id = 'the-cruel-lesson-button', text = 'The Cruel Lesson Battle', fontSize = fontSize, width = battleSelectionWidth - 10, height = 40, onClick = function()
         Battle.setupBattle('The Cruel Lesson Battle', Constants.LEVEL_1)
     end })
-
-    GlobalUi.ui.battle_menu_panel:button({ id = 'what-are-you-button', text = 'What Are You? Battle', fontSize = fontSize, width = battleSelectionWidth - 10, height = 40, onClick = function()
-        Battle.setupBattle('What Are You? Battle', Constants.LEVEL_1)
-    end })
-
-    local theBurdenLayout = GlobalUi.ui.battle_menu_panel:horizontalLayout({ id = 'the-burden-layout-button', width = battleSelectionWidth - 10, height = 40, })
-    theBurdenLayout:text({ id = 'the-burden-label', text = Constants.THE_BURDEN, fontSize = fontSize, width = 145, color = 'White' })
-    for _, level in ipairs({ Constants.LEVEL_1, }) do
-        theBurdenLayout:button({ id = 'the-burden-' .. level .. '-button', fontSize = fontSize, text = tostring(level), onClick = function()
-            Battle.setupBattle('Burden Battle', level)
-        end })
-    end
 
     local cyclonusLayout = GlobalUi.ui.battle_menu_panel:horizontalLayout({ id = 'cyclonus-layout-button', width = battleSelectionWidth - 10, height = 40, })
     cyclonusLayout:text({ id = 'cyclonus-label', text = Constants.CYCLONUS, fontSize = fontSize, width = 145, color = 'White' })
@@ -124,6 +118,18 @@ function GlobalUi.init()
             Battle.setupBattle('Chimera Metastasios Battle', level)
         end })
     end
+
+    local theBurdenLayout = GlobalUi.ui.battle_menu_panel:horizontalLayout({ id = 'the-burden-layout-button', width = battleSelectionWidth - 10, height = 40, })
+    theBurdenLayout:text({ id = 'the-burden-label', text = Constants.THE_BURDEN, fontSize = fontSize, width = 145, color = 'White' })
+    for _, level in ipairs({ Constants.LEVEL_1, }) do
+        theBurdenLayout:button({ id = 'the-burden-' .. level .. '-button', fontSize = fontSize, text = tostring(level), onClick = function()
+            Battle.setupBattle('Burden Battle', level)
+        end })
+    end
+
+    GlobalUi.ui.battle_menu_panel:button({ id = 'what-are-you-button', text = 'What Are You? Battle', fontSize = fontSize, width = battleSelectionWidth - 10, height = 40, onClick = function()
+        Battle.setupBattle('What Are You? Battle', Constants.LEVEL_1)
+    end })
 
     -----------------
     -- Cycle setup --

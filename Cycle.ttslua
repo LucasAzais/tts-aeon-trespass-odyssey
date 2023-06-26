@@ -4,6 +4,7 @@ Cycle.__index = Cycle
 local Argo
 local Argonaut = require('Argonaut')
 local Battle = require('Battle')
+local BattleBoard = require('BattleBoard')
 local Constants = require('Constants')
 local Log = require('Log').ForModule('Cycle')
 local Map = require('Map')
@@ -624,6 +625,48 @@ function Cycle.setupCycleI(params)
             end
 
             if useTutorial then
+                -- Remove tutorial cards
+                local board = BattleBoard.getBoard()
+                -- Grave
+                local deck = Utils.castAndTagFilter(board.positionToWorld({0.8682172, -1.10, -1.116671}), Vector(0, 1, 0), nil, 10)
+                if deck ~= nil then 
+                    for _, card in ipairs(deck.getObjects()) do
+                        if card.name == 'Deluge of Memories' or card.name == 'Fused Souls' or card.name == 'Theseus Logic' 
+                                or card.name == 'Ariadne\'s Logic' or card.name == 'Mazetouched' then
+                            deck.takeObject({
+                                guid = card.guid,
+                                position = deck.getPosition() + Vector(0, 1, 5),
+                            })
+                        end
+                    end
+                end
+                -- Major
+                deck = Utils.castAndTagFilter(board.positionToWorld({0.7037947, -1.10, -1.11486}), Vector(0, 1, 0), nil, 10)
+                if deck ~= nil then 
+                    for _, card in ipairs(deck.getObjects()) do
+                        if card.name == 'Flood of Memories' or card.name == 'Dread' or card.name == 'Maze Eruption' 
+                                or card.name == 'Pall of Despair' then
+                            deck.takeObject({
+                                guid = card.guid,
+                                position = deck.getPosition() + Vector(0, 1, 5),
+                            })
+                        end
+                    end
+                end
+                -- Minor
+                deck = Utils.castAndTagFilter(board.positionToWorld({0.5501335, -1.10, -1.115513}), Vector(0, 1, 0), nil, 10)
+                if deck ~= nil then 
+                    for _, card in ipairs(deck.getObjects()) do
+                        if card.name == 'Unexpected Help' or card.name == 'Fear' or card.name == 'Maze Emergence' 
+                                or card.name == 'Seed of Despair' then
+                            deck.takeObject({
+                                guid = card.guid,
+                                position = deck.getPosition() + Vector(0, 1, 5),
+                            })
+                        end
+                    end
+                end
+
                 currentArgo:setEvolutionTrack(1, Constants.HEKATON, true)
                 Battle.setupBattle('Tutorial Battle', Constants.LEVEL_0)
 
