@@ -154,7 +154,6 @@ Content.battles = {
     },
     ['Labyrinthauros Battle'] = {
         {
-            end_setup = 'endLabyrinthaurosSetup',
             levels = { Constants.LEVEL_1, Constants.LEVEL_2, Constants.LEVEL_3, Constants.LEVEL_4, },
             primordials = { Constants.LABYRINTHAUROS, },
             primordial_start_position_rotation = { 
@@ -854,30 +853,37 @@ Content.primordials = {
     {
         name = Constants.LABYRINTHAUROS,
         size = {width = 2, height = 2},
+        end_setup = 'endLabyrinthaurosSetup',
     },
     {
         name = Constants.HERMESIAN_PURSUER,
         size = {width = 2, height = 2},
+        end_setup = 'endHermesianPursuerSetup',
     },
     {
         name = Constants.ALPHA_TEMENOS,
         size = {width = 3, height = 3},
+        end_setup = 'endAlphaTemenosSetup',
     },
     {
         name = Constants.CYCLONUS,
         size = {width = 2, height = 2},
+        end_setup = 'endCyclonusSetup',
     },
     {
         name = Constants.THE_NIETZSCHEAN,
         size = {width = 2, height = 2},
+        end_setup = 'endTheNietzscheanSetup',
     },
     {
         name = Constants.THE_BURDEN,
         size = {width = 2, height = 2},
+        end_setup = 'endTheBurdenSetup',
     },
     {
         name = Constants.CHIMERA_METASTASIOS,
         size = {width = 3, height = 3},
+        end_setup = 'endChimeraMetastasiosSetup',
     },
 }
 

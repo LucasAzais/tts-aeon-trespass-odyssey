@@ -30,7 +30,7 @@ function BattleBoard.init()
     -- Create the grid on the board
     BattleBoard.updateGrid()
 
-    -- Create Kratos Pool UI
+    -- Create Kratos Pool UI + Placement Continue button
     BattleBoard.createUi()
 
     EventManager.addHandler('onObjectDrop', function(_, object)
@@ -47,13 +47,15 @@ function BattleBoard.init()
 end
 
 function BattleBoard.createUi()
-    BattleBoard.uiRoot = Ui.createRootOnObject('battle-board-root', BattleBoard.BOARD, 1.3)
+    BattleBoard.uiRoot = Ui.createRootOnObject('battle-board-root', BattleBoard.BOARD, 2.5)
     BattleBoard.uiRoot:wipe()
     -- BattleBoard.uiRoot.scale = '0.01 0.01'
 
-    BattleBoard.uiRoot:panel({ id = 'battle-board-panel', width = 1000, height = 1000 })
-    BattleBoard.clean_button = BattleBoard.uiRoot:button({ id = 'cleanup-kratos-pool-button', width = 200, height = 70,
-                                    x = 158, y = 95, textAlignment = 'MiddleCenter', text = 'Clear', fontSize = 50,
+    local panel = BattleBoard.uiRoot:panel({ id = 'battle-board-panel', width = 1000, height = 1000 })
+    BattleBoard.clean_button = panel:button({ id = 'cleanup-kratos-pool-button', width = 200, height = 70,
+    -- BattleBoard.clean_button = BattleBoard.uiRoot:button({ id = 'cleanup-kratos-pool-button', width = 200, height = 70,
+                                    x = -1580, y = -950, textAlignment = 'MiddleCenter', text = 'Clear', fontSize = 50,
+                                    -- x = 158, y = 95, textAlignment = 'MiddleCenter', text = 'Clear', fontSize = 50,
                                     colors = '#FFFFFF|#dbdbdb|#C8C8C8|rgba(0.78,0.78,0.78,0.5)', onClick = function()
                                         local kratosPool = getObjectFromGUID(BattleBoard.KRATOS_POOL_GUID)
                                         for _, object in ipairs(kratosPool.getObjects()) do
@@ -61,6 +63,11 @@ function BattleBoard.createUi()
                                         end
                                     end })
     BattleBoard.clean_button.attributes.fontStyle = 'Bold'
+
+    BattleBoard.continue_button = panel:button({ id = 'battle-board-continue-button', width = 340, height = 90, 
+                                    x = 0, y = 0, textAlignment = 'MiddleCenter', text = 'Continue', fontSize = 70, active = false,
+                                    colors = '#FFFFFF|#dbdbdb|#C8C8C8|rgba(0.78,0.78,0.78,0.5)', onClick = function() end })
+    BattleBoard.continue_button.attributes.fontStyle = 'Bold'
 end
 
 function BattleBoard.updateGrid()
@@ -137,10 +144,15 @@ function BattleBoard.getBoard()
     return BattleBoard.BOARD
 end
 
+function BattleBoard.getContinueButton()
+    return BattleBoard.continue_button
+end
+
 ------------------------------------------------------
 
 return {
     init = BattleBoard.init,
     getGrid = BattleBoard.getGrid,
     getBoard = BattleBoard.getBoard,
+    getContinueButton = BattleBoard.getContinueButton,
 }

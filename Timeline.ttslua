@@ -510,10 +510,19 @@ function Timeline:setPygmalionTrack(index, value)
     Log:debug('Cycle %s - Pygmalion track %s set to %s', self.cycle, index, tostring(self.pygmalion_track[index]))
 end
 
-function Timeline:setChoice(name, value)
+function Timeline:setChoice(name, value, preventPropagation)
     self.choice_matrix[name] = value
     self.ui['choice_matrix_' .. name .. '_checkbox']:setChecked(self.choice_matrix[name])
     Log:debug('Cycle %s - Choice matrix %s set to %s', self.cycle, name, tostring(self.choice_matrix[name]))
+
+    -- Trigger the setChoice on all the timelines
+    if not preventPropagation then
+        for cycle, timeline in pairs(Timeline.DATA) do
+            if timeline ~= nil and timeline ~= self then
+                timeline:setChoice(name, value, true)
+            end
+        end
+    end
 end
 
 function Timeline.save()

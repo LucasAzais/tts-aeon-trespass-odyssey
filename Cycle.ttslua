@@ -822,10 +822,11 @@ function Cycle.setupCycleII(params)
 
     -- Get the cycle I data
     local c1Argo = Argo.getData(Constants.CYCLE_I)
+    local c1Timeline = Timeline.getData(Constants.CYCLE_I)
 
     local currentArgo, _ = Argo.spawnSheet({ cycle = Constants.CYCLE_II, hull = 5, crew = 5, current_titans = 10, argo_knowledge = 20,
                 max_titans = 15, abilities_limit = c1Argo and c1Argo.abilities_limit or 0, })
-    local currentTimeline, _ = Timeline.spawnSheet({ cycle = Constants.CYCLE_II, })
+    local currentTimeline, _ = Timeline.spawnSheet({ cycle = Constants.CYCLE_II, choice_matrix = c1Timeline and c1Timeline.choice_matrix or nil, })
 
     -- Get map tiles out of the bag
     for _, bag in ipairs(getObjectsWithTag(Constants.MAP_TILES_BAG)) do

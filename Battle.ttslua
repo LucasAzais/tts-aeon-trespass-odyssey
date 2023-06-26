@@ -99,6 +99,7 @@ function Battle:setup()
     if not self.schematics then return end
 
     self.setupInProgress = true
+    self.placementDone = false
 
     -- Pull out the corresponding battle bag and copy it
     local primordialsBag = getObjectFromGUID(Battle.PRIMORDIAL_BAG_GUID)
@@ -138,6 +139,12 @@ function Battle:setup()
                         -- Shuffle Trauma/Kratos/Moiros decks
                         self:shuffleDecks()
 
+                        -- Run primordial specific setup
+                        if Content.getByName(Content.primordials, self.schematics.primordials[1]).end_setup ~= nil then
+                            Battle[Content.getByName(Content.primordials, self.schematics.primordials[1]).end_setup]()
+                        end
+                        
+                        -- Run battle specific setup
                         if self.schematics.end_setup ~= nil then
                             Battle[self.schematics.end_setup]()
                         end
@@ -276,65 +283,83 @@ function Battle:setupPrimordial()
     -- Calculate all starting values here --
     ----------------------------------------
 
-    -- Draw the random starting setup
-    local startIndex = 1
-    local startPosition, startRotation = nil, nil
-    if #self.schematics.primordial_start_position_rotation > 1 then
-        -- Setup a random draw. Add all the indexes "weight" amount of times and take a random index from there
-        local randomDraw = {}
-        for index, element in ipairs(self.schematics.primordial_start_position_rotation) do
-            for ballIndex = 1, (element.weight or 1) do
-                table.insert(randomDraw, index)
-            end
-        end
+    BattleBoard.getContinueButton():setOnClick(function()
+        self.placementDone = true
+        BattleBoard.getContinueButton():hide()
+        BattleBoard.getContinueButton():setOnClick(nil)
+    end)
+    BattleBoard.getContinueButton():show()
+    broadcastToAll('Press "Continue" once you\'ve positionned the Titans.', Constants.WARNING_COLOR)
 
-        randomDraw = Utils.knuthShuffle(randomDraw)
-        startIndex = randomDraw[1]
-    end
-
-    -- Get the position
-    startPosition = self.schematics.primordial_start_position_rotation[startIndex].position
-
-    -- If still nil, the players choose
-    if startPosition == nil then
-        broadcastToAll('The players get to choose the starting position.', Constants.WARNING_COLOR)
-    else
-        local x, z = self.grid:getXZ(startPosition.row, startPosition.column)
-        startPosition = {x, Battle.DROP_HEIGHT, z}
-
-        -- Get the rotation
-        startRotation = self.schematics.primordial_start_position_rotation[startIndex].rotations[1]
-        if #self.schematics.primordial_start_position_rotation[startIndex].rotations then
+    -- Delayed position selection
+    Wait.condition(function()
+        -- Draw the random starting setup
+        local startIndex = 1
+        local startPosition, startRotation = nil, nil
+        if #self.schematics.primordial_start_position_rotation > 1 then
             -- Setup a random draw. Add all the indexes "weight" amount of times and take a random index from there
             local randomDraw = {}
-            for index, element in ipairs(self.schematics.primordial_start_position_rotation[startIndex].rotations) do
+            for index, element in ipairs(self.schematics.primordial_start_position_rotation) do
                 for ballIndex = 1, (element.weight or 1) do
                     table.insert(randomDraw, index)
                 end
             end
 
             randomDraw = Utils.knuthShuffle(randomDraw)
-            startRotation = self.schematics.primordial_start_position_rotation[startIndex].rotations[randomDraw[1]].rotation
+            startIndex = randomDraw[1]
+        end
 
-            -- If still nil, the players choose
-            if startRotation == nil then
-                broadcastToAll('The players get to choose the starting rotation.', Constants.WARNING_COLOR)
+        -- Get the position
+        startPosition = self.schematics.primordial_start_position_rotation[startIndex].position
+
+        -- If still nil, the players choose
+        if startPosition == nil then
+            broadcastToAll('The players get to choose the starting position.', Constants.WARNING_COLOR)
+        else
+            local x, z = self.grid:getXZ(startPosition.row, startPosition.column)
+            startPosition = {x, Battle.DROP_HEIGHT, z}
+
+            -- Get the rotation
+            startRotation = self.schematics.primordial_start_position_rotation[startIndex].rotations[1]
+            if #self.schematics.primordial_start_position_rotation[startIndex].rotations then
+                -- Setup a random draw. Add all the indexes "weight" amount of times and take a random index from there
+                local randomDraw = {}
+                for index, element in ipairs(self.schematics.primordial_start_position_rotation[startIndex].rotations) do
+                    for ballIndex = 1, (element.weight or 1) do
+                        table.insert(randomDraw, index)
+                    end
+                end
+
+                randomDraw = Utils.knuthShuffle(randomDraw)
+                startRotation = self.schematics.primordial_start_position_rotation[startIndex].rotations[randomDraw[1]].rotation
+
+                -- If still nil, the players choose
+                if startRotation == nil then
+                    broadcastToAll('The players get to choose the starting rotation.', Constants.WARNING_COLOR)
+                end
             end
         end
-    end
+
+        for _, object in ipairs(self.primordialBag.getObjects()) do
+            if Utils.contains(object.tags, Constants.PRIMORDIAL) then
+                self.primordialBag.takeObject({
+                    guid = object.guid,
+                    position = startPosition or (Vector(self.primordialBag.getPosition()) + Vector(6, 0, 0)),
+                    rotation = startRotation or Constants.ROTATION_SOUTH,
+                    smooth = false, -- This prevents collisions for now, needs to be revisited
+                    callback_function = function(spawnedObject)
+                        spawnedObject.addTag(Constants.DISPOSABLE)
+                    end
+                })
+            end
+        end
+    end, function()
+        return self.placementDone
+    end)
 
     -- Actually pull the elements
     for _, object in ipairs(self.primordialBag.getObjects()) do
-        if Utils.contains(object.tags, Constants.PRIMORDIAL) then
-            self.primordialBag.takeObject({
-                guid = object.guid,
-                position = startPosition or (Vector(self.primordialBag.getPosition()) + Vector(6, 0, 0)),
-                rotation = startRotation or Constants.ROTATION_SOUTH,
-                callback_function = function(spawnedObject)
-                    spawnedObject.addTag(Constants.DISPOSABLE)
-                end
-            })
-        elseif object.gm_notes == 'AI1' then
+        if object.gm_notes == 'AI1' then
             self.primordialBag.takeObject({
                 guid = object.guid,
                 position = Vector({-20.52, 1.00, -27.63}) + Vector(0, Battle.DROP_HEIGHT, 0),
@@ -412,7 +437,7 @@ function Battle:setupPrimordial()
 
             self.primordialBag.takeObject({
                 guid = object.guid,
-                position = Vector({4.76, 1.00, -30.17}) + Vector(0, Battle.DROP_HEIGHT, 0),
+                position = Vector({4.76, 1.00, -30.22}) + Vector(0, Battle.DROP_HEIGHT, 0),
                 rotation = rotation,
                 callback_function = function(spawnedObject)
                     spawnedObject.addTag(Constants.DISPOSABLE)
@@ -421,7 +446,7 @@ function Battle:setupPrimordial()
         elseif object.gm_notes == 'Signature' then
             self.primordialBag.takeObject({
                 guid = object.guid,
-                position = Vector({20.63, 1.00, -30.17}) + Vector(0, Battle.DROP_HEIGHT, 0),
+                position = Vector({20.63, 1.00, -30.22}) + Vector(0, Battle.DROP_HEIGHT, 0),
                 rotation = {0, 180, 0},
                 callback_function = function(spawnedObject)
                     spawnedObject.addTag(Constants.DISPOSABLE) 
@@ -458,10 +483,10 @@ function Battle.endLabyrinthaurosSetup()
     -- to wait for the primordial sheet to be in position...
     -- Setup Gaze of Temenos card
     for _, object in ipairs(Battle.current_battle.primordialBag.getObjects()) do
-        if object.gm_notes == 'Gaze of Temenos' then
+        if object.name == 'Gaze of Temenos' then
             Battle.current_battle.primordialBag.takeObject({
                 guid = object.guid,
-                position = {26.09, 1.00, -30.17}, -- Battle.current_battle.primordialSheet.positionToWorld({-3.212472, 0.03, 0.2579071}),
+                position = {26.09, 1.50, -30.22}, -- Battle.current_battle.primordialSheet.positionToWorld({-3.212472, 0.03, 0.2579071}),
                 rotation = {0, 180, 0},
                 callback_function = function(spawnedObject)
                     spawnedObject.addTag(Constants.DISPOSABLE)
@@ -472,7 +497,163 @@ function Battle.endLabyrinthaurosSetup()
 
     -- Setup laby tracker token
     getObjectFromGUID('508d02').takeObject({
-        position = {17.41, 1.08, -25.57}, -- Battle.current_battle.primordialSheet.positionToWorld({-1.153458, 0.03, -0.8559913}),
+        position = {17.41, 1.58, -25.57}, -- Battle.current_battle.primordialSheet.positionToWorld({-1.153458, 0.03, -0.8559913}),
+        rotation = {0, 180, 0},
+        callback_function = function(spawnedObject)
+            spawnedObject.addTag(Constants.DISPOSABLE)
+        end
+    })
+
+    -- Add infinite laby spawners
+    local terrainsBag = getObjectFromGUID(Battle.TERRAIN_BAG)
+    local tileIndex = 1
+    for _, infiniteTerrain in ipairs(terrainsBag.getObjects()) do
+        if infiniteTerrain.name:sub(1, string.len('Labyrinth')) == 'Labyrinth' then
+            local thisIndex = tileIndex
+            terrainsBag.takeObject({
+                guid = infiniteTerrain.guid,
+                smooth = false,
+                callback_function = function(spawnedObject)
+                    local newObject = spawnedObject.clone({ 
+                        position = {3.50 + (thisIndex-1) * 7.30, 1.06, -36.22}, 
+                        rotation = {0, 180, 0} })
+                    newObject.addTag(Constants.DISPOSABLE)
+                    terrainsBag.putObject(spawnedObject)
+                end
+            })
+            tileIndex = tileIndex + 1
+        end
+    end
+end
+
+function Battle.endHermesianPursuerSetup()
+    -- Setup Flare deck
+    for _, object in ipairs(Battle.current_battle.primordialBag.getObjects()) do
+        if object.name == 'Flare' then
+            Battle.current_battle.primordialBag.takeObject({
+                guid = object.guid,
+                position = {26.09, 1.50, -30.22}, 
+                rotation = {0, 180, 180},
+                callback_function = function(spawnedObject)
+                    spawnedObject.addTag(Constants.DISPOSABLE)
+                    spawnedObject.shuffle()
+                end
+            })
+        end
+    end
+end
+
+function Battle.endAlphaTemenosSetup()
+    -- Setup laby tracker token
+    getObjectFromGUID('508d02').takeObject({
+        position = {16.99, 1.08, -31.62},
+        rotation = {0, 180, 0},
+        callback_function = function(spawnedObject)
+            spawnedObject.addTag(Constants.DISPOSABLE)
+        end
+    })
+
+    -- Add infinite laby spawners
+    local terrainsBag = getObjectFromGUID(Battle.TERRAIN_BAG)
+    local tileIndex = 1
+    for _, infiniteTerrain in ipairs(terrainsBag.getObjects()) do
+        if infiniteTerrain.name:sub(1, string.len('Labyrinth')) == 'Labyrinth' then
+            local thisIndex = tileIndex
+            terrainsBag.takeObject({
+                guid = infiniteTerrain.guid,
+                smooth = false,
+                callback_function = function(spawnedObject)
+                    local newObject = spawnedObject.clone({ 
+                        position = {3.50 + (thisIndex-1) * 7.30, 1.06, -36.22}, 
+                        rotation = {0, 180, 0} })
+                    newObject.addTag(Constants.DISPOSABLE)
+                    terrainsBag.putObject(spawnedObject)
+                end
+            })
+            tileIndex = tileIndex + 1
+        end
+    end
+end
+
+function Battle.endTheBurdenSetup()
+    -- Setup Sisyphean Task card
+    for _, object in ipairs(Battle.current_battle.primordialBag.getObjects()) do
+        if object.name == 'Sisyphean Task' then
+            Battle.current_battle.primordialBag.takeObject({
+                guid = object.guid,
+                position = {26.09, 1.50, -30.22},
+                rotation = {0, 180, 0},
+                callback_function = function(spawnedObject)
+                    spawnedObject.addTag(Constants.DISPOSABLE)
+                end
+            })
+        end
+    end
+end
+
+function Battle.endCyclonusSetup()
+    -- Setup combo token
+    getObjectFromGUID('932bb8').takeObject({
+        position = {17.05, 1.58, -25.76},
+        rotation = {0, 180, 0},
+        callback_function = function(spawnedObject)
+            spawnedObject.addTag(Constants.DISPOSABLE)
+        end
+    })
+end
+
+function Battle.endChimeraMetastasiosSetup()
+    -- Setup Gaze of Temenos card
+    for _, object in ipairs(Battle.current_battle.primordialBag.getObjects()) do
+        if object.name == 'Absorbed' then
+            Battle.current_battle.primordialBag.takeObject({
+                guid = object.guid,
+                position = {26.09, 1.50, -30.22},
+                rotation = {0, 180, 0},
+                callback_function = function(spawnedObject)
+                    spawnedObject.addTag(Constants.DISPOSABLE)
+                end
+            })
+        elseif object.name == 'Three-Headed Monstrosity' then
+            Battle.current_battle.primordialBag.takeObject({
+                guid = object.guid,
+                position = {30.05, 1.50, -30.22},
+                rotation = {0, 180, 0},
+                callback_function = function(spawnedObject)
+                    spawnedObject.addTag(Constants.DISPOSABLE)
+                end
+            })
+        end
+    end
+    
+    -- Setup state token
+    getObjectFromGUID('7bb35a').takeObject({
+        position = {15.95, 1.58, -25.39},
+        rotation = {0, 180, 0},
+        callback_function = function(spawnedObject)
+            spawnedObject.addTag(Constants.DISPOSABLE)
+        end
+    })
+end
+
+function Battle.endTheNietzscheanSetup()
+    -- Setup Gaze of Temenos card
+    for _, object in ipairs(Battle.current_battle.primordialBag.getObjects()) do
+        if object.name == 'Lot of the Weak' then
+            Battle.current_battle.primordialBag.takeObject({
+                guid = object.guid,
+                position = {26.09, 1.50, -30.22},
+                rotation = {0, 180, 0},
+                callback_function = function(spawnedObject)
+                    spawnedObject.addTag(Constants.DISPOSABLE)
+                end
+            })
+        end
+    end
+    
+    -- Setup combo token
+    getObjectFromGUID('932bb8').takeObject({
+        position = {13.21, 1.58, -29.46},
         rotation = {0, 180, 0},
         callback_function = function(spawnedObject)
             spawnedObject.addTag(Constants.DISPOSABLE)
@@ -532,6 +713,10 @@ function Battle.cleanupCurrentBattle()
 end
 
 function Battle:cleanup()
+    -- Hide continue button, just in case it's still showing
+    BattleBoard.getContinueButton():hide()
+    BattleBoard.getContinueButton():setOnClick(nil)
+
     -- Destroy all Disposable content
     for _, object in ipairs(getObjectsWithTag(Constants.DISPOSABLE)) do
         object.destruct()
