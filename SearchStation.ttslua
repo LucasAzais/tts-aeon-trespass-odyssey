@@ -77,7 +77,7 @@ function SearchStation.getResults(searchTerm)
         if container.type == 'Bag' or container.type == 'Deck' then
             for _, element in ipairs(container.getObjects()) do
                 -- Only exact search on the secret content bag
-                if (not container.getName() == 'Secret content' and element.name:lower():find(searchTerm:lower())) or element.name:lower() == searchTerm:lower() then
+                if (container.getName() ~= 'Secret content' and element.name:lower():find(searchTerm:lower())) or element.name:lower() == searchTerm:lower() then
                     table.insert(results, {
                         id = element.name,
                         guid = element.guid,

@@ -521,6 +521,9 @@ function Timeline.save()
 
     for cycle, timeline in pairs(Timeline.DATA) do
         flatData[cycle] = {
+            cycle = timeline.cycle,
+            sheetGUID = timeline.sheetGUID,
+
             voyage_timeline = timeline.voyage_timeline,
             choice_matrix = timeline.choice_matrix,
             pygmalion_track = timeline.pygmalion_track,

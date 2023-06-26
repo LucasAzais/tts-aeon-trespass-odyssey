@@ -241,6 +241,8 @@ function Cycle.initialSetup()
                 callback_function = function(spawnedObject)
                 end
             })
+        -- The -0.5 on drop height is here because otherwise, when traumas merge during cycle start, 
+        -- they might take the Cycle specific tag and get erased later one
         elseif object.gm_notes == 'MinorTraumas' then
             genericBag.takeObject({
                 guid = object.guid,
@@ -906,7 +908,7 @@ function Cycle.setupCycleII(params)
     end
 
     for _, card in ipairs(getObjects()) do
-        if card.name == 'Titanogenesis' then
+        if card.getName() == 'Titanogenesis' then
             card.setPosition({46.32, Cycle.DROP_HEIGHT, 65.95})
         end
     end
@@ -919,7 +921,10 @@ function Cycle.reset()
 
     -- Destroy everything that is not tagged persistent
     for _, object in ipairs(getObjects()) do
-        if not object.hasTag(Constants.PERSISTENT) then
+        if not object.hasTag(Constants.PERSISTENT) 
+                and object.type ~= 'Scripting'
+                and object.type ~= 'Checker'
+                and object.type ~= 'Hand' then
             object.destruct()
         end
     end
