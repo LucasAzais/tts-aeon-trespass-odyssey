@@ -57,14 +57,14 @@ function onLoad(script_state)
     Battle.init(savedData.battle or {})
     SearchStation.init()
 
-    Ui.globalRefresh(true)
-
-    -- if Setup.isSetupComplete() then
-    --     broadcastToAll('Game loaded', Color.Green)
-    -- else
-    --     -- Or show the setup
-    --     Ui.getRoot():show('main-panel')
-    -- end
+    -- If in the middle of a cycle, just load the game
+    if Options.getCurrentCycle() then
+        Ui.globalRefresh(true)
+    else
+        -- Or show the setup
+        Ui.globalRefresh()
+        Ui.getRoot():show('campaign-panel')
+    end
 end
 
 function onSave()

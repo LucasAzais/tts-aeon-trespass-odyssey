@@ -32,7 +32,7 @@ function GlobalUi.init()
     ----------------------
     local battleSelectionWidth = 380
     GlobalUi.ui.battle_menu_panel = Ui.getRoot():verticalLayout({
-        id = 'battle-menu-panel', height = 400, width = battleSelectionWidth, rectAlignment = 'UpperLeft', x = 120, y = -110, padding = '5 5 5 5', active = false
+        id = 'battle-menu-panel', height = 600, width = battleSelectionWidth, rectAlignment = 'UpperLeft', x = 120, y = -110, padding = '5 5 5 5', active = false
     })
     GlobalUi.ui.battle_menu_panel.attributes.color = '#05050559'
     GlobalUi.ui.battle_menu_panel.attributes.allowDragging = true
@@ -151,7 +151,7 @@ function GlobalUi.init()
     -----------------
     -- Campaign UI --
     -----------------
-    GlobalUi.ui.campaign_setup_panel = Ui.getRoot():panel({ id = '', width = 900, height = 600, rectAlignment = 'MiddleCenter', active = not Options.getCurrentCycle() })
+    GlobalUi.ui.campaign_setup_panel = Ui.getRoot():panel({ id = 'campaign-panel', width = 900, height = 600, rectAlignment = 'MiddleCenter', active = false })
     GlobalUi.ui.campaign_setup_panel.attributes.allowDragging = true
     GlobalUi.ui.campaign_setup_panel.attributes.returnToOriginalPositionWhenReleased = false
     GlobalUi.ui.campaign_setup_panel.attributes.color = '#d1cbcb'
