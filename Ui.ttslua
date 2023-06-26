@@ -614,7 +614,7 @@ function Ui.globalRefresh(broadcast)
 
     if broadcast then
         Wait.condition(function()
-            broadcastToAll('Ready to play!', Color.Red)
+            broadcastToAll('Ready to play!', Color.Green)
         end, function() 
             return loadingCount == loadedCount
         end, 10, nil)
@@ -688,6 +688,9 @@ function Ui:registerOnClick(onClick)
     self.onClick = onClick or function() end
 
     local onClickFunctionName = self.attributes.id.."_OnClick"
+    if self.object and self.object ~= Global then
+        onClickFunctionName = table.concat({'object', self.object.getGUID(), '_', onClickFunctionName}, '')
+    end
     Global.setVar(onClickFunctionName, function(player, mouseButton, id)
         self.onClick(player, mouseButton, id)
     end)
@@ -701,6 +704,9 @@ function Ui:registerOnValueChanged(onValueChanged)
     self.onValueChanged = onValueChanged or function() end
 
     local onValueChangedFunctionName = self.attributes.id.."_onValueChanged"
+    if self.object and self.object ~= Global then
+        onValueChangedFunctionName = table.concat({'object', self.object.getGUID(), '_', onValueChangedFunctionName}, '')
+    end
     Global.setVar(onValueChangedFunctionName, function(player, value, id)
         self.onValueChanged(player, value, id)
     end)
@@ -714,6 +720,9 @@ function Ui:registerOnEndEdit(onEndEdit)
     self.onEndEdit = onEndEdit or function() end
 
     local onEndEditFunctionName = self.attributes.id.."_onEndEdit"
+    if self.object and self.object ~= Global then
+        onEndEditFunctionName = table.concat({'object', self.object.getGUID(), '_', onEndEditFunctionName}, '')
+    end
     Global.setVar(onEndEditFunctionName, function(player, isOn, id)
         self.onEndEdit(player, isOn, id)
     end)
