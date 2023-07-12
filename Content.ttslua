@@ -887,7 +887,7 @@ Content.primordials = {
     },
 }
 
-Content.terrain = {
+Content.terrains = {
     {
         name = 'Labyrinth O',
         size = {width = 2, height = 2},
@@ -954,10 +954,7 @@ Content.terrain = {
     },
     {
         name = 'City',
-        size = {width = 3, height = 3},
-    },
-    {
-        name = 'Ruined City',
+        back_name = 'Ruined City',
         size = {width = 3, height = 3},
     },
     {
@@ -970,10 +967,7 @@ Content.terrain = {
     },
     {
         name = 'Fortified City',
-        size = {width = 3, height = 3},
-    },
-    {
-        name = 'Termophylaed City',
+        back_name = 'Termophylaed City',
         size = {width = 3, height = 3},
     },
     {

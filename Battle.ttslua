@@ -8,6 +8,7 @@ local Constants = require('Constants')
 local EventManager = require('EventManager')
 local GlobalUi
 local Log = require('Log').ForModule('Battle')
+local Terrain = require('Terrain')
 local Triskelion = require('Triskelion')
 local Ui = require('Ui')
 local Utils = require('Utils')
@@ -16,8 +17,6 @@ local Utils = require('Utils')
 
 -- Change all this, need to be detected live?
 Battle.PRIMORDIAL_BAG_GUID = '298b29'
-Battle.TERRAIN_BAG = 'c1095a'
-Battle.TERRAIN_CARDS_BAG = 'dbf84f'
 Battle.TITAN_START_URL = 'http://cloud-3.steamusercontent.com/ugc/2055377100667437499/43D1B7D4B60C4D4F9DB15D8702FC59C209A28EFD/'
 Battle.PRIMORDIAL_BAG_POSITION = {24.27, 0.80, -23.44}
 
@@ -203,13 +202,12 @@ function Battle:setupTerrains()
 
         -- Search for the terrain card and add it next if it's not already on the table
         if not terrainCard then
-            local terrainCardsBag = getObjectFromGUID(Battle.TERRAIN_CARDS_BAG)
-            for _, card in ipairs(terrainCardsBag.getObjects()) do
+            for _, card in ipairs(Terrain.getTerrainCardsBag().getObjects()) do
                 -- Split the card name and check for terrain
                 for terrainName in string.gmatch(card.name, "([^/]+)") do
                     -- Starts with (Labyrinth Z -> Labyrinth)
                     if terrain.name:sub(1, terrainName:len()) == terrainName then
-                        terrainCard = terrainCardsBag.takeObject({
+                        terrainCard = Terrain.getTerrainCardsBag().takeObject({
                             guid = card.guid,
                             position = {3.75 + 4 * (cardIndex-1), 1.00, 12.29},
                             rotation = {0, 180, 0},
@@ -221,12 +219,13 @@ function Battle:setupTerrains()
         end
 
         -- Search for the infinite terrain bag and place it above the card
-        local terrainsBag = getObjectFromGUID(Battle.TERRAIN_BAG)
-        for _, infiniteTerrain in ipairs(terrainsBag.getObjects()) do
-            if infiniteTerrain.name == terrain.name then
-                infiniteTerrainBag = terrainsBag.takeObject({
-                    guid = infiniteTerrain.guid,
-                })
+        for _, infiniteTerrain in ipairs(Terrain.getTerrainBag().getObjects()) do
+            for infiniteTerrainName in string.gmatch(infiniteTerrain.name, "([^/]+)") do
+                if infiniteTerrainName == terrain.name then
+                    infiniteTerrainBag = Terrain.getTerrainBag().takeObject({
+                        guid = infiniteTerrain.guid,
+                    })
+                end
             end
         end
 
@@ -249,7 +248,7 @@ function Battle:setupTerrains()
             end
 
             -- Put back the infinite terrain bag
-            terrainsBag.putObject(infiniteTerrainBag)
+            Terrain.getTerrainBag().putObject(infiniteTerrainBag)
         else
             broadcastToAll('Could not find terrain spawner for ' .. terrain.name, Constants.WARNING_COLOR)
             Log:error('Could not find terrain spawner bag for %s', terrain.name)
@@ -505,24 +504,12 @@ function Battle.endLabyrinthaurosSetup()
     })
 
     -- Add infinite laby spawners
-    local terrainsBag = getObjectFromGUID(Battle.TERRAIN_BAG)
     local tileIndex = 1
-    for _, infiniteTerrain in ipairs(terrainsBag.getObjects()) do
-        if infiniteTerrain.name:sub(1, string.len('Labyrinth')) == 'Labyrinth' then
-            local thisIndex = tileIndex
-            terrainsBag.takeObject({
-                guid = infiniteTerrain.guid,
-                smooth = false,
-                callback_function = function(spawnedObject)
-                    local newObject = spawnedObject.clone({ 
-                        position = {3.50 + (thisIndex-1) * 7.30, 1.06, -36.22}, 
-                        rotation = {0, 180, 0} })
-                    newObject.addTag(Constants.DISPOSABLE)
-                    terrainsBag.putObject(spawnedObject)
-                end
-            })
-            tileIndex = tileIndex + 1
-        end
+    for _, terrainName in ipairs({'Labyrinth O', 'Labyrinth L', 'Labyrinth Z', 'Labyrinth I'}) do
+        local terrain = Terrain.getTerrain(terrainName)
+
+        terrain:createTerrainSpawner({3.50 + (tileIndex-1) * 7.30, 1.06, -36.22})
+        tileIndex = tileIndex + 1
     end
 end
 
@@ -554,24 +541,12 @@ function Battle.endAlphaTemenosSetup()
     })
 
     -- Add infinite laby spawners
-    local terrainsBag = getObjectFromGUID(Battle.TERRAIN_BAG)
     local tileIndex = 1
-    for _, infiniteTerrain in ipairs(terrainsBag.getObjects()) do
-        if infiniteTerrain.name:sub(1, string.len('Labyrinth')) == 'Labyrinth' then
-            local thisIndex = tileIndex
-            terrainsBag.takeObject({
-                guid = infiniteTerrain.guid,
-                smooth = false,
-                callback_function = function(spawnedObject)
-                    local newObject = spawnedObject.clone({ 
-                        position = {3.50 + (thisIndex-1) * 7.30, 1.06, -36.22}, 
-                        rotation = {0, 180, 0} })
-                    newObject.addTag(Constants.DISPOSABLE)
-                    terrainsBag.putObject(spawnedObject)
-                end
-            })
-            tileIndex = tileIndex + 1
-        end
+    for _, terrainName in ipairs({'Labyrinth O', 'Labyrinth L', 'Labyrinth Z', 'Labyrinth I'}) do
+        local terrain = Terrain.getTerrain(terrainName)
+
+        terrain:createTerrainSpawner({3.50 + (tileIndex-1) * 7.30, 1.06, -36.22})
+        tileIndex = tileIndex + 1
     end
 end
 
@@ -723,10 +698,9 @@ function Battle:cleanup()
     end
 
     -- Put the terrain away
-    local terrainCardsBag = getObjectFromGUID(Battle.TERRAIN_CARDS_BAG)
     for _, card in ipairs(getObjectsWithTag(Constants.TERRAIN)) do
         if card.type == 'Card' then
-            terrainCardsBag.putObject(getObjectFromGUID(card.guid))
+            Terrain.getTerrainCardsBag().putObject(getObjectFromGUID(card.guid))
         end
     end
 

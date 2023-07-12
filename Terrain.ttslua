@@ -1,0 +1,154 @@
+local Terrain = {}
+Terrain.__index = Terrain
+
+local Constants = require('Constants')
+local Content = require('Content')
+local EventManager = require('EventManager')
+local Log = require('Log').ForModule('Terrain')
+local Ui = require('Ui')
+local Utils = require('Utils')
+
+------------------------------------------------------
+
+Terrain.TERRAINS = {}
+Terrain.TERRAIN_BAG_GUID = 'c1095a'
+Terrain.TERRAIN_CARDS_BAG_GUID = 'dbf84f'
+
+function Terrain.init()
+    Terrain.TERRAIN_BAG = getObjectFromGUID(Terrain.TERRAIN_BAG_GUID)
+    Terrain.TERRAIN_CARDS_BAG = getObjectFromGUID(Terrain.TERRAIN_CARDS_BAG_GUID)
+
+    for _, terrain in ipairs(Content.terrains) do
+        local terrainInstance = Terrain.create(terrain)
+
+        if terrainInstance then
+            Terrain.TERRAINS[terrainInstance.name] = terrainInstance
+        end
+    end
+
+    -- Add right click menu options
+    for _, card in ipairs(getObjects()) do
+        if card.type == 'Card' and card.hasTag(Constants.TERRAIN) then
+            card.addContextMenuItem('Spawn terrain bag', function()
+                    Terrain.terrainCardHandler(card)
+            end)
+            Log:debug('Added context menu item to terrain card %s', card.getName())
+        end
+    end
+
+    EventManager.addHandler('onObjectLeaveContainer', function(container, card)
+        if card.type == 'Card' and card.hasTag(Constants.TERRAIN) then
+            card.addContextMenuItem('Spawn terrain bag', function()
+                    Terrain.terrainCardHandler(card)
+            end)
+            Log:debug('Added context menu item to terrain card %s', card.getName())
+        end
+    end)
+end
+
+function Terrain.terrainCardHandler(card)
+    if not card then return end
+
+    local terrains = {}
+    for terrainName in string.gmatch(card.getName(), "([^/]+)") do
+        table.insert(terrains, terrainName)
+    end
+
+    local terrainIndex = 1
+    for terrainTypeIndex, terrainName in ipairs(terrains) do
+        -- Only create the terrain type facing up (or if there's one terrain type)
+        if #terrains == 1 or (card.is_face_down and terrainTypeIndex == 2) or (not card.is_face_down and terrainTypeIndex == 1) then
+            for name, terrain in pairs(Terrain.TERRAINS) do
+                if terrain.name:sub(1, terrainName:len()) == terrainName 
+                            or (terrain.back_name and terrain.back_name:sub(1, terrainName:len()) == terrainName) then
+                    terrain:createTerrainSpawner(card.getPosition() + Vector(0, terrainIndex, 0), 
+                                (card.is_face_down and terrainTypeIndex == 2 and {0.00, 180.00, 180.00}) or {0.00, 180.00, 0.00})
+                    terrainIndex = terrainIndex + 1
+                end
+            end
+        end
+    end
+end
+
+function Terrain.create(params)
+    if not params or not params.name then return nil end
+
+    local terrain = {
+        name = params.name,
+        back_name = params.back_name,
+        size = params.size or {width = 0, height = 0},
+    }
+    setmetatable(terrain, Terrain)
+
+    return terrain
+end
+
+function Terrain:createTerrainSpawner(position, rotation)
+    if not rotation then rotation = {0.00, 180.00, 0.00} end
+
+    for _, object in ipairs(Terrain.TERRAIN_BAG.getObjects()) do
+        -- Only need to check the front name since object.name has both front/back names and self as well
+        if object.name:find(self.name) then
+            Log:debug('Created spawner for %s', self)
+            return Terrain.TERRAIN_BAG.takeObject({
+                guid = object.guid,
+                smooth = false,
+                callback_function = function(spawnedObject)
+                    spawnedObject.attachInvisibleHider('hide', true)
+                    spawnedObject.getComponent('AudioSource').set('mute', true)
+                    local spawner = spawnedObject.clone({
+                        position = position,
+                        rotation = rotation,
+                    })
+                    spawner.addTag(Constants.DISPOSABLE)
+
+                    Terrain.TERRAIN_BAG.putObject(spawnedObject)
+                end,
+            })
+        end
+    end
+
+    broadcastToAll('Missing terrain with name ' .. self.name .. ' in Terrain bag.', Color.Red)
+end
+
+function Terrain.getTerrain(name)
+    if not name then return nil end
+
+    if not Terrain.TERRAINS[name] then
+        for _, terrain in pairs(Terrain.TERRAINS) do
+            if terrain.name == name or terrain.back_name == name then
+                return Terrain.TERRAINS[name]
+            end
+        end
+    else
+        return Terrain.TERRAINS[name]
+    end
+
+    return nil
+end
+
+function Terrain.getTerrainBag()
+    return Terrain.TERRAIN_BAG
+end
+
+function Terrain.getTerrainCardsBag()
+    return Terrain.TERRAIN_CARDS_BAG
+end
+
+function Terrain:__tostring()
+    return Utils.format('Terrain{name = %s, size = {width=%s, height=%s}}', self.name, self.size.width, self.size.height)
+end
+
+function Terrain.save()
+
+end
+
+------------------------------------------------------
+
+return {
+    init = Terrain.init,
+    save = Terrain.save,
+    getTerrain = Terrain.getTerrain,
+    getTerrainBag = Terrain.getTerrainBag,
+    getTerrainCardsBag = Terrain.getTerrainCardsBag,
+}

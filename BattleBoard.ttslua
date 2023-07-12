@@ -6,6 +6,7 @@ local Constants = require('Constants')
 local EventManager = require('EventManager')
 local Grid = require('Grid')
 local Log = require('Log').ForModule('BattleBoard')
+local Terrain = require('Terrain')
 local Ui = require('Ui')
 local Utils = require('Utils')
 
@@ -109,7 +110,7 @@ function BattleBoard.snapObjectToGrid(object)
     if object.hasTag(Constants.PRIMORDIAL) then
         element = Content.getByName(Content.primordials, object.getName())
     elseif object.hasTag(Constants.TERRAIN) then
-        element = Content.getByName(Content.terrain, object.getName())
+        element = Terrain.getTerrain(object.getName())
     end
 
     local size = nil
