@@ -53,8 +53,16 @@ function Argonaut.getNextId()
     return maxId
 end
 
--- Register a new object as an argonaut, and create the necessary instances and UI
 function Argonaut.register(object)
+    -- Try to find an existing argonaut with this object, otherwise
+    for id, argonaut in pairs(Argonaut.ARGONAUTS) do
+        if argonaut.sheetGUID == object.getGUID() and Argonaut.ARGONAUT_SHEETS[id] == nil then
+            Argonaut.ARGONAUT_SHEETS[id] = ArgonautSheetClass.create(Argonaut.ARGONAUTS[id], object)
+            return
+        end
+    end
+    
+    -- Register the object as a new argonaut, and create the necessary instances and UI
     local newId = Argonaut.getNextId()
     Argonaut.ARGONAUTS[newId] = ArgonautClass.create({ id = newId })
     Argonaut.ARGONAUT_SHEETS[newId] = ArgonautSheetClass.create(Argonaut.ARGONAUTS[newId], object)
@@ -154,7 +162,7 @@ function ArgonautClass:__tostring()
 end
 
 function ArgonautSheetClass.create(argonaut, object)
-    if not object then return end
+    if not object then return nil end
 
     local sheet = {
         argonaut = argonaut,

@@ -10,6 +10,7 @@ local Argonaut = require('Argonaut')
 local Argo = require('Argo')
 local Battle = require('Battle')
 local BattleBoard = require('BattleBoard')
+local Campaign = require('Campaign')
 local Constants = require('Constants')
 local Cycle = require('Cycle')
 local GlobalUi = require('GlobalUi')
@@ -44,6 +45,7 @@ function onLoad(script_state)
     local savedData = JSON.decode(script_state) or {}
     -- local savedData = {}
 
+    Campaign.init()
     Log.init()
     Ui.init()
     Terrain.init()

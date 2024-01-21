@@ -140,12 +140,12 @@ function Battle:setup()
 
                         -- Run primordial specific setup
                         if Content.getByName(Content.primordials, self.schematics.primordials[1]).end_setup ~= nil then
-                            Battle[Content.getByName(Content.primordials, self.schematics.primordials[1]).end_setup]()
+                            Battle[Content.getByName(Content.primordials, self.schematics.primordials[1]).end_setup](self)
                         end
                         
                         -- Run battle specific setup
                         if self.schematics.end_setup ~= nil then
-                            Battle[self.schematics.end_setup]()
+                            Battle[self.schematics.end_setup](self)
                         end
 
                         Log:debug('Setup done for %s.', self)
@@ -477,7 +477,7 @@ function Battle.endTutorialSetup()
     broadcastToAll('Don\'t forget to add the Trauma cards back into their decks after the tutorial.', Constants.WARNING_COLOR)
 end
 
-function Battle.endLabyrinthaurosSetup()
+function Battle.endLabyrinthaurosSetup(self)
     -- This is using absolute positions, otherwise we have to use "wait.time"
     -- to wait for the primordial sheet to be in position...
     -- Setup Gaze of Temenos card
@@ -513,7 +513,7 @@ function Battle.endLabyrinthaurosSetup()
     end
 end
 
-function Battle.endHermesianPursuerSetup()
+function Battle.endHermesianPursuerSetup(self)
     -- Setup Flare deck
     for _, object in ipairs(Battle.current_battle.primordialBag.getObjects()) do
         if object.name == 'Flare' then
@@ -530,7 +530,7 @@ function Battle.endHermesianPursuerSetup()
     end
 end
 
-function Battle.endAlphaTemenosSetup()
+function Battle.endAlphaTemenosSetup(self)
     -- Setup laby tracker token
     getObjectFromGUID('508d02').takeObject({
         position = {16.99, 1.08, -31.62},
@@ -548,9 +548,25 @@ function Battle.endAlphaTemenosSetup()
         terrain:createTerrainSpawner({3.50 + (tileIndex-1) * 7.30, 1.06, -36.22})
         tileIndex = tileIndex + 1
     end
+
+    -- Add trait card
+    if self.level >= Constants.LEVEL_6 then
+        for _, object in ipairs(self.primordialBag.getObjects()) do
+            if object.name == 'Song of Hopelessness' and object.gm_notes == 'Trait' then
+                self.primordialBag.takeObject({
+                    guid = object.guid,
+                    position = Vector({24.72, 1.00, -30.22}) + Vector(0, Battle.DROP_HEIGHT, 0),
+                    rotation = {0, 180, 0},
+                    callback_function = function(spawnedObject)
+                        spawnedObject.addTag(Constants.DISPOSABLE) 
+                    end
+                })
+            end
+        end
+    end
 end
 
-function Battle.endTheBurdenSetup()
+function Battle.endTheBurdenSetup(self)
     -- Setup Sisyphean Task card
     for _, object in ipairs(Battle.current_battle.primordialBag.getObjects()) do
         if object.name == 'Sisyphean Task' then
@@ -564,9 +580,25 @@ function Battle.endTheBurdenSetup()
             })
         end
     end
+
+    -- Add trait card
+    if self.level >= Constants.LEVEL_2 then
+        for _, object in ipairs(self.primordialBag.getObjects()) do
+            if object.name == 'Burden Hardest to Bear' and object.gm_notes == 'Trait' then
+                self.primordialBag.takeObject({
+                    guid = object.guid,
+                    position = Vector({20.63, 1.00, -35.82}) + Vector(0, Battle.DROP_HEIGHT, 0),
+                    rotation = {0, 180, 0},
+                    callback_function = function(spawnedObject)
+                        spawnedObject.addTag(Constants.DISPOSABLE) 
+                    end
+                })
+            end
+        end
+    end
 end
 
-function Battle.endCyclonusSetup()
+function Battle.endCyclonusSetup(self)
     -- Setup combo token
     getObjectFromGUID('932bb8').takeObject({
         position = {17.05, 1.58, -25.76},
@@ -575,9 +607,25 @@ function Battle.endCyclonusSetup()
             spawnedObject.addTag(Constants.DISPOSABLE)
         end
     })
+
+    -- Add trait card
+    if self.level >= Constants.LEVEL_4 then
+        for _, object in ipairs(self.primordialBag.getObjects()) do
+            if object.name == 'Lesser Danger Sense' and object.gm_notes == 'Trait' then
+                self.primordialBag.takeObject({
+                    guid = object.guid,
+                    position = Vector({20.63, 1.00, -35.82}) + Vector(0, Battle.DROP_HEIGHT, 0),
+                    rotation = {0, 180, 0},
+                    callback_function = function(spawnedObject)
+                        spawnedObject.addTag(Constants.DISPOSABLE) 
+                    end
+                })
+            end
+        end
+    end
 end
 
-function Battle.endChimeraMetastasiosSetup()
+function Battle.endChimeraMetastasiosSetup(self)
     -- Setup Gaze of Temenos card
     for _, object in ipairs(Battle.current_battle.primordialBag.getObjects()) do
         if object.name == 'Absorbed' then
@@ -609,9 +657,28 @@ function Battle.endChimeraMetastasiosSetup()
             spawnedObject.addTag(Constants.DISPOSABLE)
         end
     })
+
+    -- Add trait card
+    local traitCount = 0
+    for _, object in ipairs(self.primordialBag.getObjects()) do
+        if object.gm_notes == 'Trait' then
+            if (self.level >= Constants.LEVEL_1 and (object.name == 'Slime Trail' or object.name == 'This Train'))
+                or (self.level >= 2 and object.name == 'Highly Toxic') then
+                self.primordialBag.takeObject({
+                    guid = object.guid,
+                    position = Vector({20.63 + 3.70 * traitCount, 1.00, -35.82}) + Vector(0, Battle.DROP_HEIGHT, 0),
+                    rotation = {0, 180, 0},
+                    callback_function = function(spawnedObject)
+                        spawnedObject.addTag(Constants.DISPOSABLE) 
+                    end
+                })
+                traitCount = traitCount + 1
+            end
+        end
+    end
 end
 
-function Battle.endTheNietzscheanSetup()
+function Battle.endTheNietzscheanSetup(self)
     -- Setup Gaze of Temenos card
     for _, object in ipairs(Battle.current_battle.primordialBag.getObjects()) do
         if object.name == 'Lot of the Weak' then
@@ -707,6 +774,10 @@ function Battle:cleanup()
     Log:debug('%s cleaned up.', self)
 end
 
+function Battle.isBattleInProgress()
+    return Battle.current_battle ~= nil
+end
+
 function Battle:__tostring()
     return Utils.format('Battle{name = %s, level = %s}', self.name, self.level or 'nil')
 end
@@ -737,5 +808,6 @@ return {
     init = Battle.init,
     setupBattle = Battle.setupBattle,
     cleanupCurrentBattle = Battle.cleanupCurrentBattle,
+    isBattleInProgress = Battle.isBattleInProgress,
     save = Battle.save,
 }

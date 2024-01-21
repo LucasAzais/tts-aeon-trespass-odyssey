@@ -26,6 +26,8 @@ Map.BOTTOM_RIGHT = 'bottom-right'
 Map.LEFT_TOP = 'left-top'
 Map.LEFT_MIDDLE = 'left-middle'
 Map.LEFT_BOTTOM = 'left-bottom'
+Map.SPECIAL_1 = 'special-1'
+Map.SPECIAL_2 = 'special-2'
 
 -- A map tile has name, a list of icons and a list of connected tiles
 Map.TILES_LIST = {
@@ -207,7 +209,98 @@ Map.TILES_LIST = {
         { name = '084', connectedTiles = { [Map.TOP_MIDDLE] = '077', [Map.LEFT_MIDDLE] = '083', }, },
     },
     [Constants.CYCLE_III] = {
-
+        { name = '001', connectedTiles = { [Map.TOP_MIDDLE] = '002', [Map.RIGHT_MIDDLE] = '004', }, },
+        { name = '002', connectedTiles = { [Map.TOP_MIDDLE] = '003', [Map.RIGHT_MIDDLE] = '005', [Map.BOTTOM_MIDDLE] = '001', }, },
+        { name = '003', connectedTiles = { [Map.SPECIAL_1] = '038', [Map.RIGHT_MIDDLE] = '006', [Map.BOTTOM_MIDDLE] = '002', }, },
+        { name = '004', connectedTiles = { [Map.TOP_MIDDLE] = '005', [Map.RIGHT_MIDDLE] = '011', [Map.LEFT_MIDDLE] = '001', }, },
+        { name = '005', connectedTiles = { [Map.TOP_MIDDLE] = '006', [Map.RIGHT_MIDDLE] = '012', [Map.BOTTOM_MIDDLE] = '004', [Map.LEFT_MIDDLE] = '002', }, },
+        { name = '006', connectedTiles = { [Map.TOP_MIDDLE] = '007', [Map.BOTTOM_MIDDLE] = '005', [Map.LEFT_MIDDLE] = '003', }, },
+        { name = '007', connectedTiles = { [Map.TOP_MIDDLE] = '008', [Map.BOTTOM_MIDDLE] = '006', }, },
+        { name = '008', connectedTiles = { [Map.RIGHT_MIDDLE] = '013', [Map.BOTTOM_MIDDLE] = '007', }, },
+        { name = '009', connectedTiles = { [Map.TOP_MIDDLE] = '010', [Map.RIGHT_MIDDLE] = '014', }, },
+        { name = '010', connectedTiles = { [Map.TOP_MIDDLE] = '011', [Map.SPECIAL_1] = '043', [Map.BOTTOM_MIDDLE] = '009', }, },
+        { name = '011', connectedTiles = { [Map.TOP_MIDDLE] = '012', [Map.BOTTOM_MIDDLE] = '010', [Map.LEFT_MIDDLE] = '004', }, },
+        { name = '012', connectedTiles = { [Map.BOTTOM_MIDDLE] = '011', [Map.LEFT_MIDDLE] = '005', [Map.SPECIAL_1] = '021', [Map.SPECIAL_2] = '023', }, },
+        { name = '013', connectedTiles = { [Map.RIGHT_MIDDLE] = '016', [Map.LEFT_MIDDLE] = '008', }, },
+        { name = '014', connectedTiles = { [Map.RIGHT_MIDDLE] = '017', [Map.LEFT_MIDDLE] = '009', }, },
+        { name = '015', connectedTiles = { [Map.TOP_MIDDLE] = '016', [Map.RIGHT_MIDDLE] = '022', }, },
+        { name = '016', connectedTiles = { [Map.BOTTOM_MIDDLE] = '015', [Map.LEFT_MIDDLE] = '013', }, },
+        { name = '017', connectedTiles = { [Map.TOP_MIDDLE] = '018', [Map.LEFT_MIDDLE] = '014', }, },
+        { name = '018', connectedTiles = { [Map.TOP_MIDDLE] = '019', [Map.RIGHT_MIDDLE] = '023', [Map.BOTTOM_MIDDLE] = '017', }, },
+        { name = '019', connectedTiles = { [Map.TOP_MIDDLE] = '020', [Map.RIGHT_MIDDLE] = '024', [Map.BOTTOM_MIDDLE] = '018', }, },
+        { name = '020', connectedTiles = { [Map.TOP_MIDDLE] = '021', [Map.BOTTOM_MIDDLE] = '019', }, },
+        { name = '021', connectedTiles = { [Map.TOP_MIDDLE] = '022', [Map.RIGHT_MIDDLE] = '025', [Map.BOTTOM_MIDDLE] = '020', [Map.SPECIAL_1] = '012', }, },
+        { name = '022', connectedTiles = { [Map.RIGHT_MIDDLE] = '026', [Map.BOTTOM_MIDDLE] = '021', [Map.LEFT_MIDDLE] = '015', }, },
+        { name = '023', connectedTiles = { [Map.TOP_MIDDLE] = '024', [Map.LEFT_MIDDLE] = '018', [Map.SPECIAL_1] = '012', }, },
+        { name = '024', connectedTiles = { [Map.RIGHT_MIDDLE] = '028', [Map.BOTTOM_MIDDLE] = '023', [Map.LEFT_MIDDLE] = '019', }, },
+        { name = '025', connectedTiles = { [Map.RIGHT_MIDDLE] = '030', [Map.LEFT_MIDDLE] = '021', }, },
+        { name = '026', connectedTiles = { [Map.TOP_MIDDLE] = '027', [Map.RIGHT_MIDDLE] = '031', [Map.LEFT_MIDDLE] = '022', }, },
+        { name = '027', connectedTiles = { [Map.BOTTOM_MIDDLE] = '026', [Map.SPECIAL_1] = '057', }, },
+        { name = '028', connectedTiles = { [Map.TOP_MIDDLE] = '029', [Map.LEFT_MIDDLE] = '024', }, },
+        { name = '029', connectedTiles = { [Map.TOP_MIDDLE] = '030', [Map.BOTTOM_MIDDLE] = '028', }, },
+        { name = '030', connectedTiles = { [Map.TOP_MIDDLE] = '031', [Map.BOTTOM_MIDDLE] = '029', [Map.LEFT_MIDDLE] = '025', }, },
+        { name = '031', connectedTiles = { [Map.BOTTOM_MIDDLE] = '030', [Map.LEFT_MIDDLE] = '026', }, },
+        { name = '032', connectedTiles = { [Map.RIGHT_MIDDLE] = '036', }, },
+        { name = '033', connectedTiles = { [Map.TOP_MIDDLE] = '034', [Map.RIGHT_MIDDLE] = '038', }, },
+        { name = '034', connectedTiles = { [Map.BOTTOM_MIDDLE] = '033', [Map.SPECIAL_1] = '055', }, },
+        { name = '035', connectedTiles = { [Map.TOP_MIDDLE] = '036', [Map.RIGHT_MIDDLE] = '040', }, },
+        { name = '036', connectedTiles = { [Map.TOP_MIDDLE] = '037', [Map.BOTTOM_MIDDLE] = '035', [Map.LEFT_MIDDLE] = '032', [Map.SPECIAL_1] = '069', }, },
+        { name = '037', connectedTiles = { [Map.TOP_MIDDLE] = '038', [Map.RIGHT_MIDDLE] = '041', [Map.BOTTOM_MIDDLE] = '036', }, },
+        { name = '038', connectedTiles = { [Map.TOP_MIDDLE] = '039', [Map.BOTTOM_MIDDLE] = '037', [Map.LEFT_MIDDLE] = '033', [Map.SPECIAL_1] = '003', }, },
+        { name = '039', connectedTiles = { [Map.RIGHT_MIDDLE] = '042', [Map.BOTTOM_MIDDLE] = '038', }, },
+        { name = '040', connectedTiles = { [Map.RIGHT_MIDDLE] = '043', [Map.LEFT_MIDDLE] = '035', }, },
+        { name = '041', connectedTiles = { [Map.RIGHT_MIDDLE] = '045', [Map.LEFT_MIDDLE] = '037', }, },
+        { name = '042', connectedTiles = { [Map.RIGHT_MIDDLE] = '047', [Map.LEFT_MIDDLE] = '039', [Map.SPECIAL_1] = '072', }, },
+        { name = '043', connectedTiles = { [Map.TOP_MIDDLE] = '044', [Map.RIGHT_MIDDLE] = '048', [Map.LEFT_MIDDLE] = '040', [Map.SPECIAL_1] = '010', }, },
+        { name = '044', connectedTiles = { [Map.TOP_MIDDLE] = '045', [Map.RIGHT_MIDDLE] = '049', [Map.BOTTOM_MIDDLE] = '043', }, },
+        { name = '045', connectedTiles = { [Map.TOP_MIDDLE] = '046', [Map.RIGHT_MIDDLE] = '050', [Map.BOTTOM_MIDDLE] = '044', [Map.LEFT_MIDDLE] = '041', }, },
+        { name = '046', connectedTiles = { [Map.TOP_MIDDLE] = '047', [Map.RIGHT_MIDDLE] = '051', [Map.BOTTOM_MIDDLE] = '045', }, },
+        { name = '047', connectedTiles = { [Map.BOTTOM_MIDDLE] = '046', [Map.LEFT_MIDDLE] = '042', }, },
+        { name = '048', connectedTiles = { [Map.RIGHT_MIDDLE] = '052', [Map.LEFT_MIDDLE] = '043', }, },
+        { name = '049', connectedTiles = { [Map.TOP_MIDDLE] = '050', [Map.LEFT_MIDDLE] = '044', }, },
+        { name = '050', connectedTiles = { [Map.TOP_MIDDLE] = '051', [Map.BOTTOM_MIDDLE] = '049', [Map.LEFT_MIDDLE] = '045', }, },
+        { name = '051', connectedTiles = { [Map.RIGHT_MIDDLE] = '053', [Map.BOTTOM_MIDDLE] = '050', [Map.LEFT_MIDDLE] = '046', }, },
+        { name = '052', connectedTiles = { [Map.RIGHT_MIDDLE] = '056', [Map.LEFT_MIDDLE] = '048', }, },
+        { name = '053', connectedTiles = { [Map.TOP_MIDDLE] = '054', [Map.LEFT_MIDDLE] = '051', }, },
+        { name = '054', connectedTiles = { [Map.TOP_MIDDLE] = '055', [Map.BOTTOM_MIDDLE] = '053', }, },
+        { name = '055', connectedTiles = { [Map.RIGHT_MIDDLE] = '057', [Map.BOTTOM_MIDDLE] = '054', [Map.SPECIAL_1] = '034', }, },
+        { name = '056', connectedTiles = { [Map.LEFT_MIDDLE] = '052', [Map.SPECIAL_1] = '060', [Map.SPECIAL_2] = '083', }, },
+        { name = '057', connectedTiles = { [Map.RIGHT_MIDDLE] = '059', [Map.LEFT_MIDDLE] = '055', [Map.SPECIAL_1] = '027', }, },
+        { name = '058', connectedTiles = { [Map.TOP_MIDDLE] = '059', [Map.RIGHT_MIDDLE] = '060', [Map.SPECIAL_1] = '090', }, },
+        { name = '059', connectedTiles = { [Map.BOTTOM_MIDDLE] = '058', [Map.LEFT_MIDDLE] = '057', }, },
+        { name = '060', connectedTiles = { [Map.LEFT_MIDDLE] = '058', [Map.SPECIAL_1] = '056', }, },
+        { name = '061', connectedTiles = { [Map.TOP_MIDDLE] = '062', [Map.RIGHT_MIDDLE] = '063', }, },
+        { name = '062', connectedTiles = { [Map.BOTTOM_MIDDLE] = '061', }, },
+        { name = '063', connectedTiles = { [Map.TOP_MIDDLE] = '064', [Map.LEFT_MIDDLE] = '061', }, },
+        { name = '064', connectedTiles = { [Map.TOP_MIDDLE] = '065', [Map.RIGHT_MIDDLE] = '068', [Map.BOTTOM_MIDDLE] = '063', }, },
+        { name = '065', connectedTiles = { [Map.BOTTOM_MIDDLE] = '064', }, },
+        { name = '066', connectedTiles = { [Map.TOP_MIDDLE] = '067', [Map.RIGHT_MIDDLE] = '070', }, },
+        { name = '067', connectedTiles = { [Map.RIGHT_MIDDLE] = '071', [Map.BOTTOM_MIDDLE] = '066', }, },
+        { name = '068', connectedTiles = { [Map.TOP_MIDDLE] = '069', [Map.LEFT_MIDDLE] = '064', [Map.SPECIAL_1] = '087', }, },
+        { name = '069', connectedTiles = { [Map.BOTTOM_MIDDLE] = '068', [Map.SPECIAL_1] = '036', }, },
+        { name = '070', connectedTiles = { [Map.RIGHT_MIDDLE] = '073', [Map.LEFT_MIDDLE] = '066', }, },
+        { name = '071', connectedTiles = { [Map.LEFT_MIDDLE] = '067', }, },
+        { name = '072', connectedTiles = { [Map.TOP_MIDDLE] = '073', [Map.LEFT_MIDDLE] = '075', }, },
+        { name = '073', connectedTiles = { [Map.BOTTOM_MIDDLE] = '072', [Map.LEFT_MIDDLE] = '070', [Map.SPECIAL_1] = '085', }, },
+        { name = '074', connectedTiles = { [Map.TOP_MIDDLE] = '075', [Map.RIGHT_MIDDLE] = '078', }, },
+        { name = '075', connectedTiles = { [Map.BOTTOM_MIDDLE] = '074', [Map.LEFT_MIDDLE] = '072', }, },
+        { name = '076', connectedTiles = { [Map.TOP_MIDDLE] = '077', [Map.RIGHT_MIDDLE] = '080', }, },
+        { name = '077', connectedTiles = { [Map.TOP_MIDDLE] = '078', [Map.BOTTOM_MIDDLE] = '076', }, },
+        { name = '078', connectedTiles = { [Map.BOTTOM_MIDDLE] = '077', [Map.LEFT_MIDDLE] = '074', }, },
+        { name = '079', connectedTiles = { [Map.RIGHT_MIDDLE] = '082', }, },
+        { name = '080', connectedTiles = { [Map.RIGHT_MIDDLE] = '084', [Map.LEFT_MIDDLE] = '076', }, },
+        { name = '081', connectedTiles = { [Map.TOP_MIDDLE] = '082', [Map.RIGHT_MIDDLE] = '086', }, },
+        { name = '082', connectedTiles = { [Map.BOTTOM_MIDDLE] = '081', [Map.LEFT_MIDDLE] = '079', }, },
+        { name = '083', connectedTiles = { [Map.TOP_MIDDLE] = '084', [Map.RIGHT_MIDDLE] = '088', [Map.SPECIAL_1] = '056', }, },
+        { name = '084', connectedTiles = { [Map.BOTTOM_MIDDLE] = '083', [Map.LEFT_MIDDLE] = '080', }, },
+        { name = '085', connectedTiles = { [Map.TOP_MIDDLE] = '086', [Map.RIGHT_MIDDLE] = '090', [Map.SPECIAL_1] = '073', }, },
+        { name = '086', connectedTiles = { [Map.RIGHT_MIDDLE] = '091', [Map.BOTTOM_MIDDLE] = '085', [Map.LEFT_MIDDLE] = '081', }, },
+        { name = '087', connectedTiles = { [Map.TOP_LEFT] = '088', [Map.TOP_RIGHT] = '088', [Map.SPECIAL_1] = '068', }, },
+        { name = '088', connectedTiles = { [Map.TOP_MIDDLE] = '089', [Map.BOTTOM_RIGHT] = '087', [Map.BOTTOM_LEFT] = '087', [Map.LEFT_MIDDLE] = '083', }, },
+        { name = '089', connectedTiles = { [Map.BOTTOM_MIDDLE] = '088', }, },
+        { name = '090', connectedTiles = { [Map.LEFT_MIDDLE] = '085', [Map.SPECIAL_1] = '058', }, },
+        { name = '091', connectedTiles = { [Map.LEFT_MIDDLE] = '086', }, },
+        { name = '333', connectedTiles = { }, },
     },
 }
 
@@ -248,6 +341,20 @@ function Map.reset(params)
             Map.map[tile.name]:createUi(true)
         end
     end
+end
+
+function Map.export()
+    local flatData = {}
+
+    for name, guid in pairs(Map.discovered_map) do
+        flatData[name] = {
+            position = getObjectFromGUID(guid).getPosition(),
+            rotation = getObjectFromGUID(guid).getRotation(),
+            locked = getObjectFromGUID(guid).getLock(),
+        }
+    end
+
+    return flatData
 end
 
 function Map.save()
@@ -455,4 +562,5 @@ return {
     init = Map.init,
     save = Map.save,
     reset = Map.reset,
+    export = Map.export,
 }

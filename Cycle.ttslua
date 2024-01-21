@@ -21,29 +21,34 @@ Cycle.GENERIC_ARCHIVE_GUID = 'b7daa3'
 Cycle.CYCLES = {
     [Constants.CYCLE_I] = {
         name = 'Truth of the Labyrinth',
+        index = 1,
         archiveGUID = '7b2c8d',
     },
     [Constants.CYCLE_II] = {
         name = 'Abysswatchers',
+        index = 2,
         archiveGUID = '5f7b89',
     },
     [Constants.CYCLE_III] = {
         name = 'Pitiless of the Sun',
+        index = 3,
         archiveGUID = '548a8b',
-        disabled = true,
     },
     [Constants.CYCLE_IV] = {
         name = 'Gardens of Infinite Growth',
+        index = 4,
         archiveGUID = 'd4dd70',
         disabled = true,
     },
     [Constants.CYCLE_V] = {
         name = 'Truthsayer',
+        index = 5,
         archiveGUID = 'cf1477',
         disabled = true,
     },
     [Constants.ONWARDS_ODYSSEY] = {
         name = 'Onwards Odyssey',
+        index = 6,
         archiveGUID = '',
         disabled = true,
     }
@@ -495,7 +500,7 @@ function Cycle.generalSetup(cycle, params)
 
     -- Set cycle book to the correct state
     local book = getObjectsWithTag(Constants.CYCLE_BOOK)[1]
-    if book then book.setState(1) end
+    if book and book.getStateId() ~= Cycle.CYCLES[Options.getCurrentCycle()].index then book.setState(Cycle.CYCLES[Options.getCurrentCycle()].index) end
 
     -- Cleanup cycle bag
     cycleBag.destruct()
@@ -860,9 +865,6 @@ function Cycle.setupCycleI(params)
 end
 
 function Cycle.setupCycleII(params)
-    -- Check parameters
-    local useTutorial = params.useTutorial or false
-
     -- Get the cycle I data
     local c1Argo = Argo.getData(Constants.CYCLE_I)
     local c1Timeline = Timeline.getData(Constants.CYCLE_I)
@@ -958,6 +960,106 @@ function Cycle.setupCycleII(params)
     end
 
     broadcastToAll('Perform a Divine Surge then read 001.', Constants.WARNING_COLOR)
+end
+
+function Cycle.setupCycleIII(params)
+    -- Get the cycle I and II data
+    local c1Argo = Argo.getData(Constants.CYCLE_I)
+    local c1Timeline = Timeline.getData(Constants.CYCLE_I)
+    local c2Argo = Argo.getData(Constants.CYCLE_II)
+    local c2Timeline = Timeline.getData(Constants.CYCLE_II)
+
+    -- local currentArgo, _ = Argo.spawnSheet({ cycle = Constants.CYCLE_III, hull = 5, crew = 5, current_titans = 10, argo_knowledge = 20,
+    --             max_titans = 15, abilities_limit = c1Argo and c1Argo.abilities_limit or 0, })
+    -- local currentTimeline, _ = Timeline.spawnSheet({ cycle = Constants.CYCLE_II, choice_matrix = c1Timeline and c1Timeline.choice_matrix or nil, })
+
+    -- -- Get map tiles out of the bag
+    -- for _, bag in ipairs(getObjectsWithTag(Constants.MAP_TILES_BAG)) do
+    --     for _, tile in ipairs(bag.getObjects()) do
+    --         local position = nil
+    --         if tile.name == '078' then
+    --             position = {-73.39, 0.98, 28.57}
+    --             params.startMapTile = tile.guid
+    --         end
+
+    --         if position then
+    --             bag.takeObject({
+    --                 guid = tile.guid,
+    --                 position = position,
+    --                 rotation = {0.00, 180.00, 0.00},
+    --                 smooth = false,
+    --                 callback_function = function(spawnedObject)
+    --                     spawnedObject.setLock(true)
+    --                 end
+    --             })
+    --         end
+    --     end
+    -- end
+    
+    -- Map.reset({ discovered_map = { ['078'] = params.startMapTile, }})
+
+    -- -- Move argo to 078
+    -- local argoMini = getObjectFromGUID(Constants.ARGO_MINI_GUID)
+    -- local argoPosition = {-74.28, Cycle.DROP_HEIGHT, 27.83}
+    -- if argoMini then argoMini.setPosition(argoPosition) end
+
+    -- -- Grab the secret cards
+    -- local secretBag = getObjectFromGUID(Cycle.secretBagGUID)
+    -- for _, card in ipairs(secretBag.getObjects()) do
+    --     -- Grab Tech cards
+    --     if card.name == 'Forgotten Knowledge' then
+    --         secretBag.takeObject({
+    --             guid = card.guid,
+    --             position = {37.85, Cycle.DROP_HEIGHT, 71.21},
+    --             rotation = {0, 90, 0},
+    --             smooth = false,
+    --         })
+    --     elseif card.name == 'Titanomorphosis' then
+    --         secretBag.takeObject({
+    --             guid = card.guid,
+    --             position = {46.32, Cycle.DROP_HEIGHT, 71.21},
+    --             rotation = {0, 90, 0},
+    --             smooth = false,
+    --         })
+    --     elseif card.name == 'Argo Works II' then
+    --         secretBag.takeObject({
+    --             guid = card.guid,
+    --             position = {54.78, Cycle.DROP_HEIGHT, 71.21},
+    --             rotation = {0, 90, 0},
+    --             smooth = false,
+    --         })
+    --     elseif card.name == 'Temenos Project' then
+    --         secretBag.takeObject({
+    --             guid = card.guid,
+    --             position = {63.24, Cycle.DROP_HEIGHT, 71.21},
+    --             rotation = {0, 90, 0},
+    --             smooth = false,
+    --         })
+    --     elseif card.name == 'Argo\'s Mission' then
+    --         secretBag.takeObject({
+    --             guid = card.guid,
+    --             position = {71.70, Cycle.DROP_HEIGHT, 71.21},
+    --             rotation = {0, 90, 0},
+    --             smooth = false,
+    --         })
+    --     elseif card.name == 'Violent Awakening' then
+    --         -- Add Kratos card
+    --         secretBag.takeObject({
+    --             guid = card.guid,
+    --             position = {-5.47, Cycle.DROP_HEIGHT, 12.19},
+    --             rotation = {0, 180, 180},
+    --             smooth = false,
+    --         })
+    --     end
+    -- end
+
+    -- for _, card in ipairs(getObjects()) do
+    --     if card.getName() == 'Titanogenesis' then
+    --         card.setPosition({46.32, Cycle.DROP_HEIGHT, 65.95})
+    --     end
+    -- end
+
+    -- broadcastToAll('Perform a Divine Surge then read 001.', Constants.WARNING_COLOR)
 end
 
 function Cycle.reset()

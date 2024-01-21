@@ -37,6 +37,10 @@ Titan.TITANS = {
     }
 }
 
+function Titan.init(savedData)
+
+end
+
 function Titan.spawnSheet(position, type, urlType)
     if not Titan.TITANS[type] then return end
     if urlType and not Titan.TITANS[type].url[urlType] then return end
@@ -49,6 +53,7 @@ function Titan.spawnSheet(position, type, urlType)
         scale = Titan.TITAN_SHEET_SCALE,
         callback_function = function(spawnedObject)
             spawnedObject.addTag(Constants.TITAN_SHEET)
+            spawnedObject.setName(urlType)
             spawnedObject.setColorTint({128/255, 128/255, 128/255})
         end
     })
@@ -72,6 +77,9 @@ function Titan.spawnSheet(position, type, urlType)
     return titanSheet
 end
 
+function Titan.save()
+    
+end
 ------------------------------------------------------
 
 return Titan

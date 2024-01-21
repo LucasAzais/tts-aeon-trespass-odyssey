@@ -2,6 +2,7 @@ local GlobalUi = {}
 GlobalUi.__index = GlobalUi
 
 local Battle
+local Campaign = require('Campaign')
 local Constants = require('Constants')
 local Cycle = require('Cycle')
 local Options = require('Options')
@@ -151,6 +152,13 @@ function GlobalUi.init()
             else
                 GlobalUi.ui.campaign_setup_panel:show()
             end
+        end,
+    })
+
+    GlobalUi.ui.cycle_menu_button = GlobalUi.ui.cycle_menu_panel:button({
+        id = 'export-menu-button', width = 370, height = 20, fontSize = fontSize, text = 'Export Campaign',
+        onClick = function() 
+            Campaign.export()
         end,
     })
 

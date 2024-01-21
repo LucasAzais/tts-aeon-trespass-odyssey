@@ -1,0 +1,224 @@
+local Campaign = {}
+Campaign.__index = Campaign
+
+local Argo
+local Argonaut = require('Argonaut')
+local Battle = require('Battle')
+local Constants = require('Constants')
+local EventManager = require('EventManager')
+local Log = require('Log').ForModule('Campaign')
+local Map = require('Map')
+local Options = require('Options')
+local Timeline = require('Timeline')
+local Triskelion = require('Triskelion')
+local Ui = require('Ui')
+local Utils = require('Utils')
+
+------------------------------------------------------
+
+Campaign.EXPORT_VERSION = '1.0'
+
+function Campaign.init()
+    Argo = Argo or require('Argo')
+
+    -- Init the UI for the import/export section
+end
+
+function Campaign.import()
+
+end
+
+function Campaign.export()
+    -- Check there is a cycle in progress
+    if not Options.getCurrentCycle() then 
+        broadcastToAll('Please start a cycle before exporting.', Color.Red)
+        return
+    end
+
+    if Battle.isBattleInProgress() then
+        broadcastToAll('Finish and cleanup the current battle before exporting.', Color.Red)
+        return
+    end
+
+    local data = {
+        version = Campaign.EXPORT_VERSION,
+        map = Map.export(),
+        triskelions = Triskelion.save(),
+        argo = Argo.save(),
+        timeline = Timeline.save(),
+        argonauts = Argonaut.save(),
+        [Constants.GEAR] = {},
+        [Constants.MNEMOS] = {},
+        [Constants.FATED_MNEMOS] = {},
+        [Constants.CLUE] = {},
+        [Constants.EXPLORATION_CARD] = {},
+        [Constants.KRATOS_PATTERN] = {},
+        [Constants.TRAUMA_PATTERN] = {},
+        [Constants.ARGONAUT_CARD] = {},
+        [Constants.TECHNOLOGY] = {},
+        titan_sheets = {},
+        mnestis_theatre_sheet = {},
+        argonaut_sheets = {},
+        titan_minis = {},
+    }
+
+    -- -- Save object position for the various argonaut sheets (to spawn new ones)
+    -- for _, object in ipairs(getObjectsWithTag(Constants.ARGONAUT_SHEET)) do
+    --     table.insert(data.argonaut_sheet, {
+    --         guid = object.getGUID(),
+    --         position = object.getPosition(),
+    --         rotation = object.getRotation(),
+    --         locked = object.getLock(),
+    --     })
+    -- end
+
+    -- Loop through everything on the table and then add the name to the corresponding data array
+    -- depending on its type tag.
+    -- If no type tag or exception, then do not save it (tokens, map tiles, etc)
+
+        -- CHECK THESE ARE NOT DECKS??????? or save if decked or not?
+        -- IF CYCLE ~= CURRENT_CYCLE THEN MAYBE SAVE THE CYCLE AS WELL?
+
+
+    -- WAY TOO MANY LOOPS?
+    for _, object in ipairs(getObjects()) do
+        if (object.hasTag(Constants.GEAR) and not object.getGMNotes():find('^GearDeckC[0-9]'))
+            or (object.hasTag(Constants.MNEMOS) and not object.getGMNotes():find('^Mnemos$'))
+            or (object.hasTag(Constants.FATED_MNEMOS) and not object.getGMNotes():find('^FatedMnemos$'))
+            or (object.hasTag(Constants.CLUE) and not object.getGMNotes():find('^Clues$'))
+            or (object.hasTag(Constants.EXPLORATION_CARD) and not object.getGMNotes():find('^Exploration$'))
+            or (object.hasTag(Constants.MOIROS) and not object.getGMNotes():find('^MoirosDeck$'))
+            or (object.hasTag(Constants.KRATOS) and not object.getGMNotes():find('^KratosDeck$'))
+            or (object.hasTag(Constants.KRATOS_PATTERN) and not object.getGMNotes():find('^KratosPatterns$'))
+            or (object.hasTag(Constants.TRAUMA_PATTERN) and not object.getGMNotes():find('^TraumaPatterns$'))
+            or (object.hasTag(Constants.MINOR_TRAUMA))
+            or (object.hasTag(Constants.MAJOR_TRAUMA))
+            or (object.hasTag(Constants.GRAVE_TRAUMA))
+            or (object.hasTag(Constants.OBOL))
+            or (object.hasTag(Constants.TECHNOLOGY))
+            or (object.hasTag(Constants.ARGONAUT_CARD) and not object.getGMNotes():find('^Argonauts$'))
+            or (object.hasTag(Constants.GENERIC_ARGONAUT_CARD) and not object.getGMNotes():find('^GenericArgonauts$')) then
+
+            if object.type == 'Deck' then
+                local deck = {}
+                for _, card in ipairs(object.getObjects()) do 
+                    table.insert(deck, {
+                        name = object.name,
+                    })
+                end
+
+                table.insert(data[Campaign.getObjectTypeTag(object)], {
+                    name = object.getName(),
+                    position = object.getPosition(),
+                    rotation = object.getRotation(),
+                    locked = object.getLock(),
+                    cycle = Campaign.getCycle(object),
+                    deck = deck,
+                })
+            else
+                table.insert(data[Campaign.getObjectTypeTag(object)], {
+                    name = object.getName(),
+                    position = object.getPosition(),
+                    rotation = object.getRotation(),
+                    locked = object.getLock(),
+                    cycle = Campaign.getCycle(object),
+                    deck = false,
+                })
+            end
+        elseif object.hasTag(Constants.TITAN_SHEET) then
+            table.insert(data.titan_sheets, {
+                name = object.getName(),
+                position = object.getPosition(),
+                rotation = object.getRotation(),
+                locked = object.getLock(),
+            })
+            
+        elseif object.hasTag(Constants.MNESTIS_THEATRE_SHEET) then
+            
+        elseif object.hasTag(Constants.ARGONAUT_SHEET) then
+            table.insert(data.argonaut_sheets, {
+                guid = object.getGUID(),
+                name = object.getName(),
+                position = object.getPosition(),
+                rotation = object.getRotation(),
+                locked = object.getLock(),
+            })
+        -- Add something for the various titan minis?
+        elseif object.hasTag(Constants.TITAN) then
+            table.insert(data.titan_minis, {
+                type = object.getGMNotes(),
+                name = object.getName(),
+                position = object.getPosition(),
+                rotation = object.getRotation(),
+                locked = object.getLock(),
+                color = object.getColorTint(),
+            })
+        else
+            
+        end
+    end
+
+    -- Create the campaign cube
+    local exportedCube = spawnObject({
+        type = 'BlockSquare',
+        position = {0, 3, 0},
+        scale = {3, 3, 3},
+        sound = false
+    })
+
+    exportedCube.setLuaScript('--')
+    exportedCube.script_state = JSON.encode(data)
+    exportedCube.setName('Exported Campaign')
+    exportedCube.addTag(Constants.CAMPAIGN_CUBE)
+    
+    broadcastToAll("Campaign export complete. Instructions are in the chat window.", Constants.WARNING_COLOR)
+    printToAll("1. Save your game.", Constants.WARNING_COLOR)
+    printToAll("2. Copy your campaign cube (right click on the cube -> Copy).", Constants.WARNING_COLOR)
+    printToAll("3. Load the latest version of this mod.", Constants.WARNING_COLOR)
+    printToAll("4. Paste the cube (right click anywhere -> Paste) and drop it onto the same spot in the new version.", Constants.WARNING_COLOR)
+    printToAll("5. Click the 'Import Campaign' button.", Constants.WARNING_COLOR)
+end
+
+function Campaign.getCycle(object)
+    if not object then return nil end
+
+    if object.hasTag(Constants.CYCLE_I) then
+        return Constants.CYCLE_I
+    elseif object.hasTag(Constants.CYCLE_II) then
+        return Constants.CYCLE_II
+    elseif object.hasTag(Constants.CYCLE_III) then
+        return Constants.CYCLE_III
+    elseif object.hasTag(Constants.CYCLE_IV) then
+        return Constants.CYCLE_IV
+    elseif object.hasTag(Constants.CYCLE_V) then
+        return Constants.CYCLE_V
+    end
+
+    return nil
+end
+
+function Campaign.getObjectTypeTag(object)
+    if not object then return nil end
+
+    if object.hasTag(Constants.GEAR) then
+        return Constants.GEAR
+    elseif object.hasTag(Constants.MNEMOS) then
+        return Constants.MNEMOS
+    elseif object.hasTag(Constants.FATED_MNEMOS) then
+        return Constants.FATED_MNEMOS
+    elseif object.hasTag(Constants.CLUE) then
+        return Constants.CLUE
+    elseif object.hasTag(Constants.EXPLORATION_CARD) then
+        return Constants.EXPLORATION_CARD
+    elseif object.hasTag(Constants.KRATOS_PATTERN) then
+        return Constants.KRATOS_PATTERN
+    elseif object.hasTag(Constants.TRAUMA_PATTERN) then
+        return Constants.TRAUMA_PATTERN
+    end
+
+    return nil
+end
+
+------------------------------------------------------
+
+return Campaign

@@ -1670,7 +1670,7 @@ end
 
 function Argo.save()
     local flatData = {}
-
+    
     for cycle, argo in pairs(Argo.DATA) do
         flatData[cycle] = {
             cycle = argo.cycle,

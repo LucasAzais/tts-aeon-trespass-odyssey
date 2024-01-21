@@ -51,6 +51,24 @@ Constants.CYCLE_SPECIFIC_III = 'CycleIII'
 Constants.CYCLE_SPECIFIC_IV = 'CycleIV'
 Constants.CYCLE_SPECIFIC_V = 'CycleV'
 Constants.MAP_TILES_BAG = 'MapTilesBag'
+Constants.CAMPAIGN_CUBE = 'CampaignCube'
+Constants.GEAR = 'Gear'
+Constants.MNEMOS = 'Mnemos'
+Constants.FATED_MNEMOS = 'FatedMnemos'
+Constants.CLUE = 'Clue'
+Constants.EXPLORATION_CARD = 'ExplorationCard'
+Constants.MOIROS = 'Moiros'
+Constants.KRATOS = 'Kratos'
+Constants.KRATOS_PATTERN = 'KratosPattern'
+Constants.TRAUMA_PATTERN = 'TraumaPattern'
+Constants.TECHNOLOGY = 'Technology'
+Constants.ARGONAUT_CARD = 'ArgonautCard'
+Constants.GENERIC_ARGONAUT_CARD = 'GenericArgonautCard'
+Constants.MINOR_TRAUMA = 'MinorTrauma'
+Constants.MAJOR_TRAUMA = 'MajorTrauma'
+Constants.GRAVE_TRAUMA = 'GraveTrauma'
+Constants.OBOL = 'Obol'
+
 
 -- Battle types
 Constants.MNESTIS_THEATRE = 'Mnestis Theatre'
@@ -136,7 +154,7 @@ Constants.ROTATION_SOUTH = {0, 180, 0}
 Constants.ROTATION_WEST = {0, 270, 0}
 
 -- GUIDs
-Constants.ARGO_MINI_GUID = '33682e'
+Constants.ARGO_MINI_GUID = '93f417'
 Constants.LAST_CITY_TOKEN_GUID = '6f820e'
 Constants.PRIORITY_TARGET_TOKEN_GUID = '8f05ad'
 
