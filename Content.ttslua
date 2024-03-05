@@ -843,6 +843,346 @@ Content.battles = {
             }
         },
     },
+    ['Hypertime Oracle Battle'] = {
+        {
+            end_setup = 'endHypertimeOracleLevel1PlusSetup',
+            levels = { Constants.LEVEL_1, Constants.LEVEL_2, },
+            primordials = { Constants.HYPERTIME_ORACLE, },
+            primordial_start_position_rotation = { 
+                { position = { row = 7.5, column = 13.5 }, weight = 1,
+                            rotations = { { rotation = Constants.ROTATION_WEST, weight = 1 } },
+                },
+            },
+            titan_start_positions = {
+                { row = 5, column = 9 }, { row = 6, column = 9 }, { row = 9, column = 9 }, { row = 10, column = 9 },
+            },
+            terrains = {
+                {
+                    name = 'Timefront 1x4',
+                    tiles = {
+                        { position = { row = 7.5, column = 1 }, rotation = { x = 0, y = -90, z = 0 }, },
+                    },
+                },
+                {
+                    name = 'Timefront 1x5',
+                    tiles = {
+                        { position = { row = 3, column = 1 }, rotation = { x = 0, y = -90, z = 0 }, },
+                        { position = { row = 12, column = 1 }, rotation = { x = 0, y = -90, z = 0 }, },
+                    },
+                },
+                {
+                    name = 'Time-Frozen City',
+                    tiles = {
+                        { position = { row = 2, column = 18 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 13, column = 16 }, rotation = { x = 0, y = 180, z = 0 }, },
+                    },
+                },
+                {
+                    name = 'Black Iceberg',
+                    tiles = {
+                        { position = { row = 2, column = 13 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 4, column = 11 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 8, column = 9 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 10, column = 6 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 10, column = 14 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 11, column = 10 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 12, column = 8 }, rotation = { x = 0, y = 180, z = 0 }, },
+                    },
+                },
+            }
+        },
+        {
+            end_setup = 'endHypertimeOracleLevel3PlusSetup',
+            levels = { Constants.LEVEL_3, Constants.LEVEL_4, },
+            primordials = { Constants.HYPERTIME_ORACLE, },
+            primordial_start_position_rotation = { 
+                { position = { row = 7.5, column = 13.5 }, weight = 1,
+                            rotations = { { rotation = Constants.ROTATION_WEST, weight = 1 } },
+                },
+            },
+            titan_start_positions = {
+                { row = 5, column = 9 }, { row = 6, column = 9 }, { row = 9, column = 9 }, { row = 10, column = 9 },
+            },
+            terrains = {
+                {
+                    name = 'Timefront 1x4',
+                    tiles = {
+                        { position = { row = 7.5, column = 1 }, rotation = { x = 0, y = -90, z = 0 }, },
+                    },
+                },
+                {
+                    name = 'Timefront 1x5',
+                    tiles = {
+                        { position = { row = 3, column = 1 }, rotation = { x = 0, y = -90, z = 0 }, },
+                        { position = { row = 12, column = 1 }, rotation = { x = 0, y = -90, z = 0 }, },
+                    },
+                },
+                {
+                    name = 'Time-Frozen City',
+                    tiles = {
+                        { position = { row = 2, column = 18 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 13, column = 19 }, rotation = { x = 0, y = 180, z = 0 }, },
+                    },
+                },
+                {
+                    name = 'Black Iceberg',
+                    tiles = {
+                        { position = { row = 2, column = 13 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 4, column = 11 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 6, column = 12 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 7, column = 18 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 8, column = 9 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 9, column = 17 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 10, column = 14 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 11, column = 10 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 11, column = 16 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 12, column = 8 }, rotation = { x = 0, y = 180, z = 0 }, },
+                    },
+                },
+                {
+                    name = 'Giant Black Iceberg',
+                    tiles = {
+                        { position = { row = 4.5, column = 16.5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                    },
+                },
+            }
+        },
+    },
+    ['Icarian Harpy Battle'] = {
+        {
+            end_setup = 'endIcarianHarpyLevel1PlusSetup',
+            levels = { Constants.LEVEL_1, Constants.LEVEL_2, Constants.LEVEL_3, Constants.LEVEL_4, },
+            primordials = { Constants.ICARIAN_HARPY, },
+            primordial_start_position_rotation = { 
+                { position = { row = 7.5, column = 10.5 }, weight = 1,
+                            rotations = { { rotation = Constants.ROTATION_NORTH, weight = 1 },
+                                          { rotation = Constants.ROTATION_EAST, weight = 1 },
+                                          { rotation = Constants.ROTATION_SOUTH, weight = 1 },
+                                          { rotation = Constants.ROTATION_WEST, weight = 1 } },
+                },
+            },
+            titan_start_positions = {
+                { row = 5, column = 13 }, { row = 6, column = 14 }, { row = 9, column = 7 }, { row = 10, column = 8 },
+            },
+            terrains = {
+                {
+                    name = 'Time-Frozen City',
+                    tiles = {
+                        { position = { row = 5, column = 4 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 12, column = 6 }, rotation = { x = 0, y = 180, z = 0 }, },
+                    },
+                },
+                {
+                    name = 'Black Lake',
+                    tiles = {
+                        { position = { row = 5, column = 16 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 7, column = 10 }, rotation = { x = 0, y = 180, z = 0 }, },
+                    },
+                },
+                {
+                    name = 'Giant Black Iceberg',
+                    tiles = {
+                        { position = { row = 4.5, column = 6.5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 7.5, column = 18.5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 8.5, column = 13.5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                    },
+                },
+                {
+                    name = 'Black Glacier 1x5',
+                    tiles = {
+                        { position = { row = 5, column = 12 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 7, column = 6 }, rotation = { x = 0, y = 0, z = 0 }, },
+                        { position = { row = 10, column = 12 }, rotation = { x = 0, y = -90, z = 0 }, },
+                    },
+                },
+                {
+                    name = 'Black Iceberg',
+                    tiles = {
+                        { position = { row = 2, column = 9 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 2, column = 12 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 3, column = 17 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 6, column = 6 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 8, column = 3 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 9, column = 15 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 10, column = 6 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 12, column = 4 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 12, column = 17 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 13, column = 12 }, rotation = { x = 0, y = 180, z = 0 }, },
+                    },
+                },
+            }
+        },
+    },
+    ['Endure the Sun Battle'] = {
+        {
+            end_setup = 'endEndureTheSunSetup',
+            levels = { Constants.LEVEL_1, },
+            primordials = { Constants.SUN_DESCENDANT, },
+            primordial_start_position_rotation = { 
+                { position = { row = 8, column = 2 }, weight = 1,
+                            rotations = { { rotation = Constants.ROTATION_EAST, weight = 1 }, },
+                },
+            },
+            titan_start_positions = {
+                { row = 7, column = 10 }, { row = 7, column = 11 }, { row = 8, column = 10 }, { row = 8, column = 11 },
+            },
+            terrains = {
+                {
+                    name = 'Black Glacier 1x5',
+                    tiles = {
+                        { position = { row = 4, column = 7 }, rotation = { x = 0, y = 270, z = 0 }, },
+                        { position = { row = 7, column = 14 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 8, column = 6 }, rotation = { x = 0, y = 0, z = 0 }, },
+                    },
+                },
+                {
+                    name = 'Floating Rocks',
+                    tiles = {
+                        { position = { row = 1.5, column = 12.5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 12.5, column = 8.5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                    },
+                },
+                {
+                    name = 'Black Iceberg',
+                    tiles = {
+                        { position = { row = 4, column = 8 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 4, column = 13 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 5, column = 15 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 6, column = 6 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 6, column = 12 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 9, column = 9 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 9, column = 14 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 11, column = 4 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 11, column = 6 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 11, column = 13 }, rotation = { x = 0, y = 180, z = 0 }, },
+                    },
+                },
+            }
+        },
+    },
+    ['Race the Sun Battle'] = {
+        {
+            end_setup = 'endRaceTheSunSetup',
+            levels = { Constants.LEVEL_1, },
+            primordials = { Constants.SUN_DESCENDANT, },
+            primordial_start_position_rotation = { 
+                { position = { row = 8, column = 2 }, weight = 1,
+                            rotations = { { rotation = Constants.ROTATION_EAST, weight = 1 }, },
+                },
+            },
+            titan_start_positions = {
+                { row = 7, column = 10 }, { row = 7, column = 11 }, { row = 8, column = 10 }, { row = 8, column = 11 },
+            },
+            terrains = {
+                {
+                    name = 'Black Glacier 1x5',
+                    tiles = {
+                        { position = { row = 4, column = 7 }, rotation = { x = 0, y = 270, z = 0 }, },
+                        { position = { row = 7, column = 14 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 8, column = 6 }, rotation = { x = 0, y = 0, z = 0 }, },
+                    },
+                },
+                {
+                    name = 'Floating Rocks',
+                    tiles = {
+                        { position = { row = 1.5, column = 12.5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 12.5, column = 8.5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                    },
+                },
+                {
+                    name = 'Black Iceberg',
+                    tiles = {
+                        { position = { row = 4, column = 8 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 4, column = 13 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 5, column = 15 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 6, column = 6 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 6, column = 12 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 9, column = 9 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 9, column = 14 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 11, column = 4 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 11, column = 6 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 11, column = 13 }, rotation = { x = 0, y = 180, z = 0 }, },
+                    },
+                },
+            }
+        },
+    },
+    ['Burden Hardest to Bear Battle'] = {
+        {
+            end_setup = 'endBurdenHardestToBearSetup',
+            levels = { Constants.LEVEL_1, },
+            primordials = { Constants.THE_BURDEN, },
+            primordial_start_position_rotation = { 
+                { position = { row = 7.5, column = 10.5 }, weight = 1,
+                            rotations = { { rotation = Constants.ROTATION_NORTH, weight = 1 },
+                                          { rotation = Constants.ROTATION_EAST, weight = 1 },
+                                          { rotation = Constants.ROTATION_SOUTH, weight = 1 },
+                                          { rotation = Constants.ROTATION_WEST, weight = 1 } },
+                },
+            },
+            titan_start_positions = {
+                { row = 6, column = 8 }, { row = 6, column = 13 }, { row = 9, column = 8 }, { row = 9, column = 13 },
+            },
+            terrains = {
+                {
+                    name = 'Column',
+                    tiles = {
+                        { position = { row = 2, column = 4 }, rotation = { x = 0, y = 180, z = 0 }, color = Color(218/255, 75/255, 74/255), },
+                        { position = { row = 2, column = 5 }, rotation = { x = 0, y = 180, z = 0 }, color = Color(218/255, 75/255, 74/255), },
+                        { position = { row = 3, column = 15 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 4, column = 7 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 4, column = 10 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 4, column = 15 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 4, column = 17 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 5, column = 2 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 6, column = 2 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 6, column = 9 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 6, column = 19 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 7, column = 19 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 8, column = 2 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 8, column = 3 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 10, column = 3 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 10, column = 15 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 11, column = 7 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 11, column = 17 }, rotation = { x = 0, y = 180, z = 0 }, },
+                    },
+                },
+                {
+                    name = 'Cliff I',
+                    tiles = {
+                        { position = { row = 1, column = 16.5 }, rotation = { x = 0, y = 180, z = 0 }, color = Color(218/255, 75/255, 74/255), },
+                        { position = { row = 3.5, column = 12 }, rotation = { x = 0, y = 270, z = 0 }, },
+                        { position = { row = 11.5, column = 9 }, rotation = { x = 0, y = 270, z = 0 }, },
+                        { position = { row = 14, column = 16.5 }, rotation = { x = 0, y = 180, z = 0 }, color = Color(218/255, 75/255, 74/255), },
+                    },
+                },
+                {
+                    name = 'Cliff L',
+                    tiles = {
+                        { position = { row = 1.5, column = 7 }, rotation = { x = 0, y = 0, z = 180 }, color = Color(218/255, 75/255, 74/255), },
+                        { position = { row = 13.5, column = 5 }, rotation =  { x = 0, y = 180, z = 0 }, color = Color(218/255, 75/255, 74/255), },
+                    },
+                },
+                {
+                    name = 'Cliff O',
+                    tiles = {
+                        { position = { row = 4.5, column = 4.5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 7.5, column = 17.5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                        { position = { row = 12.5, column = 11.5 }, rotation = { x = 0, y = 180, z = 0 }, },
+                    },
+                },
+                {
+                    name = 'Cliff Z',
+                    tiles = {
+                        { position = { row = 2.5, column = 2 }, rotation = { x = 0, y = 180, z = 180 }, color = Color(218/255, 75/255, 74/255), },
+                        { position = { row = 2.5, column = 19 }, rotation = { x = 0, y = 180, z = 0 }, color = Color(218/255, 75/255, 74/255), },
+                        { position = { row = 12.5, column = 2 }, rotation = { x = 0, y = 180, z = 0 }, color = Color(218/255, 75/255, 74/255), },
+                        { position = { row = 12.5, column = 19 }, rotation = { x = 0, y = 180, z = 180 }, color = Color(218/255, 75/255, 74/255), },
+                    },
+                },
+            }
+        },
+    },
 }
 
 Content.primordials = {
@@ -884,6 +1224,21 @@ Content.primordials = {
         name = Constants.CHIMERA_METASTASIOS,
         size = {width = 3, height = 3},
         end_setup = 'endChimeraMetastasiosSetup',
+    },
+    {
+        name = Constants.HYPERTIME_ORACLE,
+        size = {width = 2, height = 2},
+        end_setup = 'endHypertimeOracleSetup',
+    },
+    {
+        name = Constants.ICARIAN_HARPY,
+        size = {width = 2, height = 2},
+        end_setup = 'endIcarianHarpySetup',
+    },
+    {
+        name = Constants.SUN_DESCENDANT,
+        size = {width = 3, height = 3},
+        end_setup = 'endSunDescendantSetup',
     },
 }
 
@@ -949,6 +1304,10 @@ Content.terrains = {
         size = {width = 3, height = 3},
     },
     {
+        name = 'Ambrosia Elephant',
+        size = {width = 1, height = 1},
+    },
+    {
         name = 'Giant Shell',
         size = {width = 3, height = 3},
     },
@@ -1009,6 +1368,59 @@ Content.terrains = {
     {
         name = 'Graveyard Of The Frail',
         size = {width = 2, height = 2},
+    },
+    {
+        name = 'Black Glacier 1x5',
+        size = {width = 5, height = 1},
+    },
+    {
+        name = 'Black Glacier Z',
+        size = {width = 3, height = 2},
+    },
+    {
+        name = 'Black Glacier L',
+        size = {width = 3, height = 2},
+    },
+    {
+        name = 'Black Iceberg',
+        size = {width = 1, height = 1},
+    },
+    {
+        name = 'Giant Black Iceberg',
+        size = {width = 2, height = 2},
+    },
+    {
+        name = 'Black Lake',
+        size = {width = 3, height = 3},
+    },
+    {
+        name = 'Cyclops Trap',
+        size = {width = 1, height = 1},
+    },
+    {
+        name = 'Floating Rocks',
+        size = {width = 2, height = 2},
+    },
+    {
+        name = 'Krypteia Outpost',
+        back_name = 'Damaged Krypteia Outpost',
+        size = {width = 2, height = 2},
+    },
+    {
+        name = 'Spot of Nothingness',
+        size = {width = 2, height = 2},
+    },
+    {
+        name = 'Timefront 1x4',
+        size = {width = 4, height = 1},
+    },
+    {
+        name = 'Timefront 1x5',
+        size = {width = 5, height = 1},
+    },
+    {
+        name = 'Time-Frozen City',
+        size = {width = 3, height = 3},
     },
 }
 

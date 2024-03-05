@@ -391,7 +391,7 @@ function Cycle.generalSetup(cycle, params)
         elseif Utils.contains(object.tags, Constants.MAP_TILES_BAG) then
             cycleBag.takeObject({
                 guid = object.guid,
-                position = {-81.35, 0.80, 51.07},
+                position = {-84.80, 0.81, 73.66},
                 rotation = {0.00, 180.00, 0.00},
                 smooth = false,
                 callback_function = function(spawnedObject)
@@ -465,7 +465,7 @@ function Cycle.generalSetup(cycle, params)
         elseif object.gm_notes == 'Pursuer' then
             cycleBag.takeObject({
                 guid = object.guid,
-                position = {-83.50, Cycle.DROP_HEIGHT, 56.37},
+                position = {-91.70, Cycle.DROP_HEIGHT, 69.40},
                 rotation = {0.00, 180.00, 0.00},
                 smooth = false,
                 callback_function = function(spawnedObject)
@@ -479,7 +479,7 @@ function Cycle.generalSetup(cycle, params)
 
     -- Move last city token back
     local lastCityToken = getObjectFromGUID(Constants.LAST_CITY_TOKEN_GUID)
-    if lastCityToken then lastCityToken.setPosition({-81.35, 0.98, 46.46}) end
+    if lastCityToken then lastCityToken.setPosition({-87.06, 0.98, 69.39}) end
 
     -- Move priority target token
     local priorityToken = getObjectFromGUID(Constants.PRIORITY_TARGET_TOKEN_GUID)
@@ -969,97 +969,113 @@ function Cycle.setupCycleIII(params)
     local c2Argo = Argo.getData(Constants.CYCLE_II)
     local c2Timeline = Timeline.getData(Constants.CYCLE_II)
 
-    -- local currentArgo, _ = Argo.spawnSheet({ cycle = Constants.CYCLE_III, hull = 5, crew = 5, current_titans = 10, argo_knowledge = 20,
-    --             max_titans = 15, abilities_limit = c1Argo and c1Argo.abilities_limit or 0, })
-    -- local currentTimeline, _ = Timeline.spawnSheet({ cycle = Constants.CYCLE_II, choice_matrix = c1Timeline and c1Timeline.choice_matrix or nil, })
+    local currentArgo, _ = Argo.spawnSheet({ cycle = Constants.CYCLE_III, hull = 5, crew = 5, current_titans = 10, argo_knowledge = 40, max_titans = 15,
+                abilities_limit = c2Argo and c2Argo.abilities_limit or 0,
+                titans_list1 = c2Argo and c2Argo.titans_list1 or nil,
+                titans_list2 = c2Argo and c2Argo.titans_list2 or nil,
+                adversary_unlocked = c2Argo and c2Argo.adversary_unlocked or false,
+            })
+    local currentTimeline, _ = Timeline.spawnSheet({ cycle = Constants.CYCLE_III, choice_matrix = c2Timeline and c2Timeline.choice_matrix or nil, })
 
-    -- -- Get map tiles out of the bag
-    -- for _, bag in ipairs(getObjectsWithTag(Constants.MAP_TILES_BAG)) do
-    --     for _, tile in ipairs(bag.getObjects()) do
-    --         local position = nil
-    --         if tile.name == '078' then
-    --             position = {-73.39, 0.98, 28.57}
-    --             params.startMapTile = tile.guid
-    --         end
+    -- Get map tiles out of the bag
+    for _, bag in ipairs(getObjectsWithTag(Constants.MAP_TILES_BAG)) do
+        for _, tile in ipairs(bag.getObjects()) do
+            local position = nil
+            if tile.name == '010' then
+                position = {-81.60, 0.98, 29.12}
+                params.startMapTile = tile.guid
+            -- Also pull out 333
+            elseif tile.name == '333' then
+                position = {-58.43, 0.98, 32.81}
+            end
 
-    --         if position then
-    --             bag.takeObject({
-    --                 guid = tile.guid,
-    --                 position = position,
-    --                 rotation = {0.00, 180.00, 0.00},
-    --                 smooth = false,
-    --                 callback_function = function(spawnedObject)
-    --                     spawnedObject.setLock(true)
-    --                 end
-    --             })
-    --         end
-    --     end
-    -- end
+            if position then
+                bag.takeObject({
+                    guid = tile.guid,
+                    position = position,
+                    rotation = {0.00, 180.00, 0.00},
+                    smooth = false,
+                    callback_function = function(spawnedObject)
+                        spawnedObject.setLock(true)
+                    end
+                })
+            end
+        end
+    end
     
-    -- Map.reset({ discovered_map = { ['078'] = params.startMapTile, }})
+    Map.reset({ discovered_map = { ['010'] = params.startMapTile, }})
 
-    -- -- Move argo to 078
-    -- local argoMini = getObjectFromGUID(Constants.ARGO_MINI_GUID)
-    -- local argoPosition = {-74.28, Cycle.DROP_HEIGHT, 27.83}
-    -- if argoMini then argoMini.setPosition(argoPosition) end
+    -- Move argo to 010
+    local argoMini = getObjectFromGUID(Constants.ARGO_MINI_GUID)
+    local startTile = getObjectFromGUID(params.startMapTile)
+    local argoPosition = { startTile.getPosition().x - 0.89, Cycle.DROP_HEIGHT, startTile.getPosition().z - 0.41 }
+    if argoMini then argoMini.setPosition(argoPosition) end
 
-    -- -- Grab the secret cards
-    -- local secretBag = getObjectFromGUID(Cycle.secretBagGUID)
-    -- for _, card in ipairs(secretBag.getObjects()) do
-    --     -- Grab Tech cards
-    --     if card.name == 'Forgotten Knowledge' then
-    --         secretBag.takeObject({
-    --             guid = card.guid,
-    --             position = {37.85, Cycle.DROP_HEIGHT, 71.21},
-    --             rotation = {0, 90, 0},
-    --             smooth = false,
-    --         })
-    --     elseif card.name == 'Titanomorphosis' then
-    --         secretBag.takeObject({
-    --             guid = card.guid,
-    --             position = {46.32, Cycle.DROP_HEIGHT, 71.21},
-    --             rotation = {0, 90, 0},
-    --             smooth = false,
-    --         })
-    --     elseif card.name == 'Argo Works II' then
-    --         secretBag.takeObject({
-    --             guid = card.guid,
-    --             position = {54.78, Cycle.DROP_HEIGHT, 71.21},
-    --             rotation = {0, 90, 0},
-    --             smooth = false,
-    --         })
-    --     elseif card.name == 'Temenos Project' then
-    --         secretBag.takeObject({
-    --             guid = card.guid,
-    --             position = {63.24, Cycle.DROP_HEIGHT, 71.21},
-    --             rotation = {0, 90, 0},
-    --             smooth = false,
-    --         })
-    --     elseif card.name == 'Argo\'s Mission' then
-    --         secretBag.takeObject({
-    --             guid = card.guid,
-    --             position = {71.70, Cycle.DROP_HEIGHT, 71.21},
-    --             rotation = {0, 90, 0},
-    --             smooth = false,
-    --         })
-    --     elseif card.name == 'Violent Awakening' then
-    --         -- Add Kratos card
-    --         secretBag.takeObject({
-    --             guid = card.guid,
-    --             position = {-5.47, Cycle.DROP_HEIGHT, 12.19},
-    --             rotation = {0, 180, 180},
-    --             smooth = false,
-    --         })
-    --     end
-    -- end
+    -- Grab the tech cards
+    for _, card in ipairs(params.techDeck.getObjects()) do
+        if card.name == 'First Tome' then
+            params.techDeck.takeObject({
+                guid = card.guid,
+                position = {37.85, Cycle.DROP_HEIGHT, 71.21},
+                rotation = {0, 180, useTutorial and 180 or 0},
+                smooth = false,
+            })
+        elseif card.name == 'Titanoaristia' then
+            params.techDeck.takeObject({
+                guid = card.guid,
+                position = {46.32, Cycle.DROP_HEIGHT, 71.21},
+                rotation = {0, 180, useTutorial and 180 or 0},
+                smooth = false,
+            })
+        elseif card.name == 'Argo Works III' then
+            params.techDeck.takeObject({
+                guid = card.guid,
+                position = {54.78, Cycle.DROP_HEIGHT, 71.21},
+                rotation = {0, 180, useTutorial and 180 or 0},
+                smooth = false,
+            })
+        elseif card.name == 'Abyss Expedition' then
+            params.techDeck.takeObject({
+                guid = card.guid,
+                position = {63.24, Cycle.DROP_HEIGHT, 71.21},
+                rotation = {0, 180, useTutorial and 180 or 0},
+                smooth = false,
+            })
+        elseif card.name == 'Argo\'s Destiny' then
+            params.techDeck.takeObject({
+                guid = card.guid,
+                position = {71.70, Cycle.DROP_HEIGHT, 71.21},
+                rotation = {0, 180, useTutorial and 180 or 0},
+                smooth = false,
+            })
+        end
+    end
 
-    -- for _, card in ipairs(getObjects()) do
-    --     if card.getName() == 'Titanogenesis' then
-    --         card.setPosition({46.32, Cycle.DROP_HEIGHT, 65.95})
-    --     end
-    -- end
+    for _, card in ipairs(getObjects()) do
+        if card.getName() == 'Titanogenesis' then
+            card.setPosition({46.32, Cycle.DROP_HEIGHT, 65.95})
+        end
+    end
 
-    -- broadcastToAll('Perform a Divine Surge then read 001.', Constants.WARNING_COLOR)
+    -- Grab the secret cards
+    local secretBag = getObjectFromGUID(Cycle.secretBagGUID)
+    for _, card in ipairs(secretBag.getObjects()) do
+        -- Grab Tech cards
+        if card.name == 'Preordained Awakening' then
+            secretBag.takeObject({
+                guid = card.guid,
+                position = {-0.98, Cycle.DROP_HEIGHT, 12.19},
+                rotation = {0, 180, 180},
+                smooth = false,
+            })
+        end
+    end
+
+    -- Could create the exploration deck for you as well?
+
+    broadcastToAll('Don\'t forget to read Inward Odyssey 40 if you did not have the knowledge previously.', Constants.WARNING_COLOR)
+    broadcastToAll('Adjust Cycle III factions as necessary if you have a bonus.', Constants.WARNING_COLOR)
+    broadcastToAll('Perform a Divine Surge then read 001.', Constants.WARNING_COLOR)
 end
 
 function Cycle.reset()

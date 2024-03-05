@@ -76,22 +76,15 @@ function SearchStation.getResults(searchTerm)
     for _, container in ipairs(SearchStation.search_zone.getObjects()) do
         if container.type == 'Bag' or container.type == 'Deck' then
             for _, element in ipairs(container.getObjects()) do
-                -- Only exact search on the secret content bag
-                -- if (container.getName() ~= 'Secret content' and element.name:lower():find(searchTerm:lower())) or element.name:lower() == searchTerm:lower() then
-                if element.name:lower():find(searchTerm:lower()) then
+                -- Search secret number (GM Note) in the secret content bag
+                -- Otherwise try to match the name
+                if (container.getName() == 'Secret content' and element.gm_notes:lower():find(searchTerm:lower())) or element.name:lower():find(searchTerm:lower()) then
                     table.insert(results, {
                         id = element.name,
                         guid = element.guid,
                         container = container,
                         description = false,
                     })
-                -- elseif (not container.getName() == 'Secret content' and element.description:lower():find(searchTerm:lower())) or element.description:lower() == searchTerm:lower() then
-                --     table.insert(results, {
-                --         id = element.description,
-                --         guid = element.guid,
-                --         container = container,
-                --         description = true,
-                --     })
                 end
             
                 if #results >= 5 then

@@ -19,7 +19,8 @@ function GlobalUi.init()
     -- Collapsible Menu --
     ----------------------
     GlobalUi.ui.toggle_button = Ui.getRoot():button({
-        id = 'options-menu-toggle', height = 40, width = 40, rectAlignment = 'UpperLeft', x = 70, y = -10, onClick = function() GlobalUi.expandMenu() end
+        id = 'options-menu-toggle', height = 40, width = 40, rectAlignment = 'UpperLeft', x = 70, y = -10, 
+        onClick = function() GlobalUi.expandMenu(GlobalUi.ui.toggle_button, { GlobalUi.ui.cycle_menu_panel, GlobalUi.ui.battle_menu_panel }) end
     })
     GlobalUi.ui.toggle_button.attributes.fontSize = 35
     GlobalUi.ui.toggle_button.attributes.text = '\u{25BC}'
@@ -33,7 +34,7 @@ function GlobalUi.init()
     ----------------------
     local battleSelectionWidth = 380
     GlobalUi.ui.battle_menu_panel = Ui.getRoot():verticalLayout({
-        id = 'battle-menu-panel', height = 600, width = battleSelectionWidth, rectAlignment = 'UpperLeft', x = 120, y = -110, padding = '5 5 5 5', active = false
+        id = 'battle-menu-panel', height = 900, width = battleSelectionWidth, rectAlignment = 'UpperLeft', x = 120, y = -110, padding = '5 5 5 5', active = false
     })
     GlobalUi.ui.battle_menu_panel.attributes.color = '#05050559'
     GlobalUi.ui.battle_menu_panel.attributes.allowDragging = true
@@ -132,6 +133,37 @@ function GlobalUi.init()
         Battle.setupBattle('What Are You? Battle', Constants.LEVEL_1)
     end })
 
+    GlobalUi.ui.cycle_III_text = GlobalUi.ui.battle_menu_panel:text({ id = 'cycle-III-text', text = 'Cycle III', fontSize = fontSize + 5,
+                    color = 'White', textAlignment = 'MiddleCenter', width = battleSelectionWidth })
+
+    local hypertimeOracleLayout = GlobalUi.ui.battle_menu_panel:horizontalLayout({ id = 'hypertime-oracle-layout-button', width = battleSelectionWidth - 10, height = 40, })
+    hypertimeOracleLayout:text({ id = 'hypertime-oracle-label', text = Constants.HYPERTIME_ORACLE, fontSize = fontSize, width = 145, color = 'White' })
+    for _, level in ipairs({ Constants.LEVEL_1, Constants.LEVEL_2, Constants.LEVEL_3, Constants.LEVEL_4, }) do
+        hypertimeOracleLayout:button({ id = 'hypertime-oracle-' .. level .. '-button', fontSize = fontSize, text = tostring(level), onClick = function()
+            Battle.setupBattle('Hypertime Oracle Battle', level)
+        end })
+    end
+
+    local icarianHarpyLayout = GlobalUi.ui.battle_menu_panel:horizontalLayout({ id = 'icarian-harpy-layout-button', width = battleSelectionWidth - 10, height = 40, })
+    icarianHarpyLayout:text({ id = 'icarian-harpy-label', text = Constants.ICARIAN_HARPY, fontSize = fontSize, width = 145, color = 'White' })
+    for _, level in ipairs({ Constants.LEVEL_1, Constants.LEVEL_2, Constants.LEVEL_3, Constants.LEVEL_4, }) do
+        icarianHarpyLayout:button({ id = 'icarian-harpy-' .. level .. '-button', fontSize = fontSize, text = tostring(level), onClick = function()
+            Battle.setupBattle('Icarian Harpy Battle', level)
+        end })
+    end
+
+    GlobalUi.ui.battle_menu_panel:button({ id = 'endure-the-sun-button', text = 'Endure the Sun Battle', fontSize = fontSize, width = battleSelectionWidth - 10, height = 40, onClick = function()
+        Battle.setupBattle('Endure the Sun Battle', Constants.LEVEL_1)
+    end })
+
+    GlobalUi.ui.battle_menu_panel:button({ id = 'race-the-sun-button', text = 'Race the Sun Battle', fontSize = fontSize, width = battleSelectionWidth - 10, height = 40, onClick = function()
+        Battle.setupBattle('Race the Sun Battle', Constants.LEVEL_1)
+    end })
+
+    GlobalUi.ui.battle_menu_panel:button({ id = 'burden-hardest-to-bear-button', text = 'Burden Hardest to Bear Battle', fontSize = fontSize, width = battleSelectionWidth - 10, height = 40, onClick = function()
+        Battle.setupBattle('Burden Hardest to Bear Battle', Constants.LEVEL_1)
+    end })
+
     -----------------
     -- Cycle setup --
     -----------------
@@ -174,7 +206,7 @@ function GlobalUi.init()
         id = 'campaign-close-button', text = 'X', width = 30, height = 30, 
         x = -5, y = -5, fontSize = 25,
         textAlignment = 'MiddleCenter', rectAlignment = 'UpperRight', onClick = function(_, button) GlobalUi.ui.campaign_setup_panel:hide() end
-})
+    })
 
     -- 1 toggle button per cycle at the top
     GlobalUi.ui.cycle_toggle_group = GlobalUi.ui.campaign_setup_panel:toggleGroup({ id = 'cycle-toggle-group', })
@@ -298,22 +330,24 @@ function GlobalUi.init()
     GlobalUi.ui.confirmation_no_button.attributes.resizeTextMaxSize = 25
 end
 
-function GlobalUi.expandMenu()
-    GlobalUi.ui.toggle_button:setText('\u{25B2}')
-    GlobalUi.ui.toggle_button:setOnClick(function() GlobalUi.collapseMenu() end)
+function GlobalUi.expandMenu(toggleButton, menus)
+    toggleButton:setText('\u{25B2}')
+    toggleButton:setOnClick(function() GlobalUi.collapseMenu(toggleButton, menus) end)
 
     -- Display vertical menu
-    GlobalUi.ui.cycle_menu_panel:show()
-    GlobalUi.ui.battle_menu_panel:show()
+    for _, menu in ipairs(menus) do
+        menu:show()
+    end
 end
 
-function GlobalUi.collapseMenu()
-    GlobalUi.ui.toggle_button:setText('\u{25BC}')
-    GlobalUi.ui.toggle_button:setOnClick(function() GlobalUi.expandMenu() end)
+function GlobalUi.collapseMenu(toggleButton, menus)
+    toggleButton:setText('\u{25BC}')
+    toggleButton:setOnClick(function() GlobalUi.expandMenu(toggleButton, menus) end)
 
     -- Hide vertical menu
-    GlobalUi.ui.cycle_menu_panel:hide()
-    GlobalUi.ui.battle_menu_panel:hide()
+    for _, menu in ipairs(menus) do
+        menu:hide()
+    end
 end
 
 -- Message is a string

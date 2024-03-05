@@ -95,6 +95,10 @@ Constants.CYCLONUS = 'Cyclonus'
 Constants.THE_NIETZSCHEAN = 'The Nietzschean'
 Constants.THE_BURDEN = 'The Burden'
 Constants.CHIMERA_METASTASIOS = 'Chimera Metastasios'
+-- Cycle III
+Constants.HYPERTIME_ORACLE = 'Hypertime Oracle'
+Constants.ICARIAN_HARPY = 'Icarian Harpy'
+Constants.SUN_DESCENDANT = 'Sun Descendant'
 
 -- Factions
 Constants.MINOANS = 'Minoans'
@@ -157,6 +161,7 @@ Constants.ROTATION_WEST = {0, 270, 0}
 Constants.ARGO_MINI_GUID = '93f417'
 Constants.LAST_CITY_TOKEN_GUID = '6f820e'
 Constants.PRIORITY_TARGET_TOKEN_GUID = '8f05ad'
+Constants.TITAN_START_TOKEN_BAG_GUID = '23479a'
 
 ------------------------------------------------------
 

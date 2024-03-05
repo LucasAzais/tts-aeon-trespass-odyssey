@@ -40,7 +40,8 @@ function Battle.init(savedData)
         Battle.current_battle = nil
     end
 
-    -- Add 'Disposable' tag to cards that leave the AI/BP and other decks
+    -- Add 'Disposable' tag to elements that leave a disposable container
+    -- ie. cards that leave the AI/BP and other decks for instance
     EventManager.addHandler('onObjectLeaveContainer', function(container, object)
         if container.hasTag(Constants.DISPOSABLE) then
             object.addTag(Constants.DISPOSABLE)
@@ -188,7 +189,7 @@ function Battle:setupTerrains()
     for terrainIndex, terrain in ipairs(self.schematics.terrains) do
         local infiniteTerrainBag, terrainCard = nil, nil
 
-        -- Search table for terrain card (it can it was pulled out already)
+        -- Search table for terrain card (in case it was pulled out already)
         for _, card in ipairs(getObjectsWithTag(Constants.TERRAIN)) do
             if card.type == 'Card' then
                 for terrainName in string.gmatch(card.name, "([^/]+)") do
@@ -200,7 +201,7 @@ function Battle:setupTerrains()
             end
         end
 
-        -- Search for the terrain card and add it next if it's not already on the table
+        -- Search for the terrain card in the bag and add it next if it's not already on the table
         if not terrainCard then
             for _, card in ipairs(Terrain.getTerrainCardsBag().getObjects()) do
                 -- Split the card name and check for terrain
@@ -257,22 +258,18 @@ function Battle:setupTerrains()
 end
 
 function Battle:setupTitanStartPositions()
+    local startTokenBag = getObjectFromGUID(Constants.TITAN_START_TOKEN_BAG_GUID)
+
     for _, position in ipairs(self.schematics.titan_start_positions) do
         local x, z = self.grid:getXZ(position.row, position.column)
 
-        spawnObject({
-            type = 'Custom_Tile',
-            sound = false,
-            position = {x, Battle.DROP_HEIGHT, z},
+        startTokenBag.takeObject({
+            position = {x, Battle.DROP_HEIGHT * 2, z},
             scale = {0.91, 1, 0.91},
             callback_function = function(spawnedObject)
                 spawnedObject.setColorTint({192/255, 176/255, 169/255})
                 spawnedObject.addTag(Constants.DISPOSABLE)
             end
-        }).setCustomObject({
-            image = Battle.TITAN_START_URL,
-            type = 2,
-            thickness = 0.1,
         })
     end
 end
@@ -282,13 +279,17 @@ function Battle:setupPrimordial()
     -- Calculate all starting values here --
     ----------------------------------------
 
-    BattleBoard.getContinueButton():setOnClick(function()
+    if #self.schematics.primordial_start_position_rotation > 1 or #self.schematics.primordial_start_position_rotation[1].rotations > 1 then
+        BattleBoard.getContinueButton():setOnClick(function()
+            self.placementDone = true
+            BattleBoard.getContinueButton():hide()
+            BattleBoard.getContinueButton():setOnClick(nil)
+        end)
+        BattleBoard.getContinueButton():show()
+        broadcastToAll('Press "Continue" once you\'ve positionned the Titans.', Constants.WARNING_COLOR)
+    else
         self.placementDone = true
-        BattleBoard.getContinueButton():hide()
-        BattleBoard.getContinueButton():setOnClick(nil)
-    end)
-    BattleBoard.getContinueButton():show()
-    broadcastToAll('Press "Continue" once you\'ve positionned the Titans.', Constants.WARNING_COLOR)
+    end
 
     -- Delayed position selection
     Wait.condition(function()
@@ -359,7 +360,7 @@ function Battle:setupPrimordial()
     -- Actually pull the elements
     for _, object in ipairs(self.primordialBag.getObjects()) do
         if object.gm_notes == 'AI1' then
-            self.primordialBag.takeObject({
+            self.AI1Deck = self.primordialBag.takeObject({
                 guid = object.guid,
                 position = Vector({-20.52, 1.00, -27.63}) + Vector(0, Battle.DROP_HEIGHT, 0),
                 rotation = {0, 180, 180},
@@ -369,7 +370,7 @@ function Battle:setupPrimordial()
                 end
             })
         elseif object.gm_notes == 'AI2' then
-            self.primordialBag.takeObject({
+            self.AI2Deck = self.primordialBag.takeObject({
                 guid = object.guid,
                 position = Vector({-20.48, 1.00, -33.28}) + Vector(0, Battle.DROP_HEIGHT, 0),
                 rotation = {0, 180, 180},
@@ -379,7 +380,7 @@ function Battle:setupPrimordial()
                 end
             })
         elseif object.gm_notes == 'AI3' then
-            self.primordialBag.takeObject({
+            self.AI3Deck = self.primordialBag.takeObject({
                 guid = object.guid,
                 position = Vector({-20.48, 1.00, -38.63}) + Vector(0, Battle.DROP_HEIGHT, 0),
                 rotation = {0, 180, 180},
@@ -389,7 +390,7 @@ function Battle:setupPrimordial()
                 end
             })
         elseif object.gm_notes == 'BP1' then
-            self.primordialBag.takeObject({
+            self.BP1Deck = self.primordialBag.takeObject({
                 guid = object.guid,
                 position = Vector({-11.33, 1.00, -27.58}) + Vector(0, Battle.DROP_HEIGHT, 0),
                 rotation = {0, 180, 180},
@@ -399,7 +400,7 @@ function Battle:setupPrimordial()
                 end
             })
         elseif object.gm_notes == 'BP2' then
-            self.primordialBag.takeObject({
+            self.BP2Deck = self.primordialBag.takeObject({
                 guid = object.guid,
                 position = Vector({-11.33, 1.00, -33.28}) + Vector(0, Battle.DROP_HEIGHT, 0),
                 rotation = {0, 180, 180},
@@ -409,7 +410,7 @@ function Battle:setupPrimordial()
                 end
             })
         elseif object.gm_notes == 'BP3' then
-            self.primordialBag.takeObject({
+            self.BP3Deck = self.primordialBag.takeObject({
                 guid = object.guid,
                 position = Vector({-11.33, 1.00, -38.63}) + Vector(0, Battle.DROP_HEIGHT, 0),
                 rotation = {0, 180, 180},
@@ -485,7 +486,7 @@ function Battle.endLabyrinthaurosSetup(self)
         if object.name == 'Gaze of Temenos' then
             Battle.current_battle.primordialBag.takeObject({
                 guid = object.guid,
-                position = {26.09, 1.50, -30.22}, -- Battle.current_battle.primordialSheet.positionToWorld({-3.212472, 0.03, 0.2579071}),
+                position = {24.72, 1.50, -30.22}, -- Battle.current_battle.primordialSheet.positionToWorld({-3.212472, 0.03, 0.2579071}),
                 rotation = {0, 180, 0},
                 callback_function = function(spawnedObject)
                     spawnedObject.addTag(Constants.DISPOSABLE)
@@ -519,7 +520,7 @@ function Battle.endHermesianPursuerSetup(self)
         if object.name == 'Flare' then
             Battle.current_battle.primordialBag.takeObject({
                 guid = object.guid,
-                position = {26.09, 1.50, -30.22}, 
+                position = {24.72, 1.50, -30.22}, 
                 rotation = {0, 180, 180},
                 callback_function = function(spawnedObject)
                     spawnedObject.addTag(Constants.DISPOSABLE)
@@ -572,7 +573,7 @@ function Battle.endTheBurdenSetup(self)
         if object.name == 'Sisyphean Task' then
             Battle.current_battle.primordialBag.takeObject({
                 guid = object.guid,
-                position = {26.09, 1.50, -30.22},
+                position = {24.72, 1.50, -30.22},
                 rotation = {0, 180, 0},
                 callback_function = function(spawnedObject)
                     spawnedObject.addTag(Constants.DISPOSABLE)
@@ -631,7 +632,7 @@ function Battle.endChimeraMetastasiosSetup(self)
         if object.name == 'Absorbed' then
             Battle.current_battle.primordialBag.takeObject({
                 guid = object.guid,
-                position = {26.09, 1.50, -30.22},
+                position = {24.72, 1.50, -30.22},
                 rotation = {0, 180, 0},
                 callback_function = function(spawnedObject)
                     spawnedObject.addTag(Constants.DISPOSABLE)
@@ -684,7 +685,7 @@ function Battle.endTheNietzscheanSetup(self)
         if object.name == 'Lot of the Weak' then
             Battle.current_battle.primordialBag.takeObject({
                 guid = object.guid,
-                position = {26.09, 1.50, -30.22},
+                position = {24.72, 1.50, -30.22},
                 rotation = {0, 180, 0},
                 callback_function = function(spawnedObject)
                     spawnedObject.addTag(Constants.DISPOSABLE)
@@ -703,6 +704,334 @@ function Battle.endTheNietzscheanSetup(self)
     })
 end
 
+function Battle.endHypertimeOracleSetup(self)
+    -- Setup extra cards
+    local cardCount = 0
+    for _, object in ipairs(Battle.current_battle.primordialBag.getObjects()) do
+        if (self.level >= Constants.LEVEL_1 and object.name == 'Death by Fate' and object.gm_notes == 'Trait')
+            or (self.level >= 4 and object.name == 'Omega Terminus' and object.gm_notes == 'Status') then
+            Battle.current_battle.primordialBag.takeObject({
+                guid = object.guid,
+                position = Vector({24.72 + 4.09 * cardCount, 1.50, -30.22}) + Vector(0, Battle.DROP_HEIGHT, 0),
+                rotation = {0, 180, 0},
+                callback_function = function(spawnedObject)
+                    spawnedObject.addTag(Constants.DISPOSABLE)
+                end
+            })
+            cardCount = cardCount + 1
+        end
+    end
+end
+
+function Battle.endHypertimeOracleLevel1PlusSetup(self)
+    -- Setup time anchors
+    -- Yellow anchor
+    local x, z = BattleBoard.getGrid():getXZ(10, 5)
+    getObjectFromGUID('044121').takeObject({
+        position = Vector(x, Battle.DROP_HEIGHT * 2, z),
+        rotation = {0, 180, 0},
+        callback_function = function(spawnedObject)
+            spawnedObject.addTag(Constants.DISPOSABLE)
+        end
+    })
+
+    -- Blue anchor
+    local x, z = BattleBoard.getGrid():getXZ(3, 11)
+    getObjectFromGUID('368af6').takeObject({
+        position = Vector(x, Battle.DROP_HEIGHT * 2, z),
+        rotation = {0, 180, 0},
+        callback_function = function(spawnedObject)
+            spawnedObject.addTag(Constants.DISPOSABLE)
+        end
+    })
+
+    -- Red anchor
+    local x, z = BattleBoard.getGrid():getXZ(12, 7)
+    getObjectFromGUID('50a5f7').takeObject({
+        position = Vector(x, Battle.DROP_HEIGHT * 2, z),
+        rotation = {0, 180, 0},
+        callback_function = function(spawnedObject)
+            spawnedObject.addTag(Constants.DISPOSABLE)
+        end
+    })
+
+    -- Green anchor
+    local x, z = BattleBoard.getGrid():getXZ(12, 10)
+    getObjectFromGUID('d357fd').takeObject({
+        position = Vector(x, Battle.DROP_HEIGHT * 2, z),
+        rotation = {0, 180, 0},
+        callback_function = function(spawnedObject)
+            spawnedObject.addTag(Constants.DISPOSABLE)
+        end
+    })
+
+    -- Setup Aeons Tsunami card from the AI3 deck
+    for _, object in ipairs(self.AI3Deck.getObjects()) do
+        if object.name == 'Aeons Tsunami' then
+            self.AI3Deck.takeObject({
+                guid = object.guid,
+                position = Vector({20.63, 1.00, -35.65}) + Vector(0, Battle.DROP_HEIGHT, 0),
+                rotation = {0, 180, 0},
+                callback_function = function(spawnedObject)
+                    spawnedObject.addTag(Constants.DISPOSABLE)
+                end
+            })
+        end
+    end
+end
+
+function Battle.endHypertimeOracleLevel3PlusSetup(self)
+    -- Setup time anchors
+    -- Yellow anchor
+    local x, z = BattleBoard.getGrid():getXZ(11, 14)
+    getObjectFromGUID('044121').takeObject({
+        position = Vector(x, Battle.DROP_HEIGHT * 2, z),
+        rotation = {0, 180, 0},
+        callback_function = function(spawnedObject)
+            spawnedObject.addTag(Constants.DISPOSABLE)
+        end
+    })
+
+    -- Blue anchor
+    local x, z = BattleBoard.getGrid():getXZ(3, 11)
+    getObjectFromGUID('368af6').takeObject({
+        position = Vector(x, Battle.DROP_HEIGHT * 2, z),
+        rotation = {0, 180, 0},
+        callback_function = function(spawnedObject)
+            spawnedObject.addTag(Constants.DISPOSABLE)
+        end
+    })
+
+    -- Red anchor
+    local x, z = BattleBoard.getGrid():getXZ(12, 7)
+    getObjectFromGUID('50a5f7').takeObject({
+        position = Vector(x, Battle.DROP_HEIGHT * 2, z),
+        rotation = {0, 180, 0},
+        callback_function = function(spawnedObject)
+            spawnedObject.addTag(Constants.DISPOSABLE)
+        end
+    })
+
+    -- Green anchor
+    local x, z = BattleBoard.getGrid():getXZ(12, 10)
+    getObjectFromGUID('d357fd').takeObject({
+        position = Vector(x, Battle.DROP_HEIGHT * 2, z),
+        rotation = {0, 180, 0},
+        callback_function = function(spawnedObject)
+            spawnedObject.addTag(Constants.DISPOSABLE)
+        end
+    })
+
+    -- Setup Aeons Tsunami card from the AI3 deck
+    for _, object in ipairs(self.AI3Deck.getObjects()) do
+        if object.name == 'Aeons Tsunami' then
+            self.AI3Deck.takeObject({
+                guid = object.guid,
+                position = Vector({20.63, 1.00, -35.65}) + Vector(0, Battle.DROP_HEIGHT, 0),
+                rotation = {0, 180, 0},
+                callback_function = function(spawnedObject)
+                    spawnedObject.addTag(Constants.DISPOSABLE)
+                end
+            })
+        end
+    end
+end
+
+function Battle.endIcarianHarpySetup(self)
+    -- Add trait card
+    for _, object in ipairs(self.primordialBag.getObjects()) do
+        if object.name == 'Predation' and object.gm_notes == 'TraitAttack' then
+            self.primordialBag.takeObject({
+                guid = object.guid,
+                position = Vector({24.72, 1.00, -30.22}) + Vector(0, Battle.DROP_HEIGHT, 0),
+                rotation = {0, 180, 0},
+                callback_function = function(spawnedObject)
+                    spawnedObject.addTag(Constants.DISPOSABLE) 
+                end
+            })
+        end
+    end
+
+    -- Add infinite spawners
+    local tileIndex = 1
+    for _, terrainName in ipairs({'Ambrosia Pool'}) do
+        local terrain = Terrain.getTerrain(terrainName)
+
+        terrain:createTerrainSpawner({3.50 + (tileIndex-1) * 7.30, 1.06, -36.22})
+        tileIndex = tileIndex + 1
+    end
+end
+
+function Battle.endIcarianHarpyLevel1PlusSetup(self)
+    -- Setup time anchors
+    -- Yellow anchor
+    local x, z = BattleBoard.getGrid():getXZ(7, 14)
+    getObjectFromGUID('044121').takeObject({
+        position = Vector(x, Battle.DROP_HEIGHT * 2, z),
+        rotation = {0, 180, 0},
+        callback_function = function(spawnedObject)
+            spawnedObject.addTag(Constants.DISPOSABLE)
+        end
+    })
+
+    -- Blue anchor
+    local x, z = BattleBoard.getGrid():getXZ(4, 13)
+    getObjectFromGUID('368af6').takeObject({
+        position = Vector(x, Battle.DROP_HEIGHT * 2, z),
+        rotation = {0, 180, 0},
+        callback_function = function(spawnedObject)
+            spawnedObject.addTag(Constants.DISPOSABLE)
+        end
+    })
+
+    -- Red anchor
+    local x, z = BattleBoard.getGrid():getXZ(11, 8)
+    getObjectFromGUID('50a5f7').takeObject({
+        position = Vector(x, Battle.DROP_HEIGHT * 2, z),
+        rotation = {0, 180, 0},
+        callback_function = function(spawnedObject)
+            spawnedObject.addTag(Constants.DISPOSABLE)
+        end
+    })
+
+    -- Green anchor
+    local x, z = BattleBoard.getGrid():getXZ(8, 7)
+    getObjectFromGUID('d357fd').takeObject({
+        position = Vector(x, Battle.DROP_HEIGHT * 2, z),
+        rotation = {0, 180, 0},
+        callback_function = function(spawnedObject)
+            spawnedObject.addTag(Constants.DISPOSABLE)
+        end
+    })
+end
+
+function Battle.endSunDescendantSetup(self)
+    
+end
+
+function Battle.endEndureTheSunSetup(self)
+    -- Setup time anchors
+    -- Yellow anchor
+    local x, z = BattleBoard.getGrid():getXZ(10, 13)
+    getObjectFromGUID('044121').takeObject({
+        position = Vector(x, Battle.DROP_HEIGHT * 2, z),
+        rotation = {0, 180, 0},
+        callback_function = function(spawnedObject)
+            spawnedObject.addTag(Constants.DISPOSABLE)
+        end
+    })
+
+    -- Blue anchor
+    local x, z = BattleBoard.getGrid():getXZ(5, 13)
+    getObjectFromGUID('368af6').takeObject({
+        position = Vector(x, Battle.DROP_HEIGHT * 2, z),
+        rotation = {0, 180, 0},
+        callback_function = function(spawnedObject)
+            spawnedObject.addTag(Constants.DISPOSABLE)
+        end
+    })
+
+    -- Red anchor
+    local x, z = BattleBoard.getGrid():getXZ(10, 6)
+    getObjectFromGUID('50a5f7').takeObject({
+        position = Vector(x, Battle.DROP_HEIGHT * 2, z),
+        rotation = {0, 180, 0},
+        callback_function = function(spawnedObject)
+            spawnedObject.addTag(Constants.DISPOSABLE)
+        end
+    })
+
+    -- Green anchor
+    local x, z = BattleBoard.getGrid():getXZ(5, 8)
+    getObjectFromGUID('d357fd').takeObject({
+        position = Vector(x, Battle.DROP_HEIGHT * 2, z),
+        rotation = {0, 180, 0},
+        callback_function = function(spawnedObject)
+            spawnedObject.addTag(Constants.DISPOSABLE)
+        end
+    })
+
+    -- Add trait card
+    for _, object in ipairs(self.primordialBag.getObjects()) do
+        if object.name == 'Merciless Sun' and object.gm_notes == 'Trait' then
+            self.primordialBag.takeObject({
+                guid = object.guid,
+                position = Vector({24.72, 1.00, -30.22}) + Vector(0, Battle.DROP_HEIGHT, 0),
+                rotation = {0, 180, 0},
+                callback_function = function(spawnedObject)
+                    spawnedObject.addTag(Constants.DISPOSABLE) 
+                end
+            })
+        end
+    end
+end
+
+function Battle.endRaceTheSunSetup(self)
+    -- Setup time anchors
+    -- Yellow anchor
+    local x, z = BattleBoard.getGrid():getXZ(10, 13)
+    getObjectFromGUID('044121').takeObject({
+        position = Vector(x, Battle.DROP_HEIGHT * 2, z),
+        rotation = {0, 180, 0},
+        callback_function = function(spawnedObject)
+            spawnedObject.addTag(Constants.DISPOSABLE)
+        end
+    })
+
+    -- Blue anchor
+    local x, z = BattleBoard.getGrid():getXZ(5, 13)
+    getObjectFromGUID('368af6').takeObject({
+        position = Vector(x, Battle.DROP_HEIGHT * 2, z),
+        rotation = {0, 180, 0},
+        callback_function = function(spawnedObject)
+            spawnedObject.addTag(Constants.DISPOSABLE)
+        end
+    })
+
+    -- Red anchor
+    local x, z = BattleBoard.getGrid():getXZ(10, 6)
+    getObjectFromGUID('50a5f7').takeObject({
+        position = Vector(x, Battle.DROP_HEIGHT * 2, z),
+        rotation = {0, 180, 0},
+        callback_function = function(spawnedObject)
+            spawnedObject.addTag(Constants.DISPOSABLE)
+        end
+    })
+
+    -- Green anchor
+    local x, z = BattleBoard.getGrid():getXZ(5, 8)
+    getObjectFromGUID('d357fd').takeObject({
+        position = Vector(x, Battle.DROP_HEIGHT * 2, z),
+        rotation = {0, 180, 0},
+        callback_function = function(spawnedObject)
+            spawnedObject.addTag(Constants.DISPOSABLE)
+        end
+    })
+    
+    -- TODO: Add the special setup here
+    broadcastToAll('Follow the Special Setup instructions.', Constants.WARNING_COLOR)
+end
+
+function Battle.endBurdenHardestToBearSetup(self)
+    -- Add trait card
+    for _, object in ipairs(self.primordialBag.getObjects()) do
+        if object.name == 'Burden Hardest to Bear' and object.gm_notes == 'Trait' then
+            self.primordialBag.takeObject({
+                guid = object.guid,
+                position = Vector({28.81, 1.00, -30.22}) + Vector(0, Battle.DROP_HEIGHT, 0),
+                rotation = {0, 180, 0},
+                callback_function = function(spawnedObject)
+                    spawnedObject.addTag(Constants.DISPOSABLE) 
+                end
+            })
+        end
+    end
+
+    -- Leave Sisyphean Task in the bag (do nothing)
+
+    broadcastToAll('Don\'t forget to draw a Minor Trauma to follow the Tilted Peak instructions.', Constants.WARNING_COLOR)
+end
+
 function Battle.setupAmbushBattleCycleI()
     Battle.current_battle.schematics = Utils.shallowCopy(Battle.current_battle.schematics)
 
@@ -710,15 +1039,19 @@ function Battle.setupAmbushBattleCycleI()
     local hekatonBattles, labyrinthaurosBattles = 0, 0
     local lastMarkedLevelHekaton, lastMarkedLevelLabyrinthauros = 0, 0
     
-    for index, element in ipairs(Argo.getData(Constants.CYCLE_I):getEvolutionTrack() or {}) do
+    for index, element in ipairs(Argo.getData(Constants.CYCLE_I) and Argo.getData(Constants.CYCLE_I):getEvolutionTrack() or {}) do
         if element[Constants.HEKATON] == true then
             hekatonBattles = hekatonBattles + 1
-            lastMarkedLevelHekaton = Argo.getData(Constants.CYCLE_I):getLevelFromEvolutionIndex(Constants.CYCLE_I, index)
+            if Argo.getData(Constants.CYCLE_I) then
+                lastMarkedLevelHekaton = Argo.getData(Constants.CYCLE_I):getLevelFromEvolutionIndex(Constants.CYCLE_I, index)
+            end
         end
 
         if element[Constants.LABYRINTHAUROS] == true then
             labyrinthaurosBattles = labyrinthaurosBattles + 1
-            lastMarkedLevelLabyrinthauros = Argo.getData(Constants.CYCLE_I):getLevelFromEvolutionIndex(Constants.CYCLE_I, index)
+            if Argo.getData(Constants.CYCLE_I) then
+                lastMarkedLevelLabyrinthauros = Argo.getData(Constants.CYCLE_I):getLevelFromEvolutionIndex(Constants.CYCLE_I, index)
+            end
         end
     end
 

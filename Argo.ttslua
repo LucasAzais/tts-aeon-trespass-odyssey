@@ -94,6 +94,7 @@ function Argo.spawnSheet(params)
             spawnedObject.setLock(true)
             spawnedObject.addTag(Constants.ARGO_SHEET)
             spawnedObject.addTag('Cycle' .. params.cycle)
+            spawnedObject.setName('Cycle' .. params.cycle)
         end
     })
 
@@ -131,6 +132,13 @@ function Argo.create(params)
         for i = 9, 1, -1 do
             argo.passengers[tostring(i)] = ''
         end
+    end
+
+    if argo.cycle == Constants.CYCLE_III then
+        argo.loop_length = params.loop_length or 0
+        argo.frozen_time = params.frozen_time or 0
+        argo.frozen_time_unlocked = params.frozen_time_unlocked or false
+        argo.paradox = params.paradox or 0
     end
 
     argo.story_card = params.story_card or nil
@@ -259,11 +267,23 @@ function Argo.create(params)
                 [9] = { [Constants.MIXED] = false },
             }
         elseif argo.cycle == Constants.CYCLE_III then
-            argo.evolution_track = {}
+            argo.evolution_track = {
+                [1] = { [Constants.HYPERTIME_ORACLE] = false, [Constants.ICARIAN_HARPY] = false, },
+                [2] = { [Constants.MIXED] = false },
+                [3] = { [Constants.HYPERTIME_ORACLE] = false, [Constants.ICARIAN_HARPY] = false, },
+                [4] = { [Constants.MIXED] = false },
+                [5] = { [Constants.MIXED] = false },
+                [6] = { [Constants.HYPERTIME_ORACLE] = false, [Constants.ICARIAN_HARPY] = false, },
+                [7] = { [Constants.HYPERTIME_ORACLE] = false, [Constants.ICARIAN_HARPY] = false, },
+                [8] = { [Constants.HYPERTIME_ORACLE] = false, [Constants.ICARIAN_HARPY] = false, },
+                [9] = { [Constants.HYPERTIME_ORACLE] = false, [Constants.ICARIAN_HARPY] = false, },
+                [10] = { [Constants.MIXED] = false },
+            }
         end
     end
 
     argo.boss_track = params.boss_track or 0
+    argo.adversary_name = params.adversary_name or ''
     argo.adversary_track = params.adversary_track or 0
     argo.adversary_unlocked = params.adversary_unlocked or false
 
@@ -350,6 +370,50 @@ function Argo.create(params)
             argo.resources.rare_resources_note = params.rare_resources_note or {'', ''}
         -- Cycle III resources
         elseif argo.cycle == Constants.CYCLE_III then
+            argo.resources.sirenshell = params.sirenshell or 0
+            argo.resources.sirenshell_note = params.sirenshell_note or {'', ''}
+            argo.resources.hyperborean_alloy = params.hyperborean_alloy or 0
+            argo.resources.hyperborean_alloy_note = params.hyperborean_alloy_note or {'', ''}
+            argo.resources.daedalus_makina = params.daedalus_makina or 0
+            argo.resources.daedalus_makina_note = params.daedalus_makina_note or {'', ''}
+
+            argo.resources.living_abyss = params.living_abyss or 0
+            argo.resources.living_abyss_note = params.living_abyss_note or {'', ''}
+            argo.resources.skin_of_malice = params.skin_of_malice or 0
+            argo.resources.skin_of_malice_note = params.skin_of_malice_note or {'', ''}
+            argo.resources.clothflesh = params.clothflesh or 0
+            argo.resources.clothflesh_note = params.clothflesh_note or {'', ''}
+            argo.resources.eyes_cluster = params.eyes_cluster or 0
+            argo.resources.eyes_cluster_note = params.eyes_cluster_note or {'', ''}
+            argo.resources.razorclaw = params.razorclaw or 0
+            argo.resources.razorclaw_note = params.razorclaw_note or {'', ''}
+            argo.resources.icarian_feather = params.icarian_feather or 0
+            argo.resources.icarian_feather_note = params.icarian_feather_note or {'', ''}
+            argo.resources.writhing_tentacle = params.writhing_tentacle or 0
+            argo.resources.writhing_tentacle_note = params.writhing_tentacle_note or {'', ''}
+            argo.resources.sunburned_skull = params.sunburned_skull or 0
+            argo.resources.sunburned_skull_note = params.sunburned_skull_note or {'', ''}
+            argo.resources.grotesque_beak = params.grotesque_beak or 0
+            argo.resources.grotesque_beak_note = params.grotesque_beak_note or {'', ''}
+            argo.resources.powdered_matter = params.powdered_matter or 0
+            argo.resources.powdered_matter_note = params.powdered_matter_note or {'', ''}
+            argo.resources.retractable_mechanism = params.retractable_mechanism or 0
+            argo.resources.retractable_mechanism_note = params.retractable_mechanism_note or {'', ''}
+            argo.resources.reliefshell_fragment = params.reliefshell_fragment or 0
+            argo.resources.reliefshell_fragment_note = params.reliefshell_fragment_note or {'', ''}
+            argo.resources.frozen_ambrosia = params.frozen_ambrosia or 0
+            argo.resources.frozen_ambrosia_note = params.frozen_ambrosia_note or {'', ''}
+            argo.resources.cores_note = params.cores_note or {'', ''}
+            argo.resources.rare_resources_note = params.rare_resources_note or {'', ''}
+
+            argo.resources.priests = params.priests or 0
+            argo.resources.priests_note = params.priests_note or {'', ''}
+            argo.resources.echoes_of_recollection = params.echoes_of_recollection or 0
+            argo.resources.echoes_of_recollection_note = params.echoes_of_recollection_note or {'', ''}
+            argo.resources.sisyphus_tears = params.sisyphus_tears or 0
+            argo.resources.sisyphus_tears_note = params.sisyphus_tears_note or {'', ''}
+            argo.resources.pygmalion_stones = params.pygmalion_stones or 0
+            argo.resources.pygmalion_stones_note = params.pygmalion_stones_note or {'', ''}
         end
     end
 
