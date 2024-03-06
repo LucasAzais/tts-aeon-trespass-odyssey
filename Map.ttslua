@@ -312,7 +312,6 @@ function Map.init(savedData)
     -- Useless? If someone does it manually, they won't care about the map being registered right?
     -- Useful for Cycle III and its crazy map
     EventManager.addHandler('onObjectLeaveContainer', function(container, object)
-        Log:debug('Container %s', container)
         -- Log:debug('Tag %b', object.hasTag(Constants.MAP_TILE))
 
         if container == Map.map_tiles_bag and object.hasTag(Constants.MAP_TILE) 

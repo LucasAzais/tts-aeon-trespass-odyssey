@@ -14,6 +14,9 @@ Terrain.TERRAINS = {}
 Terrain.TERRAIN_BAG_GUID = 'c1095a'
 Terrain.TERRAIN_CARDS_BAG_GUID = 'dbf84f'
 
+Terrain.SLOTS_START_POSITION = Vector({3.75, 1.00, 12.29})
+Terrain.SLOTS_X_STEP = 4.00
+
 function Terrain.init()
     Terrain.TERRAIN_BAG = getObjectFromGUID(Terrain.TERRAIN_BAG_GUID)
     Terrain.TERRAIN_CARDS_BAG = getObjectFromGUID(Terrain.TERRAIN_CARDS_BAG_GUID)
@@ -83,8 +86,77 @@ function Terrain.create(params)
     return terrain
 end
 
+function Terrain:createTerrainCard(position, rotation)
+    if not rotation then rotation = Vector({0.00, 180.00, 0.00}) end
+    local useFront = true
+    if Vector.dot(rotation:normalized(), Vector(0, 1, 0)) < 0 then
+        useFront = false
+    end
+
+    -- If no position, then find the next one
+    if not position then
+        local attemptIndex = 0
+        while not position and attemptIndex < 10 do
+            attemptIndex = attemptIndex + 1
+
+            -- Free slot found
+            if not Utils.getFirstElementAbovePosition(Terrain.SLOTS_START_POSITION + Vector({Terrain.SLOTS_X_STEP * attemptIndex, 0, 0})) then
+                position = Terrain.SLOTS_START_POSITION + Vector({Terrain.SLOTS_X_STEP * attemptIndex, 0, 0})
+            end
+        end
+
+        if not position then
+            broadcastToAll('Could not find empty spot above the board for terrain card ' .. self.name, Constants.WARNING_COLOR)
+            Log:error('Could not find empty spot above the board for terrain card %s', self.name)
+            return
+        end
+    end
+
+    -- -- Search table for terrain card (in case it was pulled out already)
+    -- local terrainCard = nil
+    -- for _, card in ipairs(getObjectsWithTag(Constants.TERRAIN)) do
+    --     if card.type == 'Card' then
+    --         for terrainName in string.gmatch(card.name, "([^/]+)") do
+    --             if self.name:sub(1, terrainName:len()) == terrainName then
+    --                 terrainCard = card
+    --             end
+    --         end
+    --     end
+    -- end
+
+    -- Search for the terrain card in the bag and add it next if it's not already on the table
+    -- if not terrainCard then
+        for _, card in ipairs(Terrain.getTerrainCardsBag().getObjects()) do
+            -- Split the card name and check for terrain
+            for terrainName in string.gmatch(card.name, "([^/]+)") do
+                if self.name:sub(1, terrainName:len()) == terrainName then
+                    return Terrain.getTerrainCardsBag().takeObject({
+                        guid = card.guid,
+                        smooth = false,
+                        callback_function = function(spawnedObject)
+                            spawnedObject.attachInvisibleHider('hide', true)
+                            spawnedObject.getComponent('AudioSource').set('mute', true)
+                            local newCard = spawnedObject.clone({
+                                position = position,
+                                rotation = rotation,
+                            })
+                            newCard.addTag(Constants.DISPOSABLE)
+
+                            Terrain.TERRAIN_CARDS_BAG.putObject(spawnedObject)
+                        end,
+                    })
+                end
+            end
+        end
+    -- end
+
+    broadcastToAll('Could not find terrain card for ' .. self.name, Constants.WARNING_COLOR)
+    Log:error('Could not find terrain card for %s', self.name)
+end
+
 function Terrain:createTerrainSpawner(position, rotation)
-    if not rotation then rotation = {0.00, 180.00, 0.00} end
+    if not position then return end
+    if not rotation then rotation = Vector({0.00, 180.00, 0.00}) end
 
     for _, object in ipairs(Terrain.TERRAIN_BAG.getObjects()) do
         -- Only need to check the front name since object.name has both front/back names and self as well

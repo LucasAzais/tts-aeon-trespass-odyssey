@@ -16,6 +16,9 @@ Constants.INFO = 2
 Constants.WARNING = 3
 Constants.ERROR = 4
 
+-- Random values
+Constants.DROP_HEIGHT = 1.6
+
 -- Message colors
 Constants.WARNING_COLOR = Color(243/255, 100/255, 29/255)
 
@@ -162,6 +165,7 @@ Constants.ARGO_MINI_GUID = '93f417'
 Constants.LAST_CITY_TOKEN_GUID = '6f820e'
 Constants.PRIORITY_TARGET_TOKEN_GUID = '8f05ad'
 Constants.TITAN_START_TOKEN_BAG_GUID = '23479a'
+Constants.GENERIC_TOKEN_BAG_GUID = 'f08537'
 
 ------------------------------------------------------
 

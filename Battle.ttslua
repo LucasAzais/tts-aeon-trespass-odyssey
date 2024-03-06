@@ -838,28 +838,67 @@ function Battle.endHypertimeOracleLevel3PlusSetup(self)
 end
 
 function Battle.endIcarianHarpySetup(self)
-    -- Add trait card
+    -- Add extra cards
+    local cardCount = 0
+    for _, object in ipairs(Battle.current_battle.primordialBag.getObjects()) do
+        if (self.level >= Constants.LEVEL_1 and object.name == 'Death by Fate' and object.gm_notes == 'Trait')
+            or (self.level >= 1 and object.name == 'Predator' and object.gm_notes == 'Trait') then
+            Battle.current_battle.primordialBag.takeObject({
+                guid = object.guid,
+                position = Vector({24.72 + 4.09 * cardCount, 1.50, -30.22}) + Vector(0, Battle.DROP_HEIGHT, 0),
+                rotation = {0, 180, 0},
+                callback_function = function(spawnedObject)
+                    spawnedObject.addTag(Constants.DISPOSABLE)
+                end
+            })
+            cardCount = cardCount + 1
+        end
+    end
+
+    -- Add special board
     for _, object in ipairs(self.primordialBag.getObjects()) do
-        if object.name == 'Predation' and object.gm_notes == 'TraitAttack' then
+        if object.name == 'Rapid Adaptation' and object.gm_notes == 'SpecialBoard' then
             self.primordialBag.takeObject({
                 guid = object.guid,
-                position = Vector({24.72, 1.00, -30.22}) + Vector(0, Battle.DROP_HEIGHT, 0),
+                position = Vector({12.68, 0.98, -37.74}),
                 rotation = {0, 180, 0},
                 callback_function = function(spawnedObject)
                     spawnedObject.addTag(Constants.DISPOSABLE) 
+                    spawnedObject.setLock(true)
                 end
             })
         end
     end
 
-    -- Add infinite spawners
-    local tileIndex = 1
-    for _, terrainName in ipairs({'Ambrosia Pool'}) do
-        local terrain = Terrain.getTerrain(terrainName)
-
-        terrain:createTerrainSpawner({3.50 + (tileIndex-1) * 7.30, 1.06, -36.22})
-        tileIndex = tileIndex + 1
+    -- Add adaptation tokens
+    local tokenCount = 0
+    if self.level == 1 then
+        tokenCount = 1
+    elseif self.level == 2 then
+        tokenCount = 2
+    elseif self.level == 3 or self.level == 4 then
+        tokenCount = 3
+    elseif self.level == 5 or self.level == 6 then
+        tokenCount = 4
+    else
+        tokenCount = 5
     end
+
+    local genericBag = getObjectFromGUID(Constants.GENERIC_TOKEN_BAG_GUID)
+    for i = 1, tokenCount do
+        genericBag.takeObject({
+            position = Vector({5.58, 0.98 + Battle.DROP_HEIGHT, -41.11 + 1.7 * (i-1)}),
+            rotation = {0, 180, 0},
+            callback_function = function(spawnedObject)
+                spawnedObject.addTag(Constants.DISPOSABLE) 
+            end
+        })
+    end
+
+    -- Add infinite spawners
+    Terrain.getTerrain('Ambrosia Pool'):createTerrainSpawner({24.72 + 4.09 * cardCount, 1.00 + Battle.DROP_HEIGHT, -25.22})
+    Terrain.getTerrain('Ambrosia Pool'):createTerrainCard({24.72 + 4.09 * cardCount, 1.50 + Battle.DROP_HEIGHT, -30.22})
+    
 end
 
 function Battle.endIcarianHarpyLevel1PlusSetup(self)
@@ -903,10 +942,38 @@ function Battle.endIcarianHarpyLevel1PlusSetup(self)
             spawnedObject.addTag(Constants.DISPOSABLE)
         end
     })
+    
+    for _, object in ipairs(self.primordialBag.getObjects()) do
+        if object.name == 'Predation' and object.gm_notes == 'TraitAttack' then
+            self.primordialBag.takeObject({
+                guid = object.guid,
+                position = Vector({20.63, 1.00, -35.65}) + Vector(0, Battle.DROP_HEIGHT, 0),
+                rotation = {0, 180, 0},
+                callback_function = function(spawnedObject)
+                    spawnedObject.addTag(Constants.DISPOSABLE) 
+                end
+            })
+        end
+    end
 end
 
 function Battle.endSunDescendantSetup(self)
-    
+    -- Add trait card
+    local cardCount = 0
+    for _, object in ipairs(Battle.current_battle.primordialBag.getObjects()) do
+        if (self.level >= Constants.LEVEL_1 and object.name == 'Merciless Sun' and object.gm_notes == 'TraitAttack')
+            or (self.level >= 1 and object.name == 'Death by Fate' and object.gm_notes == 'Trait') then
+            Battle.current_battle.primordialBag.takeObject({
+                guid = object.guid,
+                position = Vector({24.72 + 4.09 * cardCount, 1.50, -30.22}) + Vector(0, Battle.DROP_HEIGHT, 0),
+                rotation = {0, 180, 0},
+                callback_function = function(spawnedObject)
+                    spawnedObject.addTag(Constants.DISPOSABLE)
+                end
+            })
+            cardCount = cardCount + 1
+        end
+    end
 end
 
 function Battle.endEndureTheSunSetup(self)
@@ -950,20 +1017,6 @@ function Battle.endEndureTheSunSetup(self)
             spawnedObject.addTag(Constants.DISPOSABLE)
         end
     })
-
-    -- Add trait card
-    for _, object in ipairs(self.primordialBag.getObjects()) do
-        if object.name == 'Merciless Sun' and object.gm_notes == 'Trait' then
-            self.primordialBag.takeObject({
-                guid = object.guid,
-                position = Vector({24.72, 1.00, -30.22}) + Vector(0, Battle.DROP_HEIGHT, 0),
-                rotation = {0, 180, 0},
-                callback_function = function(spawnedObject)
-                    spawnedObject.addTag(Constants.DISPOSABLE) 
-                end
-            })
-        end
-    end
 end
 
 function Battle.endRaceTheSunSetup(self)
