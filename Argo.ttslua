@@ -62,11 +62,10 @@ Argo.EVOLUTION_INDEX_TO_LEVEL = {
         [7] = Constants.LEVEL_4,
         [8] = Constants.LEVEL_4,
         [9] = Constants.LEVEL_4,
-        [10] = Constants.LEVEL_4,
+        [10] = Constants.LEVEL_5,
     },
 }
 
--- TODO: This about making everything cycle specific? like hull = {[Cycle.CYCLE_I] = 0, [Cycle.CYCLE_II] = 0, [Cycle.CYCLE_III] = 0,}
 -- TODO: Replace all names with proper strings
 function Argo.init(savedData)
     Battle = Battle or require('Battle')
@@ -94,7 +93,7 @@ function Argo.spawnSheet(params)
             spawnedObject.setLock(true)
             spawnedObject.addTag(Constants.ARGO_SHEET)
             spawnedObject.addTag('Cycle' .. params.cycle)
-            spawnedObject.setName('Cycle' .. params.cycle)
+            spawnedObject.setName('Cycle ' .. params.cycle)
         end
     })
 
@@ -125,16 +124,25 @@ function Argo.create(params)
     argo.hull_unlocked = params.hull_unlocked or false
     argo.crew = params.crew or 0
     argo.crew_unlocked = params.crew_unlocked or false
-    argo.passengers = params.passengers or nil
-    if not argo.passengers then
-        argo.passengers = {}
-        -- This will be a list with strings for keys to able to lookup the values quickly
-        for i = 9, 1, -1 do
-            argo.passengers[tostring(i)] = ''
+
+    if argo.cycle == Constants.CYCLE_II then
+        argo.passengers = params.passengers or nil
+        if not argo.passengers then
+            argo.passengers = {}
+            -- This will be a list with strings for keys to able to lookup the values quickly
+            for i = 9, 1, -1 do
+                argo.passengers[tostring(i)] = ''
+            end
         end
     end
 
-    if argo.cycle == Constants.CYCLE_III then
+    if argo.cycle == Constants.CYCLE_I then
+        argo.strangers = params.strangers or 0
+    elseif argo.cycle == Constants.CYCLE_II then
+        argo.humanity = params.humanity or 0
+        argo.defectors = params.defectors or 0
+        argo.defectors_unlocked = params.defectors_unlocked or false
+    elseif argo.cycle == Constants.CYCLE_III then
         argo.loop_length = params.loop_length or 0
         argo.frozen_time = params.frozen_time or 0
         argo.frozen_time_unlocked = params.frozen_time_unlocked or false
@@ -144,12 +152,9 @@ function Argo.create(params)
     argo.story_card = params.story_card or nil
     argo.doom_card = params.doom_card or ''
     argo.map_tile = params.map_tile or ''
-    argo.humanity = params.humanity or 0
-    argo.defectors = params.defectors or 0
-    argo.defectors_unlocked = params.defectors_unlocked or false
     argo.argo_fate = params.argo_fate or 0
     argo.argo_knowledge = params.argo_knowledge or 0
-    argo.strangers = params.strangers or 0
+
     argo.abilities_limit = params.abilities_limit or 0
     argo.current_titans = params.current_titans or 0
     argo.max_titans = params.max_titans or 0
@@ -157,7 +162,8 @@ function Argo.create(params)
     if not argo.titans_list1 then
         argo.titans_list1 = {}
         local lineCount = 10
-        if argo.cycle == Constants.CYCLE_II then lineCount = 9 end
+        if argo.cycle == Constants.CYCLE_II then lineCount = 9
+        elseif argo.cycle == Constants.CYCLE_III then lineCount = 8 end
 
         for i = 1, lineCount do
             table.insert(argo.titans_list1, '')
@@ -168,7 +174,8 @@ function Argo.create(params)
     if not argo.titans_list2 then
         argo.titans_list2 = {}
         local lineCount = 10
-        if argo.cycle == Constants.CYCLE_II then lineCount = 9 end
+        if argo.cycle == Constants.CYCLE_II then lineCount = 9
+        elseif argo.cycle == Constants.CYCLE_III then lineCount = 8 end
 
         for i = 1, lineCount do
             table.insert(argo.titans_list2, '')
@@ -283,6 +290,9 @@ function Argo.create(params)
     end
 
     argo.boss_track = params.boss_track or 0
+    if argo.cycle == Constants.CYCLE_III then
+        argo.boss_level2 = params.boss_level2 or false
+    end
     argo.adversary_name = params.adversary_name or ''
     argo.adversary_track = params.adversary_track or 0
     argo.adversary_unlocked = params.adversary_unlocked or false
@@ -1068,7 +1078,7 @@ function Argo:createSheetUiForCycleII()
                         text = tostring(self.argo_knowledge), onClick = function(_, button)
         
         self.argo_knowledge = self.argo_knowledge + (button == '-2' and -1 or 1)
-        self.argo_knowledge = Utils.clamp(self.argo_knowledge, 0, nil)
+        self.argo_knowledge = Utils.clamp(self.argo_knowledge, 20, nil)
         self.ui.argo_knowledge_button:setText(self.argo_knowledge)
         Log:debug('Argo knowledge set to %s', self.argo_knowledge)
     end })
@@ -1570,7 +1580,595 @@ function Argo:createSheetUiForCycleII()
 end
 
 function Argo:createSheetUiForCycleIII()
+    self.ui.main_panel = self.ui.root:panel({ id = 'global-panel', width = 4000, height = 3000 })
+    -- panel.attributes.color = 'Green'
+    
+    ------------------------
+    -- Top left section
+    self.ui.story_card_input = self.ui.main_panel:input({ id = 'story-card-input', width = 150, height = 60, x = -1110, y = 570, 
+                        fontSize = 50, placeholder = ' ', text = self.story_card, colors = Ui.TRANSPARENT_INPUT_COLORS,
+                        textAlignment = 'MiddleCenter', onValueChanged = function(_, value)
+                            self:setStoryCard(value)
+                        end })
+    self.ui.doom_card_input = self.ui.main_panel:input({ id = 'doom-card-input', width = 150, height = 60, x = -820, y = 570,
+                        fontSize = 50, placeholder = ' ', text = self.doom_card, colors = Ui.TRANSPARENT_INPUT_COLORS,
+                        textAlignment = 'MiddleCenter', onValueChanged = function(_, value) 
+                            self:setDoomCard(value)
+                        end })
+    self.ui.map_tile_input = self.ui.main_panel:input({ id = 'map-tile-input', width = 150, height = 60, x = -530, y = 570,
+                        fontSize = 50, placeholder = ' ', text = self.map_tile, colors = Ui.TRANSPARENT_INPUT_COLORS,
+                        textAlignment = 'MiddleCenter', onValueChanged = function(_, value) 
+                            self:setMapTile(value)
+                        end })
 
+    self.ui.loop_length_button = self.ui.main_panel:button({ id = 'loop-length-button', fontSize = 40, 
+                        width = 70, height = 50, x = -1018, y = 475,
+                        colors = Ui.TRANSPARENT_INPUT_COLORS, textAlignment = 'MiddleCenter',
+                        text = tostring(self.loop_length), onClick = function(_, button)
+
+        local newValue = self.loop_length + (button == '-2' and -1 or 1)
+        -- newValue = Utils.clamp(newValue, 0, nil)
+        self:setLoopLength(newValue)
+    end })
+
+    self.ui.frozen_time_button = self.ui.main_panel:button({ id = 'frozen-time-button', fontSize = 40, 
+                        width = 55, height = 50, x = -703, y = 475,
+                        colors = Ui.TRANSPARENT_INPUT_COLORS, textAlignment = 'MiddleCenter',
+                        text = tostring(self.frozen_time), onClick = function(_, button)
+
+        local newValue = self.frozen_time + (button == '-2' and -1 or 1)
+        newValue = Utils.clamp(newValue, 0, nil)
+        self:setFrozenTime(newValue)
+    end })
+
+    self.ui.frozen_time_unlocked_checkbox = self.ui.main_panel:checkbox({ id = 'frozen-time-unlocked-checkbox', 
+                            width = 30, height = 30, x = -676, y = 475,
+                            checked = self.frozen_time_unlocked, onClick = function(_, button)
+                                self:setFrozenTimeUnlocked(not self.frozen_time_unlocked)
+                            end })
+
+    self.ui.paradox_button = self.ui.main_panel:button({ id = 'paradox-button', fontSize = 40, 
+                        width = 70, height = 50, x = -372, y = 475,
+                        colors = Ui.TRANSPARENT_INPUT_COLORS, textAlignment = 'MiddleCenter',
+                        text = tostring(self.paradox), onClick = function(_, button)
+    
+            local newValue = self.paradox + (button == '-2' and -1 or 1)
+            -- newValue = Utils.clamp(newValue, 0, nil)
+            self:setParadox(newValue)
+        end })
+
+    ------------------------
+    -- Argo fate section
+    self.ui.argo_fate_button = self.ui.main_panel:button({ id = 'argo-fate-button', fontSize = 40, 
+                        width = 55, height = 54, x = -305, y = 720,
+                        colors = Ui.TRANSPARENT_INPUT_COLORS, textAlignment = 'MiddleCenter',
+                        text = tostring(self.argo_fate), onClick = function(_, button)
+
+        self.argo_fate = self.argo_fate + (button == '-2' and -1 or 1)
+        self.argo_fate = Utils.clamp(self.argo_fate, 0, 10)
+        self.ui.argo_fate_button:setText(self.argo_fate)
+        Log:debug('Argo fate set to %s', self.argo_fate)
+
+        if self.argo_fate >= 10 then
+            broadcastToAll('Read 0273 immediately.', Constants.WARNING_COLOR)
+        end
+    end })
+
+    self.ui.argo_knowledge_button = self.ui.main_panel:button({ id = 'argo-knowledge-button', fontSize = 40, 
+                        width = 80, height = 50, x = -102, y = 649,
+                        colors = Ui.TRANSPARENT_INPUT_COLORS, textAlignment = 'MiddleCenter',
+                        text = tostring(self.argo_knowledge), onClick = function(_, button)
+        
+        self.argo_knowledge = self.argo_knowledge + (button == '-2' and -1 or 1)
+        self.argo_knowledge = Utils.clamp(self.argo_knowledge, 40, nil)
+        self.ui.argo_knowledge_button:setText(self.argo_knowledge)
+        Log:debug('Argo knowledge set to %s', self.argo_knowledge)
+    end })
+
+    ------------------------
+    -- Hull/Crew
+    self.ui.hull_group = self.ui.main_panel:checkboxGroup({ id = 'hull-group', onClick = function(checkbox)
+        self:setHull(checkbox.checkboxValue)
+    end })
+
+    local maxCheckboxes = 7
+    for i = maxCheckboxes, 0, -1 do
+        self.ui['hull_'..i..'_checkbox'] = self.ui.hull_group:checkbox({ id = 'hull-'..i..'-checkbox', 
+                            width = 100, height = 100, x = -1015 + (maxCheckboxes-i) * 82.5 + (i < 6 and 12.5 or 0), y = 349,
+                            checked = (self.hull == i) }, true)
+        self.ui['hull_'..i..'_checkbox'].checkboxValue = i
+    end
+
+    self.ui['hull_unlocked_checkbox'] = self.ui.main_panel:checkbox({ id = 'hull-unlocked-checkbox', 
+                            width = 50, height = 50, x = -983, y = 345,
+                            checked = self.hull_unlocked, onClick = function(_, button)
+                                self:setHullUnlocked(not self.hull_unlocked)
+                            end })
+
+    self.ui.crew_group = self.ui.main_panel:checkboxGroup({ id = 'crew-group', onClick = function(checkbox)
+        self:setCrew(checkbox.checkboxValue)
+    end })
+
+    local maxCheckboxes = 10
+    for i = maxCheckboxes, 0, -1 do
+        self.ui['crew_'..i..'_checkbox'] = self.ui.crew_group:checkbox({ id = 'crew-'..i..'-checkbox', 
+                            width = 100, height = 100, x = -1020 + (maxCheckboxes-i) * 82.5 + (i < 9 and 15 or 0), y = 252,
+                            checked = (self.crew == i) }, true)
+        self.ui['crew_'..i..'_checkbox'].checkboxValue = i
+    end
+
+    self.ui['crew_unlocked_checkbox'] = self.ui.main_panel:checkbox({ id = 'crew-unlocked-checkbox', 
+                            width = 50, height = 50, x = -988, y = 250,
+                            checked = self.crew_unlocked, onClick = function(_, button)
+                                self:setCrewUnlocked(not self.crew_unlocked)
+                            end })
+
+    ------------------------
+    -- Titans
+    self.ui.abilities_limit_input = self.ui.main_panel:input({ id = 'abilities-limit-input', width = 95, height = 45, x = -85, y = 166, 
+                        fontSize = 45, placeholder = ' ', text = tostring(self.abilities_limit), colors = Ui.TRANSPARENT_INPUT_COLORS,
+                        textAlignment = 'MiddleCenter', characterValidation = 'Integer', onValueChanged = function(_, value) 
+                            self:setAbilitiesLimit(value)
+                        end })
+    self.ui.current_titans_input = self.ui.main_panel:input({ id = 'current-titans-input', width = 60, height = 45, x = -112, y = 115.5,
+                        fontSize = 35, placeholder = ' ', text = tostring(self.current_titans or ''), colors = Ui.TRANSPARENT_INPUT_COLORS,
+                        textAlignment = 'MiddleCenter', characterValidation = 'Integer', onValueChanged = function(_, value) 
+                            self:setCurrentTitans(value)
+                        end })
+    self.ui.max_titans_input = self.ui.main_panel:input({ id = 'max-titans-input', width = 60, height = 45, x = -64, y = 115.5,
+                        fontSize = 35, placeholder = ' ', text = tostring(self.max_titans or ''), colors = Ui.TRANSPARENT_INPUT_COLORS,
+                        textAlignment = 'MiddleCenter', characterValidation = 'Integer', onValueChanged = function(_, value) 
+                            self:setTitansLimit(value)
+                        end })
+
+    for index, text in ipairs(self.titans_list1) do
+        self.ui['titans_input1_line' .. index] = self.ui.main_panel:input({ id = 'titans-list1-input-' .. index, fontSize = 30, 
+                                colors = Ui.TRANSPARENT_INPUT_COLORS, width = 585, height = 40, x = -952, y = 100 + (index-1)*-34 ,
+                                text = text, placeholder = ' ', onValueChanged = function(_, value)
+                                    self:setTitansList1(index, value)
+                                end })
+    end
+
+    for index, text in ipairs(self.titans_list2) do
+        self.ui['titans_input2_line' .. index] = self.ui.main_panel:input({ id = 'titans-list2-input-' .. index, fontSize = 30, 
+                                colors = Ui.TRANSPARENT_INPUT_COLORS, width = (index == 1 and 485 or 585), height = 40, x = (index == 1 and -390 or -343), y = 100 + (index-1)*-34 ,
+                                text = text, placeholder = ' ', onValueChanged = function(_, value)
+                                    self:setTitansList2(index, value)
+                                end })
+    end
+
+    ------------------------
+    -- Adventure tracks
+    local xStart, yStart = -1007, -356
+    local xStep = 50
+    local xOffset, yOffset = 386, -97
+    -- Named array for ordering purposes
+    local ordering = {
+        Constants.ROAD_LESS_TRAVELED, Constants.CHILDREN_OF_THE_SUN, Constants.WHAT_WE_LEFT_BEHIND,
+        Constants.OF_WAX_AND_PROMISES, Constants.CANT_GO_BACK, Constants.SIN_OF_THE_FATHERS,
+        Constants.COMING_OF_AGE,
+    }
+
+    for adventureIndex, adventureName in ipairs(ordering) do
+        local adventure = self.adventure_tracks[adventureName]
+
+        for index, value in ipairs(adventure) do
+            -- Calculate it, in cycle 1 it's 3 columns and 3 rows
+            local x = xStart + (index - math.ceil(#adventure / 2) - ((#adventure % 2) == 0 and 0.5 or 0)) * xStep + xOffset * ((adventureIndex - 1) % 3)
+                                    + (adventureIndex % 3 == 2 and 27 or 0) -- + (adventureIndex % 3 >= 2 and 2 or 0)
+            local y = yStart + yOffset * math.floor((adventureIndex - 1)/3)
+
+            if value == true or value == false then
+                self.ui[adventureName .. '_track_input_' .. index] = self.ui.main_panel:checkbox({ 
+                            id = adventureName .. '-track-input-' .. index, 
+                            width = 65, height = 65, x = x, y = y,
+                            checked = value, onClick = function(_, button)
+                                self:setAdventureTrack(adventureName, index, not adventure[index])
+                            end })
+            else
+                self.ui[adventureName .. '_track_input_' .. index] = self.ui.main_panel:input({
+                            id = adventureName .. '-track-input-' .. index, colors = Ui.TRANSPARENT_INPUT_COLORS,
+                            text = (tonumber(adventure[index]) > 0 and tostring(adventure[index])) or '',
+                            width = 58, height = 50, x = x, y = y, textAlignment = 'MiddleCenter',
+                            characterLimit = 2, characterValidation = 'Integer', fontSize = 35, placeholder = ' ', onValueChanged = function(_, newValue) 
+                                self:setAdventureTrack(adventureName, index, newValue)
+                            end})
+            end
+        end
+    end
+    
+    ------------------------
+    -- Diplomacy tracks
+    local cycleTracks = self.diplomacy_tracks
+    local xStart, yStart = -1400, -765
+    for index, factionName in ipairs({ Constants.SUNHEIRS, Constants.DELPHIANS, Constants.TWILIGHT_WATCH }) do
+        self.ui[factionName .. '_checkbox_group'] = self.ui.main_panel:checkboxGroup({ id = factionName .. '-checkbox-group', onClick = function(checkbox)
+            checkbox:select()
+            cycleTracks[factionName] = checkbox.checkboxValue
+            Log:debug(factionName .. ' diplomacy set to %s', cycleTracks[factionName])
+        end })
+
+        for i = 0, 20 do
+            local jump = 0
+            if i >= 1 then jump = jump + 34 end
+            if i >= 6 then jump = jump + 18 end
+            if i >= 10 then jump = jump + 22 end
+            if i >= 14 then jump = jump + 22 end
+            if i >= 18 then jump = jump + 16 end
+
+            self.ui[factionName .. '_'..i..'_checkbox'] = self.ui[factionName .. '_checkbox_group']:checkbox({ id = factionName .. '-'..i..'-checkbox', 
+                                width = 50, height = 50, x = xStart + jump + (10 + i) * 41, y = yStart + (index - 1) * -49,
+                                checked = (cycleTracks[factionName] == i) }, true)
+            self.ui[factionName .. '_'..i..'_checkbox'].checkboxValue = i
+        end
+    end
+    
+    ------------------------
+    -- Godforms
+    -- If checkbox checked -> set to true
+    -- If text entered -> set to the text
+    -- Otherwise set it to nil
+    local xStart, yStart = 80, 739
+    for index = 1, 6 do
+        self.ui['godform_'..index..'_checkbox'] = self.ui.main_panel:checkbox({ id = 'godform-' .. index .. '-checkbox',
+                            checked = (self.godforms[index] ~= nil), width = 65, height = 65,
+                            x = xStart, y = yStart + (index-1) * -55, onClick = function(_, button)
+                                if self.godforms[index] == nil then
+                                    self.godforms[index] = true
+                                    self.ui['godform_'..index..'_checkbox']:setChecked(true)
+                                    Log:debug('Godform %s activated.', index)
+                                else
+                                    self.godforms[index] = nil
+                                    self.ui['godform_'..index..'_checkbox']:setChecked(false)
+                                    self.ui['godform_'..index..'_input']:setText('')
+                                    Log:debug('Godform %s deactivated.', index)
+                                end
+                            end })
+
+        self.ui['godform_'..index..'_input'] = self.ui.main_panel:input({ id = 'godform-' .. index .. '-input',
+                            text = (self.godforms[index] == true and '') or self.godforms[index], width = 500, height = 50,
+                            fontSize = 40, colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ',
+                            x = xStart + 290, y = yStart + 10 + (index-1) * -55, onValueChanged = function(_, newValue)
+                                self.godforms[index] = newValue
+                                Log:debug('Godform %s set to %s', index, newValue)
+
+                                if self.godforms[index] == '' then
+                                    self.godforms[index] = nil
+                                    self.ui['godform_'..index..'_checkbox']:setChecked(false)
+                                    Log:debug('Godform %s deactivated.', index)
+                                elseif self.godforms[index] and self.godforms[index] ~= '' then
+                                    self.ui['godform_'..index..'_checkbox']:setChecked(true)
+                                    Log:debug('Godform %s activated.', index)
+                                end
+                            end })
+    end
+
+    ------------------------
+    -- Summons
+    -- If checkbox checked -> set to true
+    -- If text entered -> set to the text
+    -- Otherwise set it to nil
+    self.ui.summons_limit_button = self.ui.main_panel:button({ id = 'summons-button', fontSize = 40, 
+                        width = 55, height = 55, x = 1225, y = 795,
+                        colors = Ui.TRANSPARENT_INPUT_COLORS, textAlignment = 'MiddleCenter',
+                        text = tostring(self.summons_limit), onClick = function(_, button)
+        
+        self.summons_limit = self.summons_limit + (button == '-2' and -1 or 1)
+        self.summons_limit = Utils.clamp(self.summons_limit, 0, nil)
+        self.ui.summons_limit_button:setText(self.summons_limit)
+        Log:debug('Summons limit set to %s', self.summons_limit)
+    end })
+
+    local xStart, yStart = 703, 739
+    for index = 1, 6 do
+        self.ui['summon_'..index..'_checkbox'] = self.ui.main_panel:checkbox({ id = 'summon-' .. index .. '-checkbox',
+                            checked = (self.summons[index] ~= nil), width = 65, height = 65,
+                            x = xStart, y = yStart + (index-1) * -55, onClick = function(_, button)
+                                if self.summons[index] == nil then
+                                    self.summons[index] = true
+                                    self.ui['summon_'..index..'_checkbox']:setChecked(true)
+                                    Log:debug('Summon %s activated.', index)
+                                else
+                                    self.summons[index] = nil
+                                    self.ui['summon_'..index..'_checkbox']:setChecked(false)
+                                    self.ui['summon_'..index..'_input']:setText('')
+                                    Log:debug('Summon %s deactivated.', index)
+                                end
+                            end })
+
+        self.ui['summon_'..index..'_input'] = self.ui.main_panel:input({ id = 'summon-' .. index .. '-input',
+                            text = self.summons[index], width = 500, height = 50,
+                            fontSize = 40, colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ',
+                            x = xStart + 290, y = yStart + 10 + (index-1) * -55, onValueChanged = function(_, newValue)
+                                self.summons[index] = newValue
+                                Log:debug('Summon %s set to %s', index, newValue)
+
+                                if self.summons[index] == '' then
+                                    self.summons[index] = nil
+                                    self.ui['summon_'..index..'_checkbox']:setChecked(false)
+                                    Log:debug('Summon %s deactivated.', index)
+                                elseif self.summons[index] and self.summons[index] ~= '' then
+                                    self.ui['summon_'..index..'_checkbox']:setChecked(true)
+                                    Log:debug('Summon %s activated.', index)
+                                end
+                            end })
+    end
+
+    ------------------------
+    -- Evolution tracks
+    local xStart, yStart = 621, 236
+    for index, level in ipairs(self.evolution_track) do
+        local x = xStart + (index - 1) * 47.5
+        local y = yStart
+
+        if level[Constants.MIXED] ~= nil then
+            self.ui['evolution_' .. index .. '_' .. Constants.MIXED .. '_checkbox'] = 
+                            self.ui.main_panel:checkbox({ id = 'evolution-' .. index .. '-' .. Constants.MIXED .. '-checkbox',
+                                        checked = level[Constants.MIXED], width = 55, height = 55,
+                                        x = x, y = y, onClick = function(_, button)
+                                            level[Constants.MIXED] = not level[Constants.MIXED]
+                                            self.ui['evolution_' .. index .. '_' .. Constants.MIXED .. '_checkbox']:setChecked(level[Constants.MIXED])
+                                            Log:debug('Evolution track section %s set to %s.', index, tostring(level[Constants.MIXED]))
+
+                                            if(level[Constants.MIXED]) then
+                                                -- Find the correct level, up to the current evolution level
+                                                local lastMarkedHypertimeOracleIndex, lastMarkedIcarianHarpyIndex = 0, 0
+    
+                                                for jndex, element in ipairs(self:getEvolutionTrack()) do
+                                                    if jndex >= index then break end
+
+                                                    if element[Constants.HYPERTIME_ORACLE] == true then
+                                                        lastMarkedHypertimeOracleIndex = jndex
+                                                    end
+
+                                                    if element[Constants.ICARIAN_HARPY] == true then
+                                                        lastMarkedIcarianHarpyIndex = jndex
+                                                    end
+                                                end
+
+                                                local allowHypertimeOracle, allowIcarianHarpy = false, false
+                                                if index == lastMarkedHypertimeOracleIndex + 1 then allowHypertimeOracle = true end
+                                                if index == lastMarkedIcarianHarpyIndex + 1 then allowIcarianHarpy = true end
+
+                                                -- Let the player choose which Primordial to setup
+                                                local confirmationText = 'Which primordial do you want to setup?'
+                                                if not allowHypertimeOracle and not allowIcarianHarpy then confirmationText = 'You cannot fill this box' end
+
+                                                GlobalUi.showConfirmationDialog(confirmationText, (allowHypertimeOracle and 'Hypertime Oracle') or false, (allowHypertimeOracle and function()
+                                                    Battle.setupBattle('Hypertime Oracle Battle', self.EVOLUTION_INDEX_TO_LEVEL[self.cycle][index])
+                                                end) or nil, (allowIcarianHarpy and 'Icarian Harpy') or false, (allowIcarianHarpy and function()
+                                                    Battle.setupBattle('Icarian Harpy Battle', self.EVOLUTION_INDEX_TO_LEVEL[self.cycle][index])
+                                                end) or nil)
+                                            end
+                                        end })
+        else
+            if level[Constants.HYPERTIME_ORACLE] ~= nil then
+                y = yStart + 27
+                self.ui['evolution_' .. index .. '_' .. Constants.HYPERTIME_ORACLE .. '_checkbox'] = 
+                            self.ui.main_panel:checkbox({ id = 'evolution-' .. index .. '-' .. Constants.HYPERTIME_ORACLE .. '-checkbox',
+                                        checked = level[Constants.HYPERTIME_ORACLE], width = 55, height = 55,
+                                        x = x, y = y, onClick = function(_, button)
+                                            level[Constants.HYPERTIME_ORACLE] = not level[Constants.HYPERTIME_ORACLE]
+                                            self.ui['evolution_' .. index .. '_' .. Constants.HYPERTIME_ORACLE .. '_checkbox']:setChecked(level[Constants.HYPERTIME_ORACLE])
+                                            Log:debug('Evolution track section %s-%s set to %s.', index, Constants.HYPERTIME_ORACLE, tostring(level[Constants.HYPERTIME_ORACLE]))
+
+                                            if level[Constants.HYPERTIME_ORACLE] == true then
+                                                GlobalUi.showConfirmationDialog('Do you want to setup Hypertime Oracle Battle - Level ' 
+                                                                .. self.EVOLUTION_INDEX_TO_LEVEL[self.cycle][index] .. '?', 'Yes', function()
+                                                    Battle.setupBattle('Hypertime Oracle Battle', self.EVOLUTION_INDEX_TO_LEVEL[self.cycle][index])
+                                                end)
+                                            end
+                                        end })
+            end
+
+            if level[Constants.ICARIAN_HARPY] ~= nil then
+                y = yStart - 26
+                self.ui['evolution_' .. index .. '_' .. Constants.ICARIAN_HARPY .. '_checkbox'] = 
+                            self.ui.main_panel:checkbox({ id = 'evolution-' .. index .. '-' .. Constants.ICARIAN_HARPY .. '-checkbox',
+                                        checked = level[Constants.ICARIAN_HARPY], width = 55, height = 55,
+                                        x = x, y = y, onClick = function(_, button)
+                                            level[Constants.ICARIAN_HARPY] = not level[Constants.ICARIAN_HARPY]
+                                            self.ui['evolution_' .. index .. '_' .. Constants.ICARIAN_HARPY .. '_checkbox']:setChecked(level[Constants.ICARIAN_HARPY])
+                                            Log:debug('Evolution track section %s-%s set to %s.', index, Constants.ICARIAN_HARPY, tostring(level[Constants.ICARIAN_HARPY]))
+                                            
+                                            if level[Constants.ICARIAN_HARPY] == true then
+                                                GlobalUi.showConfirmationDialog('Do you want to setup Icarian Harpy Battle - Level ' 
+                                                                    .. self.EVOLUTION_INDEX_TO_LEVEL[self.cycle][index] .. '?', 'Yes', function()
+                                                        Battle.setupBattle('Icarian Harpy Battle', self.EVOLUTION_INDEX_TO_LEVEL[self.cycle][index])
+                                                end)
+                                                
+                                            end
+                                        end })
+            end
+        end
+    end
+
+    ------------------------
+    -- Boss primordial track
+    local xStart, yStart = 364, 91
+    local maxCheckboxes = 5
+    for index = 1, maxCheckboxes do
+        self.ui['boss_'..index..'_checkbox'] = self.ui.main_panel:checkbox({ id = 'boss-' .. index .. '-checkbox',
+                                checked = (self.boss_track >= index), width = 55, height = 55,
+                                x = xStart + (index-1) * 47, y = yStart, onClick = function(_, button)
+                                    if self.boss_track >= index then
+                                        self.boss_track = index - 1
+                                    else
+                                        self.boss_track = index
+                                        -- Setup the battle if we add a cross
+                                        GlobalUi.showConfirmationDialog('Do you want to setup Endure the Sun Battle - Level ' .. (self.boss_level2 and '2?' or '1?'), 'Yes', function()
+                                                    Battle.setupBattle('Endure the Sun Battle', self.boss_level2 and Constants.LEVEL_2 or Constants.LEVEL_1)
+                                        end)
+                                    end
+
+                                    for jndex = 1, self.boss_track do
+                                        self.ui['boss_'..jndex..'_checkbox']:setChecked(true)
+                                    end
+
+                                    for jndex = self.boss_track + 1, maxCheckboxes do
+                                        self.ui['boss_'..jndex..'_checkbox']:setChecked(false)
+                                    end
+                                    
+                                    Log:debug('Boss track set to %s.', self.boss_track)
+                                end })
+    end
+
+    self.ui['boss_level2_checkbox'] = self.ui.main_panel:checkbox({ id = 'boss-level2-checkbox',
+                                checked = self.boss_level2, width = 200, height = 55,
+                                checkedImage = 'bossLevel2', uncheckedImage = 'bossLevel2',
+                                x = xStart - 170, y = yStart - 60, onClick = function(_, button)
+                                    self.boss_level2 = not self.boss_level2
+
+                                    if self.boss_level2 then
+                                        self.ui['boss_level2_checkbox']:setChecked(true)
+                                    else
+                                        self.ui['boss_level2_checkbox']:setChecked(false)
+                                    end
+                                    
+                                    Log:debug('Boss set to level 2 = %s', tostring(self.boss_level2))
+                                end })
+
+    ------------------------
+    -- Adversary track
+    local xStart = 995
+    local yStart = 91
+    self.ui['adversary_unlocked_checkbox'] = self.ui.main_panel:checkbox({ id = 'adversary-unlocked-checkbox',
+                                checked = self.adversary_unlocked, width = 50, height = 50,
+                                x = xStart - 45, y = yStart, onClick = function(_, button)
+                                    self.adversary_unlocked = not self.adversary_unlocked
+                                    self.ui['adversary_unlocked_checkbox']:setChecked(self.adversary_unlocked)
+                                    Log:debug('Adversary unlocked set to %s.', tostring(self.adversary_unlocked))
+                                end })
+
+    for index = 1, 5 do
+        self.ui['adversary_'..index..'_checkbox'] = self.ui.main_panel:checkbox({ id = 'adversary-' .. index .. '-checkbox',
+                                checked = (self.adversary_track >= index), width = 55, height = 55,
+                                x = xStart + (index-1) * 47, y = yStart, onClick = function(_, button)
+                                    if self.adversary_track >= index then
+                                        self.adversary_track = index - 1
+                                    else
+                                        self.adversary_track = index
+                                        -- Setup the battle if we add a cross
+                                        GlobalUi.showConfirmationDialog('Do you want to setup Burden Hardest to Bear Battle - Level 1?', 'Yes', function()
+                                            Battle.setupBattle('Burden Hardest to Bear Battle', Constants.LEVEL_1)
+                                        end)
+                                    end
+
+                                    for jndex = 1, self.adversary_track do
+                                        self.ui['adversary_'..jndex..'_checkbox']:setChecked(true)
+                                    end
+
+                                    for jndex = self.adversary_track + 1, 5 do
+                                        self.ui['adversary_'..jndex..'_checkbox']:setChecked(false)
+                                    end
+                                    
+                                    Log:debug('Adversary track set to %s.', self.adversary_track)
+                                end })
+    end
+
+    ------------------------
+    -- Mortal resource track
+    local xStart, yStart = 76, -159
+    -- This requires a named loop to keep the resources order....
+    for index, resource in ipairs({'sirenshell', 'hyperborean_alloy', 'daedalus_makina'}) do
+        self.ui[resource .. '_button'] = self.ui.main_panel:button({ id = resource .. '-button', fontSize = 40, 
+                            width = 55, height = 55, 
+                            x = xStart, y = yStart + (index-1) * -138 + (index == 3 and 5 or 0), -- Somehow the boxes aren't linear
+                            colors = Ui.TRANSPARENT_INPUT_COLORS, textAlignment = 'MiddleCenter',
+                            text = tostring(self.resources[resource]), onClick = function(_, button)
+            
+                local newValue = self.resources[resource] + (button == '-2' and -1 or 1)
+                newValue = Utils.clamp(newValue, 0, nil)
+                self:setResource(resource, newValue)
+        end })
+
+        for jndex = 1, 2 do
+            self.ui[resource .. '_note_input_' .. jndex] = self.ui.main_panel:input({ id = resource .. '-note-button-' .. jndex,
+                                fontSize = 24, width = 240, height = 35, textAlignment = 'LeftCenter',
+                                x = xStart + 90, y = yStart - 54 + (index-1) * -132 + (jndex-1) * -28, -- Somehow the boxes aren't linear
+                                colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ',
+                                text = self.resources[resource .. '_note'][jndex], onValueChanged = function(_, newValue)
+                
+                self:setResourceNote(resource, jndex, newValue)
+            end })
+        end
+    end
+
+    -- Primordial resources
+    local xStart, yStart = 352, -159
+    local xOffset, yOffset = 223, -137
+    local resourcesArray = {'living_abyss', 'skin_of_malice', 'clothflesh', 'eyes_cluster', 'razorclaw', 
+                'icarian_feather', 'writhing_tentacle', 'sunburned_skull', 'grotesque_beak', 'powdered_matter', 
+                'retractable_mechanism', 'reliefshell_fragment', 'frozen_ambrosia'}
+    for index, resource in ipairs(resourcesArray) do
+        local x = xStart + xOffset * ((index - 1) % 4) + ((index % 4 == 0 and 24 or 0)) -- + (((index == 3 or index == 7) and -5) or 0) -- Fix some inconsistencies
+        local y = yStart + yOffset * math.floor((index - 1)/4) + (index >= 9 and 6 or 0) + (index >= 13 and 4 or 0)
+
+        self.ui[resource .. '_button'] = self.ui.main_panel:button({ id = resource .. '-button', fontSize = 40, 
+                            width = 55, height = 55, x = x, y = y, 
+                            colors = Ui.TRANSPARENT_INPUT_COLORS, textAlignment = 'MiddleCenter',
+                            text = tostring(self.resources[resource]), onClick = function(_, button)
+            
+                local newValue = self.resources[resource] + (button == '-2' and -1 or 1)
+                newValue = Utils.clamp(newValue, 0, nil)
+                self:setResource(resource, newValue)
+        end })
+
+        for jndex = 1, 2 do
+            self.ui[resource .. '_note_input_' .. jndex] = self.ui.main_panel:input({ id = resource .. '-note-button-' .. jndex, 
+                                fontSize = 24, width = 220, height = 35, x = x + 84, y = y - 54 + (index > 4 and 7 or 0) + (jndex-1) * -28,
+                                colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ',
+                                text = self.resources[resource .. '_note'][jndex], onValueChanged = function(_, newValue)
+                
+                self:setResourceNote(resource, jndex, newValue)
+            end })
+        end
+    end
+
+    for jndex = 1, 2 do
+        self.ui['cores_note_input_' .. jndex] = self.ui.main_panel:input({ id = 'cores-note-button-' .. jndex, fontSize = 24, 
+                            width = 445, height = 35, x = 772, y = -607 + (jndex-1) * -28,
+                            colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ',
+                            text = self.resources['cores_note'][jndex], onValueChanged = function(_, newValue)
+            
+                self:setResourceNote('cores', jndex, newValue)
+        end })
+    end
+
+    for jndex = 1, 2 do
+        self.ui['rare_resources_note_input_' .. jndex] = self.ui.main_panel:input({ id = 'rare_resources-note-button-' .. jndex, fontSize = 24, 
+                            width = 265, height = 35, x = 1128, y = -607 + (jndex-1) * -28,
+                            colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ',
+                            text = self.resources['rare_resources_note'][jndex], onValueChanged = function(_, newValue)
+            
+                self:setResourceNote('rare_resources', jndex, newValue)
+        end })
+    end
+
+    ------------------------
+    -- Divine resources
+    local xStart, yStart = 79, -806
+    for index, resource in ipairs({'priests', 'echoes_of_recollection', 'sisyphus_tears', 'pygmalion_stones'}) do
+        self.ui[resource .. '_button'] = self.ui.main_panel:button({ id = resource .. '-button', fontSize = 40, 
+                            width = 55, height = 55, x = xStart + (index-1) * 306 + (index >= 3 and 2 or 0) + (index >= 4 and -6 or 0), y = yStart, 
+                            colors = Ui.TRANSPARENT_INPUT_COLORS, textAlignment = 'MiddleCenter',
+                            text = tostring(self.resources[resource]), onClick = function(_, button)
+            
+            local newValue = self.resources[resource] + (button == '-2' and -1 or 1)
+            newValue = Utils.clamp(newValue, 0, nil)
+            self:setResource(resource, newValue)
+        end })
+        
+        for jndex = 1, 2 do
+            self.ui[resource .. '_note_input_' .. jndex] = self.ui.main_panel:input({ id = resource .. '-note-button-' .. jndex, 
+                                    fontSize = 24, width = 300, height = 35, x = xStart + 118 + (index-1) * 307 + (index >= 3 and -2 or 0) + (index >= 4 and -6 or 0), y = yStart - 54 + (jndex-1) * -28,
+                                    colors = Ui.TRANSPARENT_INPUT_COLORS, placeholder = ' ',
+                                    text = self.resources[resource .. '_note'][jndex], onValueChanged = function(_, newValue)
+                    
+                self:setResourceNote(resource, jndex, newValue)
+            end })
+        end
+    end
 end
 
 function Argo:getLevelFromEvolutionIndex(cycle, index)
@@ -1637,6 +2235,12 @@ function Argo:setHumanity(value)
     Log:debug('Cycle %s - Humanity set to %s', self.cycle, self.humanity)
 end
 
+function Argo:setLoopLength(value)
+    self.loop_length = value
+    self.ui.loop_length_button:setText(self.loop_length)
+    Log:debug('Cycle %s - Loop Length set to %s', self.cycle, self.loop_length)
+end
+
 function Argo:setDefectors(value)
     self.defectors = value
     self.ui.defectors_button:setText(self.defectors)
@@ -1647,6 +2251,24 @@ function Argo:setDefectorsUnlocked(unlocked)
     self.defectors_unlocked = unlocked
     self.ui['defectors_unlocked_checkbox']:setChecked(self.defectors_unlocked)
     Log:debug('Cycle %s - Defectors unlocked set to %s.', self.cycle, tostring(self.defectors_unlocked))
+end
+
+function Argo:setFrozenTime(value)
+    self.frozen_time = value
+    self.ui.frozen_time_button:setText(self.frozen_time)
+    Log:debug('Cycle %s - Frozen Time set to %s', self.cycle, self.frozen_time)
+end
+
+function Argo:setFrozenTimeUnlocked(unlocked)
+    self.frozen_time_unlocked = unlocked
+    self.ui['frozen_time_unlocked_checkbox']:setChecked(self.frozen_time_unlocked)
+    Log:debug('Cycle %s - Frozen Time unlocked set to %s.', self.cycle, tostring(self.frozen_time_unlocked))
+end
+
+function Argo:setParadox(value)
+    self.paradox = value
+    self.ui.paradox_button:setText(self.paradox)
+    Log:debug('Cycle %s - Paradox set to %s', self.cycle, self.paradox)
 end
 
 function Argo:setPassenger(index, value)
@@ -1744,16 +2366,11 @@ function Argo.save()
             hull_unlocked = argo.hull_unlocked,
             crew = argo.crew,
             crew_unlocked = argo.crew_unlocked,
-            passengers = argo.passengers,
             story_card = argo.story_card,
             doom_card = argo.doom_card,
             map_tile = argo.map_tile,
-            humanity = argo.humanity,
-            defectors = argo.defectors,
-            defectors_unlocked = argo.defectors_unlocked,
             argo_fate = argo.argo_fate,
             argo_knowledge = argo.argo_knowledge,
-            strangers = argo.strangers,
             abilities_limit = argo.abilities_limit,
             current_titans = argo.current_titans,
             max_titans = argo.max_titans,
@@ -1768,11 +2385,30 @@ function Argo.save()
 
             evolution_track = argo.evolution_track,
             boss_track = argo.boss_track,
+            adversary_name = argo.adversary_name,
             adversary_track = argo.adversary_track,
             adversary_unlocked = argo.adversary_unlocked,
 
             resources = argo.resources,
         }
+
+        -- Cycle specific elements
+        if cycle == Constants.CYCLE_I then
+            flatData[cycle].strangers = argo.strangers
+        elseif cycle == Constants.CYCLE_II then
+            flatData[cycle].passengers = argo.passengers
+
+            flatData[cycle].humanity = argo.humanity
+            flatData[cycle].defectors = argo.defectors
+            flatData[cycle].defectors_unlocked = argo.defectors_unlocked
+        elseif cycle == Constants.CYCLE_III then
+            flatData[cycle].loop_length = argo.loop_length
+            flatData[cycle].frozen_time = argo.frozen_time
+            flatData[cycle].frozen_time_unlocked = argo.frozen_time_unlocked
+            flatData[cycle].paradox = argo.paradox
+
+            flatData[cycle].boss_level2 = argo.boss_level2
+        end
     end
 
     return flatData

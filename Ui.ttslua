@@ -402,7 +402,7 @@ function Ui:checkbox(params, grouped)
     checkbox.checkedColors = params.checkedColors or self.checkedColors or Ui.VISIBLE_COLORS
     
     -- The or 'checked' here somehow shows the checked image when hovering, it looks cool
-    checkbox.uncheckedImage = params.uncheckedImage or self.uncheckedImage or 'checked' 
+    checkbox.uncheckedImage = params.uncheckedImage or self.uncheckedImage or 'checked'
     checkbox.uncheckedColors = params.uncheckedColors or self.uncheckedColors or Ui.INVISIBLE_COLORS
 
     if params.checked then
@@ -442,6 +442,7 @@ end
 function Ui:text(params)
     assert(params.text ~= nil and 'string' == type(params.text))
     assert(params.fontSize == nil or 'number' == type(params.fontSize))
+    assert(params.fontStyle == nil or 'string' == type(params.fontStyle))
 
     local text = self:createElement('Text', params)
     text.z = self.z
@@ -452,6 +453,10 @@ function Ui:text(params)
 
     if params.fontSize ~= nil then
         text.attributes.fontSize = params.fontSize
+    end
+
+    if params.fontStyle ~= nil then
+        text.attributes.fontStyle = params.fontStyle
     end
     
     setmetatable(text, Ui)

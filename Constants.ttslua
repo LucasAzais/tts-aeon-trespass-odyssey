@@ -7,7 +7,11 @@ Constants.CUSTOM_ASSETS = {
     {
         name = 'checked',
         url = 'http://cloud-3.steamusercontent.com/ugc/2057628267251746049/3647F426FC0701F65CD80005CF410D4C1B7C0BFF/',
-    }
+    },
+    {
+        name = 'bossLevel2',
+        url = 'http://cloud-3.steamusercontent.com/ugc/2457348104290557007/50258F74F6D396EBD611EA879BFB1A31E8029E0A/',
+    },
 }
 
 -- Logging

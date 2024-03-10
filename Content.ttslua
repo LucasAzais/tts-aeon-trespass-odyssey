@@ -893,7 +893,7 @@ Content.battles = {
         },
         {
             end_setup = 'endHypertimeOracleLevel3PlusSetup',
-            levels = { Constants.LEVEL_3, Constants.LEVEL_4, },
+            levels = { Constants.LEVEL_3, Constants.LEVEL_4, Constants.LEVEL_5, },
             primordials = { Constants.HYPERTIME_ORACLE, },
             primordial_start_position_rotation = { 
                 { position = { row = 7.5, column = 13.5 }, weight = 1,
@@ -951,7 +951,7 @@ Content.battles = {
     ['Icarian Harpy Battle'] = {
         {
             end_setup = 'endIcarianHarpyLevel1PlusSetup',
-            levels = { Constants.LEVEL_1, Constants.LEVEL_2, Constants.LEVEL_3, Constants.LEVEL_4, },
+            levels = { Constants.LEVEL_1, Constants.LEVEL_2, Constants.LEVEL_3, Constants.LEVEL_4, Constants.LEVEL_5, },
             primordials = { Constants.ICARIAN_HARPY, },
             primordial_start_position_rotation = { 
                 { position = { row = 7.5, column = 10.5 }, weight = 1,
@@ -1016,7 +1016,7 @@ Content.battles = {
     ['Endure the Sun Battle'] = {
         {
             end_setup = 'endEndureTheSunSetup',
-            levels = { Constants.LEVEL_1, },
+            levels = { Constants.LEVEL_1, Constants.LEVEL_2, },
             primordials = { Constants.SUN_DESCENDANT, },
             primordial_start_position_rotation = { 
                 { position = { row = 8, column = 2 }, weight = 1,

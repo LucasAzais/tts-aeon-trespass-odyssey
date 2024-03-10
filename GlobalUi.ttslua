@@ -138,7 +138,7 @@ function GlobalUi.init()
 
     local hypertimeOracleLayout = GlobalUi.ui.battle_menu_panel:horizontalLayout({ id = 'hypertime-oracle-layout-button', width = battleSelectionWidth - 10, height = 40, })
     hypertimeOracleLayout:text({ id = 'hypertime-oracle-label', text = Constants.HYPERTIME_ORACLE, fontSize = fontSize, width = 145, color = 'White' })
-    for _, level in ipairs({ Constants.LEVEL_1, Constants.LEVEL_2, Constants.LEVEL_3, Constants.LEVEL_4, }) do
+    for _, level in ipairs({ Constants.LEVEL_1, Constants.LEVEL_2, Constants.LEVEL_3, Constants.LEVEL_4, Constants.LEVEL_5, }) do
         hypertimeOracleLayout:button({ id = 'hypertime-oracle-' .. level .. '-button', fontSize = fontSize, text = tostring(level), onClick = function()
             Battle.setupBattle('Hypertime Oracle Battle', level)
         end })
@@ -146,15 +146,19 @@ function GlobalUi.init()
 
     local icarianHarpyLayout = GlobalUi.ui.battle_menu_panel:horizontalLayout({ id = 'icarian-harpy-layout-button', width = battleSelectionWidth - 10, height = 40, })
     icarianHarpyLayout:text({ id = 'icarian-harpy-label', text = Constants.ICARIAN_HARPY, fontSize = fontSize, width = 145, color = 'White' })
-    for _, level in ipairs({ Constants.LEVEL_1, Constants.LEVEL_2, Constants.LEVEL_3, Constants.LEVEL_4, }) do
+    for _, level in ipairs({ Constants.LEVEL_1, Constants.LEVEL_2, Constants.LEVEL_3, Constants.LEVEL_4, Constants.LEVEL_5, }) do
         icarianHarpyLayout:button({ id = 'icarian-harpy-' .. level .. '-button', fontSize = fontSize, text = tostring(level), onClick = function()
             Battle.setupBattle('Icarian Harpy Battle', level)
         end })
     end
 
-    GlobalUi.ui.battle_menu_panel:button({ id = 'endure-the-sun-button', text = 'Endure the Sun Battle', fontSize = fontSize, width = battleSelectionWidth - 10, height = 40, onClick = function()
-        Battle.setupBattle('Endure the Sun Battle', Constants.LEVEL_1)
-    end })
+    local endureTheSunLayout = GlobalUi.ui.battle_menu_panel:horizontalLayout({ id = 'endure-the-sun-layout-button', width = battleSelectionWidth - 10, height = 40, })
+    endureTheSunLayout:text({ id = 'endure-the-sun-label', text = 'Endure the Sun', fontSize = fontSize, width = 145, color = 'White' })
+    for _, level in ipairs({ Constants.LEVEL_1, Constants.LEVEL_2, }) do
+        endureTheSunLayout:button({ id = 'endure-the-sun-' .. level .. '-button', fontSize = fontSize, text = tostring(level), onClick = function()
+            Battle.setupBattle('Endure the Sun Battle', level)
+        end })
+    end
 
     GlobalUi.ui.battle_menu_panel:button({ id = 'race-the-sun-button', text = 'Race the Sun Battle', fontSize = fontSize, width = battleSelectionWidth - 10, height = 40, onClick = function()
         Battle.setupBattle('Race the Sun Battle', Constants.LEVEL_1)
@@ -300,6 +304,9 @@ function GlobalUi.init()
     })
     GlobalUi.ui.confirmation_panel.z = 10000
     GlobalUi.ui.confirmation_panel.attributes.color = '#e3e0da'
+    GlobalUi.ui.confirmation_panel.attributes.raycastTarget = true
+    GlobalUi.ui.confirmation_panel.attributes.allowDragging = true
+    GlobalUi.ui.confirmation_panel.attributes.returnToOriginalPositionWhenReleased = false
 
     GlobalUi.ui.confirmation_text = GlobalUi.ui.confirmation_panel:text({ id = 'confirmation-text', text = '', 
                     width = 390, height = 200, textAlignment = 'UpperCenter', rectAlignment = 'UpperCenter', 
