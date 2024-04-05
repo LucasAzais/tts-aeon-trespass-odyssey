@@ -488,13 +488,13 @@ function Cycle.generalSetup(cycle, params)
     -- Move figurines
     for _, object in ipairs(getObjectsWithTag(Constants.TITAN)) do
         if object.getGMNotes() == 'Titan1' then
-            object.setPosition({-70.66, 0.97, -46.04})
+            object.setPosition({-69.82, 0.98, -47.24})
         elseif object.getGMNotes() == 'Titan2' then
-            object.setPosition({-30.22, 0.97, -46.04})
+            object.setPosition({-29.36, 0.98, -47.24})
         elseif object.getGMNotes() == 'Titan3' then
-            object.setPosition({9.68, 0.97, -46.04})
+            object.setPosition({10.59, 0.98, -47.24})
         elseif object.getGMNotes() == 'Titan4' then
-            object.setPosition({49.72, 0.97, -46.04})
+            object.setPosition({50.78, 0.98, -47.24})
         end
     end
 

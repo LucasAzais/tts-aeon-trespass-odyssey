@@ -2,6 +2,7 @@ local Titan = {}
 Titan.__index = Titan
 
 local Constants = require('Constants')
+local EventManager = require('EventManager')
 local Log = require('Log').ForModule('Titan')
 
 ------------------------------------------------------
@@ -38,7 +39,18 @@ Titan.TITANS = {
 }
 
 function Titan.init(savedData)
+    -- Register collisions
+    for _, object in ipairs(getObjectsWithTag(Constants.COLOR_CHANGE_SPOT)) do
+        object.registerCollisions()
+    end
 
+    -- Handle player color change
+    EventManager.addHandler('onObjectCollisionEnter', function(object, collisionInfo)
+        -- Only change appropriate elements
+        if collisionInfo.collision_object.hasTag(Constants.TITAN) then
+            collisionInfo.collision_object.setColorTint(object.getColorTint())
+        end
+    end)
 end
 
 function Titan.spawnSheet(position, type, urlType)

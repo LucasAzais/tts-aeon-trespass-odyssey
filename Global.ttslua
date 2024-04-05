@@ -19,6 +19,7 @@ local Options = require('Options')
 local SearchStation = require('SearchStation')
 local Terrain = require('Terrain')
 local Timeline = require('Timeline')
+local Titan = require('Titan')
 local Triskelion = require('Triskelion')
 local Ui = require('Ui')
 local Log = require('Log').ForModule("Global")
@@ -60,6 +61,7 @@ function onLoad(script_state)
     BattleBoard.init()
     Battle.init(savedData.battle or {})
     SearchStation.init()
+    Titan.init()
 
     -- If in the middle of a cycle, just load the game
     if Options.getCurrentCycle() then

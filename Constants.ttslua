@@ -75,6 +75,7 @@ Constants.MINOR_TRAUMA = 'MinorTrauma'
 Constants.MAJOR_TRAUMA = 'MajorTrauma'
 Constants.GRAVE_TRAUMA = 'GraveTrauma'
 Constants.OBOL = 'Obol'
+Constants.COLOR_CHANGE_SPOT = 'ColorChangeSpot'
 
 
 -- Battle types
