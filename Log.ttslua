@@ -9,17 +9,17 @@ local Utils = require('Utils')
 Log.logsByModule = {}
 Log.levelByModule = {
     ['Global'] = Constants.DEBUG,
-    ['Argo'] = Constants.DEBUG,
-    ['Argonaut'] = Constants.DEBUG,
-    ['Battle'] = Constants.DEBUG,
-    ['BattleBoard'] = Constants.DEBUG,
-    ['Cycle'] = Constants.DEBUG,
-    ['Map'] = Constants.DEBUG,
+    -- ['Argo'] = Constants.DEBUG,
+    -- ['Argonaut'] = Constants.DEBUG,
+    -- ['Battle'] = Constants.DEBUG,
+    -- ['BattleBoard'] = Constants.DEBUG,
+    -- ['Cycle'] = Constants.DEBUG,
+    -- ['Map'] = Constants.DEBUG,
     -- ['SearchStation'] = Constants.DEBUG,
-    ['Terrain'] = Constants.DEBUG,
-    ['Timeline'] = Constants.DEBUG,
-    ['Titan'] = Constants.DEBUG,
-    ['Triskelion'] = Constants.DEBUG,
+    -- ['Terrain'] = Constants.DEBUG,
+    -- ['Timeline'] = Constants.DEBUG,
+    -- ['Titan'] = Constants.DEBUG,
+    -- ['Triskelion'] = Constants.DEBUG,
 }
 
 function Log.init()

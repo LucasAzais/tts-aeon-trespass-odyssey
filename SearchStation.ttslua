@@ -79,8 +79,16 @@ function SearchStation.getResults(searchTerm)
                 -- Search secret number (GM Note) in the secret content bag
                 -- Otherwise try to match the name
                 if (container.getName() == 'Secret content' and element.gm_notes:lower():find(searchTerm:lower())) or element.name:lower():find(searchTerm:lower()) then
+                    local fullName = element.name
+                    if container.getName() == 'Secret content' then
+                        local _, _, secretNumber = element.gm_notes:lower():find("secret card (.*)")
+                        if secretNumber then
+                            fullName = fullName .. ' (' .. secretNumber .. ')'
+                        end
+                    end
+
                     table.insert(results, {
-                        id = element.name,
+                        id = fullName,
                         guid = element.guid,
                         container = container,
                         description = false,
@@ -118,7 +126,7 @@ function SearchStation.displayResults(results)
         for _, button in ipairs(SearchStation.result_buttons) do
             button:setOnClick(nil)
             button:setText('')
-            button:hide()
+            button:setActive(false)
         end
         -- This should happen when we click on a result button, so reset the search as well
         if not results then
@@ -137,8 +145,9 @@ function SearchStation.displayResults(results)
                 SearchStation.pullElement(results[i])
             end)
             -- Avoid the flickering effect of setText
+            -- Not using show because the animation sometimes breaks if you type too fast
             if SearchStation.result_buttons[i].attributes.active ~= true then
-                SearchStation.result_buttons[i]:show()
+                SearchStation.result_buttons[i]:setActive(true)
             end
 
             -- Check if there's another result with the same name
@@ -162,7 +171,7 @@ function SearchStation.displayResults(results)
         for i = math.min(#results, 5) + 1, 5 do
             SearchStation.result_buttons[i]:setOnClick(nil)
             SearchStation.result_buttons[i]:setText(nil)
-            -- SearchStation.result_buttons[i]:hide()
+            SearchStation.result_buttons[i]:setActive(false)
         end
     end
 end
